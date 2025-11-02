@@ -1,83 +1,150 @@
-# WomCast Project Constitution
+# WomCast — Project Constitution (Spec-Driven Development Guardrails)
 
-## Core Principles
+## 1) Mission & Non-Goals
 
-### 1. Code Quality Standards
-- **Type Safety**: All TypeScript code must use strict typing; Python code must pass `mypy --strict` with no `Any` types except where absolutely necessary
-- **Linting**: Zero tolerance for lint errors; warnings must be addressed before merge
-- **Code Review**: All changes require review focusing on readability, maintainability, and adherence to project patterns
-- **Documentation**: Public APIs must have comprehensive docstrings; complex logic requires inline comments explaining "why" not "what"
-- **DRY Principle**: Avoid duplication; extract shared logic into reusable functions/modules
-- **Single Responsibility**: Each module, class, or function should have one clear purpose
+**Mission**: Build a local-first, privacy-respecting entertainment OS for Raspberry Pi 5 with a polished 10-foot UI, free-content connectors, legal cloud passthrough, live TV, retro gaming, casting, and on-device AI voice/search.
 
-### 2. Testing Standards
-- **Coverage Minimums**: Unit test coverage ≥ 80% for critical paths; 100% for public APIs
-- **Test Pyramid**: Prioritize unit tests > integration tests > e2e tests
-- **Test Quality**: Tests must be readable, maintainable, and test behavior not implementation
-- **Fast Feedback**: Unit tests must run in < 5 seconds; full suite < 2 minutes
-- **CI Gates**: All tests must pass before merge; no flaky tests tolerated
-- **Performance Tests**: Critical paths (USB indexing, AI queries, casting setup) must have performance regression tests
+**Non-Goals**:
+- No DRM bypass or gray-area content
+- No phone-home telemetry by default
+- No feature creep beyond MVP scope (Phase 2 "WomCast Link" excluded from MVP)
 
-### 3. User Experience Consistency
-- **10-Foot UI Design**: All interfaces optimized for TV viewing distance (3+ meters)
-- **Navigation**: D-pad/remote-first navigation; keyboard/mouse as secondary inputs
-- **Response Time**: UI interactions must respond within 100ms; feedback for operations > 500ms
-- **Accessibility**: High contrast modes; large touch targets (≥ 48px); screen reader support where applicable
-- **Error Handling**: User-friendly error messages with clear next steps; no technical jargon in UI
-- **Consistency**: Uniform design language across all screens; predictable interaction patterns
+## 2) Product Pillars
 
-### 4. Performance Requirements
-- **Boot Time**: System ready for interaction within 45 seconds of power-on
-- **USB Indexing**: 1000 media files indexed and searchable within 5 seconds
-- **AI Query Response**: Intent recognition and response within 3 seconds
-- **Casting Setup**: Device discovery and connection establishment within 2 seconds
-- **Video Playback**: Start playback within 2 seconds; seek operations < 1 second
-- **Memory Footprint**: Core system < 2GB RAM usage; leave headroom for media playback
-- **Frame Rate**: UI animations maintain 60 fps; no jank on navigation
+- **Local-first & private** (LAN by default, optional TLS, PIN pairing)
+- **Performance** (boot ≤15s; index ≤5s/1k; AI RTT ≤3s; cast setup ≤2s)
+- **Reliability** (offline-friendly; graceful degradation)
+- **Legality & Ethics** (licensed or public-domain only; passthrough for paid services)
+- **Delightful 10-foot UX** (remote/keyboard/CEC friendly; big targets; clear typography)
 
-### 5. Security & Privacy
-- **Local-First**: All processing happens on-device unless explicitly connecting to user-chosen cloud services
-- **Data Minimization**: Collect only data necessary for functionality; no telemetry without opt-in
-- **Secure Defaults**: Services bound to localhost; network exposure requires explicit configuration
-- **Dependency Auditing**: Regular security scans (pip-audit, npm audit); no high/critical vulnerabilities in production
-- **Token Management**: Secure storage of API keys and tokens; rotation mechanisms in place
-- **Update Security**: Signed OTA updates; rollback capability on failed updates
+## 3) Target Platforms & Support Matrix (MVP)
 
-### 6. Reliability & Stability
-- **Graceful Degradation**: System remains functional when optional services fail (e.g., AI, casting)
-- **Error Recovery**: Automatic retry with exponential backoff for transient failures
-- **Logging**: Structured logging with appropriate levels; errors include context for debugging
-- **Monitoring**: Key metrics (playback health, service status) logged for troubleshooting
-- **Resource Management**: Proper cleanup of file handles, network connections, and memory
-- **Crash Handling**: Automatic service restart; preserve user state where possible
+- **Primary**: Raspberry Pi 5 (8 GB), HDMI 2.0
+- **OS Base**: LibreELEC or Raspberry Pi OS Lite
+- **Extended** (best effort): Desktop builds (Windows/macOS/Linux) for dev/testing only
 
-### 7. Open Source & Community
-- **License Compliance**: All dependencies must be compatible with project license; maintain SBOM
-- **No DRM**: Exclude DRM and proprietary extraction modules; focus on open/free content
-- **Contribution Guidelines**: Clear documentation for setup, development workflow, and PR standards
-- **Reproducible Builds**: Documented build process; deterministic outputs where possible
-- **Attribution**: Proper credit for third-party code, assets, and content sources
+## 4) Architecture Guardrails
 
-### 8. Development Workflow
-- **Small Commits**: Atomic commits with clear messages following conventional commit format
-- **Branch Strategy**: Feature branches from main; fast-forward merges preferred
-- **CI/CD Pipeline**: Automated build, test, lint, and security checks on every push
-- **Quality Gates**: All gates must pass before merge; no "fix it later" exceptions
-- **Documentation Updates**: CHANGELOG.md, ASBUILT.md, and RUNBOOK.md updated with each significant change
-- **Task Tracking**: Use task timing scripts; maintain UTC timestamps for all task events
+- **Frontend**: React + Electron or Kodi Skin UI (choose one per build flavor; avoid split-brain UX)
+- **Backend Services**: FastAPI (Python 3.11) micro-services (USB indexer, media API, AI bridge)
+- **AI**: Ollama (local LLM), Whisper STT, ChromaDB for semantic search
+- **Media/Live TV**: FFmpeg, HLS/DASH parser; user-supplied M3U playlists only
+- **Retro**: RetroArch cores (NES→PS1) with save states, BT controllers
+- **Casting**: mDNS + WebRTC + local pairing; optional phone mic input
+- **Storage**: USB SSD/HDD; optional SMB/NFS network shares
+- **Security**: LAN-only by default; no telemetry; PIN pairing; optional TLS; minimal privileges
 
-## Decision Framework
+## 5) Quality Gates (All Milestones M1–M6)
 
-When making architectural or implementation decisions, prioritize in this order:
-1. **User Experience**: Does this improve usability and delight?
-2. **Performance**: Does this meet our performance budgets?
-3. **Maintainability**: Will this be easy to understand and modify in 6 months?
-4. **Security/Privacy**: Does this protect user data and system integrity?
-5. **Simplicity**: Is this the simplest solution that meets requirements?
+1. **Build/Lint**: ruff + mypy (no new Any), eslint + TS typecheck, unit tests ≥70% line coverage on changed code
+2. **Security**: pip-audit + npm audit (no high/critical); license scan (no forbidden licenses)
+3. **Pack/Boot Smoke**: Image builds; Kodi JSON-RPC ping OK; services start without errors
+4. **Performance**: Index ≤5s/1k items; AI RTT ≤3s; cast setup ≤2s (measured via scripts)
+5. **UX/Behavior**: Keyboard & CEC navigation; sample playback tests pass; accessibility checks (contrast, focus order)
+6. **Docs**: docs/ASBUILT.md updated (delta log), docs/RUNBOOK.md (ops + troubleshooting), CHANGELOG.md (UTC, Keep-a-Changelog)
+
+## 6) Definition of Done (DoD)
+
+A story/PR is done when:
+- Acceptance Criteria met; code + tests + docs included
+- All Quality Gates pass locally and in CI
+- Backward compatibility honored (unless major bump with migration notes)
+- CHANGELOG.md entry present; ASBUILT delta appended (what changed, why)
+- Feature flags or config defaults maintain safe behavior (LAN-only; no telemetry)
+
+## 7) Branching, Reviews, and CI/CD
+
+- **Branching**: main is stable; feature branches use conventional prefixes (feat/, fix/, chore/, docs/, perf/, refactor/)
+- **Commits**: Conventional Commits. PRs squash-merge with meaningful titles
+- **Reviews**: At least 1 human review for non-trivial changes. Security-sensitive changes require 2 approvals
+- **CI**: GitHub Actions gates for build/lint/test/security/license; artifacts: image, deb/zip, SBOM (if available)
+
+## 8) Coding Standards
+
+- **Python**: PEP8 via ruff; type hints enforced by mypy (no new Any); pytest for tests
+- **Node/TS/React**: eslint + tsc --noEmit; vitest or jest for tests; Storybook for UI where helpful
+- **Config**: .env for local only; secrets via OS keyring or GitHub Actions secrets (never commit secrets)
+- **Logging**: Structured logs; no PII; configurable verbosity
+
+## 9) Security & Privacy
+
+- **Principles**: Least privilege; defense in depth; no default remote reachability
+- **Data**: No collection of viewing habits, IDs, or analytics by default. Local preferences stored on device; optional export/import
+- **Network**: TLS optional; verify certificates if enabled; QR pairing uses short-lived tokens
+- **Threats**: MITM on LAN, rogue playlists, malformed media. Validate and sandbox where possible
+
+## 10) Testing Strategy
+
+- **Unit**: ≥70% on changed code; deterministic media/AI stubs
+- **Integration**: Playback pipelines, indexer timing, AI round-trip latency
+- **E2E (smoke)**: First boot, USB index, play sample files, run voice query, cast handshake
+- **Performance**: Automated timers for index/AI/cast; regression thresholds enforced
+
+## 11) Performance Budgets
+
+- **Boot to UI**: ≤15s (Pi 5, clean image, minimal services)
+- **Library index**: ≤5s for 1k items (USB 3.0 SSD)
+- **AI RTT (voice→intent)**: ≤3s local
+- **Cast setup**: ≤2s (same LAN, typical phone)
+
+## 12) Dependencies & Licensing
+
+- **Allow**: MIT/Apache-2/BSD/MPL; GPL okay only when isolated and compatible with distro goals
+- **Deny**: Unknown or restricted licenses; code with DRM circumvention
+- **Scan**: Automated license check in CI; PR blocked on violations
+
+## 13) Documentation Requirements
+
+- **docs/ASBUILT.md** (system as-built + deltas per PR)
+- **docs/RUNBOOK.md** (first boot, operations, troubleshooting, rollback)
+- **CHANGELOG.md** (UTC timestamps; Keep-a-Changelog)
+- **docs/spec/** → SPECIFICATIONS.md, TASKS.md, TASKS.json
+- Each task tracks start_at_utc, end_at_utc, duration_h, status
+
+## 14) Observability & Supportability
+
+- **Metrics**: Minimal local counters (index time, AI RTT, cast time)
+- **Health checks**: /healthz endpoints for services; Kodi JSON-RPC ping
+- **Crash handling**: Safe restart; user-visible error state; no sensitive logs
+
+## 15) UX Principles (10-Foot)
+
+- Readable at distance (min 18–24px base), strong contrast, large focus states
+- Remote/keyboard/CEC first; minimal text entry
+- Clear empty states; progress indicators for indexing/casting/AI
+
+## 16) Accessibility
+
+- Keyboard and remote navigability; high-contrast option; screen-reader hints where applicable
+- Avoid motion sickness; provide reduced motion toggle
+
+## 17) Internationalization (stretch)
+
+- English default; architecture allows locale packs; date/time and number formatting via i18n lib
+
+## 18) Release & Versioning
+
+- **SemVer**: MAJOR.MINOR.PATCH, images tagged with build metadata + UTC
+- **Release notes**: Summaries + upgrade/migration steps
+- **Rollback**: Prior image retained; RUNBOOK includes rollback steps
+
+## 19) Risk Register (MVP)
+
+- **Media/licensing**: Strict filters; user-provided playlists only
+- **Performance regressions**: CI perf gates; bisect scripts
+- **Hardware variance**: Constrain to Pi 5 for MVP; document known issues on other hosts
+
+## 20) Phase Boundaries
+
+- **MVP (M1–M6)**: Everything above except remote access
+- **Phase 2**: WomCast Link (WireGuard + WebRTC) for secure remote control/playback
+- **Phase 3**: Easter eggs & personalization honoring Mathew Wombacker (fun but safe)
 
 ## Enforcement
 
-- Constitution violations flagged in code review
-- CI pipeline enforces measurable standards (lint, test coverage, performance budgets)
-- Regular retrospectives to refine principles based on team experience
-- Constitution updates require team consensus and documentation of rationale
+Any PR that violates this constitution (quality gates, security, licensing, privacy, or scope) must be revised before merge. Exceptions require a clearly documented waiver in the PR, approved by the maintainer.
+
+## Ownership
+
+**Project maintainer**: Gary (WomCast)  
+**Reviewer pool**: Contributors designated in CODEOWNERS
