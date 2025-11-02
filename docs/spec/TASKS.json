@@ -497,10 +497,10 @@
                                                   "Details pane shows metadata",
                                                   "Play action calls media API"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-02T17:05:56.9064186Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {

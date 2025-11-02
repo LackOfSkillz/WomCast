@@ -1,14 +1,14 @@
-import React from 'react';
+import { LibraryView } from './views/Library/LibraryView';
+import './App.css';
 
 export interface AppProps {
   title?: string;
 }
 
-export function App({ title = 'WomCast' }: AppProps): React.JSX.Element {
+export function App(): React.JSX.Element {
   return (
     <div className="app">
-      <h1>{title}</h1>
-      <p>Local-first entertainment OS</p>
+      <LibraryView />
     </div>
   );
 }
