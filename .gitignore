@@ -6,6 +6,8 @@ out/
 dist/
 dist-electron/
 build/
+!build/image/
+!build/scripts/
 *.img
 *.img.gz
 .vscode/*
