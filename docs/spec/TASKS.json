@@ -155,9 +155,9 @@
                                                   "Services can start via uvicorn"
                                               ],
                       "start_at_utc":  "2025-11-02T16:04:55.8562558Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-02T16:07:36.1530925Z",
+                      "duration_h":  0.04,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -182,10 +182,10 @@
                                                   "Keyboard arrows navigate basic grid",
                                                   "CEC input handling scaffold present"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-02T16:07:36.1628097Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {
