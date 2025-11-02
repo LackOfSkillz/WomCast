@@ -14,8 +14,8 @@ Create a local-first entertainment OS for Raspberry Pi 5 (HDMI) that unifies loc
 6. Local AI search & voice (Ollama + Whisper + Chroma)
 7. Retro Gaming (NES→PS1 + save states + BT controllers)
 8. Live TV (user-added M3U/HLS/DASH)
-9. Companion Casting + Phone-Mic Voice Input (no DRM detector)
-10. Polished UI (parallax, 60 fps, ambient mode)
+9. Casting + phone-mic voice input (no DRM detector)
+10. Polished 10-foot UI
 11. Placeholder Task: Easter Eggs & Personalization — details TBD
 
 ## Quality Gates & Definition of Done (REQUIRED)
