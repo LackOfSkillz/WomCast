@@ -75,6 +75,19 @@ export function DetailPane({ mediaId }: DetailPaneProps) {
     (media.resume_position_seconds / (media.duration_seconds || 1)) * 100
   );
 
+  // Parse subtitle tracks
+  let subtitles: Array<{ language: string; format: string }> = [];
+  if (media.subtitle_tracks) {
+    try {
+      subtitles = JSON.parse(media.subtitle_tracks) as Array<{
+        language: string;
+        format: string;
+      }>;
+    } catch {
+      // Ignore JSON parse errors
+    }
+  }
+
   return (
     <div className="detail-pane">
       <div className="detail-pane__header">
@@ -126,6 +139,16 @@ export function DetailPane({ mediaId }: DetailPaneProps) {
               <>
                 <dt>Play Count</dt>
                 <dd>{media.play_count}</dd>
+              </>
+            )}
+            {subtitles.length > 0 && (
+              <>
+                <dt>Subtitles</dt>
+                <dd>
+                  {subtitles
+                    .map((sub) => `${sub.language} (${sub.format})`)
+                    .join(', ')}
+                </dd>
               </>
             )}
           </dl>

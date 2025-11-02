@@ -322,3 +322,84 @@ class KodiClient:
         except Exception as e:
             logger.error(f"Failed to get volume: {e}")
             return 0
+
+    async def get_subtitles(self) -> list[dict]:
+        """Get available subtitle tracks.
+
+        Returns:
+            List of subtitle track dictionaries with 'index', 'language', and 'name' keys
+        """
+        try:
+            players = await self.get_active_players()
+            if not players:
+                return []
+
+            player_id = players[0]["playerid"]
+
+            # Get available subtitles
+            result = await self._call(
+                "Player.GetProperties",
+                {"playerid": player_id, "properties": ["subtitles", "currentsubtitle"]},
+            )
+
+            subtitles = result.get("subtitles", [])
+            current = result.get("currentsubtitle", {})
+
+            # Add current subtitle indicator
+            for _, sub in enumerate(subtitles):
+                sub["current"] = sub.get("index") == current.get("index")
+
+            return subtitles
+        except Exception as e:
+            logger.error(f"Failed to get subtitles: {e}")
+            return []
+
+    async def set_subtitle(self, subtitle_index: int) -> bool:
+        """Set the active subtitle track.
+
+        Args:
+            subtitle_index: Index of the subtitle track to activate
+
+        Returns:
+            True if subtitle set successfully
+        """
+        try:
+            players = await self.get_active_players()
+            if not players:
+                logger.warning("No active players for subtitle selection")
+                return False
+
+            player_id = players[0]["playerid"]
+
+            await self._call(
+                "Player.SetSubtitle",
+                {"playerid": player_id, "subtitle": subtitle_index},
+            )
+            logger.info(f"Set subtitle track to index {subtitle_index}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to set subtitle: {e}")
+            return False
+
+    async def toggle_subtitles(self) -> bool:
+        """Toggle subtitles on/off.
+
+        Returns:
+            True if toggle successful
+        """
+        try:
+            players = await self.get_active_players()
+            if not players:
+                logger.warning("No active players for subtitle toggle")
+                return False
+
+            player_id = players[0]["playerid"]
+
+            await self._call(
+                "Player.SetSubtitle", {"playerid": player_id, "subtitle": "on"}
+            )
+            logger.info("Toggled subtitles")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to toggle subtitles: {e}")
+            return False

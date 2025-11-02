@@ -31,6 +31,7 @@ export default tseslint.config(
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
+      '@typescript-eslint/unified-signatures': 'off', // Disabled due to ESLint bug
     },
   },
 );

@@ -5,6 +5,7 @@ Implements efficient scanning with change detection and progress reporting.
 """
 
 import asyncio
+import json
 import logging
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
@@ -21,6 +22,7 @@ VIDEO_EXTENSIONS = {".mkv", ".mp4", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m
 AUDIO_EXTENSIONS = {".mp3", ".flac", ".wav", ".aac", ".ogg", ".m4a", ".wma", ".opus"}
 PHOTO_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp", ".heic"}
 GAME_EXTENSIONS = {".iso", ".cue", ".bin", ".chd", ".7z", ".zip"}
+SUBTITLE_EXTENSIONS = {".srt", ".vtt", ".ass", ".ssa", ".sub"}
 
 ALL_EXTENSIONS = VIDEO_EXTENSIONS | AUDIO_EXTENSIONS | PHOTO_EXTENSIONS | GAME_EXTENSIONS
 
@@ -79,6 +81,85 @@ async def get_file_hash(file_path: Path, chunk_size: int = 8192) -> str:
     return f"{stat.st_size}:{stat.st_mtime_ns}"
 
 
+def detect_subtitle_files(media_file_path: Path) -> list[dict]:
+    """Detect external subtitle files for a media file.
+
+    Looks for subtitle files with the same base name as the media file,
+    optionally with language codes (e.g., movie.en.srt, movie.srt).
+
+    Args:
+        media_file_path: Path to the media file
+
+    Returns:
+        List of subtitle track dictionaries with 'path', 'language', and 'format' keys
+    """
+    subtitles = []
+    base_name = media_file_path.stem  # filename without extension
+    parent_dir = media_file_path.parent
+
+    # Common language codes
+    lang_codes = {
+        "en",
+        "eng",
+        "english",
+        "es",
+        "spa",
+        "spanish",
+        "fr",
+        "fra",
+        "french",
+        "de",
+        "ger",
+        "german",
+        "it",
+        "ita",
+        "italian",
+        "pt",
+        "por",
+        "portuguese",
+        "ja",
+        "jpn",
+        "japanese",
+        "zh",
+        "chi",
+        "chinese",
+        "ko",
+        "kor",
+        "korean",
+        "ru",
+        "rus",
+        "russian",
+    }
+
+    try:
+        # Look for subtitle files in the same directory
+        for item in parent_dir.iterdir():
+            if item.suffix.lower() in SUBTITLE_EXTENSIONS:
+                # Check if the subtitle file matches the media file
+                if item.stem.startswith(base_name):
+                    # Extract language from filename (e.g., movie.en.srt -> en)
+                    parts = item.stem.split(".")
+                    language = "unknown"
+
+                    if len(parts) > 1:
+                        # Check if last part before extension is a language code
+                        potential_lang = parts[-1].lower()
+                        if potential_lang in lang_codes:
+                            language = potential_lang
+
+                    subtitles.append(
+                        {
+                            "path": str(item),
+                            "language": language,
+                            "format": item.suffix[1:].lower(),  # Remove the dot
+                        }
+                    )
+    except OSError as e:
+        logger.warning(f"Error scanning for subtitles in {parent_dir}: {e}")
+
+    return subtitles
+
+
 async def index_file(
     db: aiosqlite.Connection,
     file_path: Path,
@@ -103,6 +184,13 @@ async def index_file(
         file_hash = await get_file_hash(file_path)
         now = datetime.now(UTC).isoformat()
 
+        # Detect subtitle files for video content
+        subtitle_tracks = []
+        if media_type == "video":
+            subtitle_tracks = detect_subtitle_files(file_path)
+
+        subtitle_tracks_json = json.dumps(subtitle_tracks) if subtitle_tracks else None
+
         # Check if file already exists
         async with db.execute(
             "SELECT id, file_hash FROM media_files WHERE file_path = ?",
@@ -113,10 +201,15 @@ async def index_file(
         if existing:
             existing_id, existing_hash = existing
             if existing_hash == file_hash:
-                # File unchanged, update indexed_at timestamp
+                # File unchanged, update indexed_at timestamp and subtitle tracks
                 await db.execute(
-                    "UPDATE media_files SET indexed_at = ? WHERE id = ?",
-                    (now, existing_id),
+                    """
+                    UPDATE media_files
+                    SET indexed_at = ?,
+                        subtitle_tracks = ?
+                    WHERE id = ?
+                    """,
+                    (now, subtitle_tracks_json, existing_id),
                 )
                 return existing_id
             else:
@@ -127,7 +220,8 @@ async def index_file(
                     SET file_size = ?,
                         file_hash = ?,
                         modified_at = ?,
-                        indexed_at = ?
+                        indexed_at = ?,
+                        subtitle_tracks = ?
                     WHERE id = ?
                     """,
                     (
@@ -135,6 +229,7 @@ async def index_file(
                         file_hash,
                         datetime.fromtimestamp(stat.st_mtime, UTC).isoformat(),
                         now,
+                        subtitle_tracks_json,
                         existing_id,
                     ),
                 )
@@ -145,8 +240,8 @@ async def index_file(
                 """
                 INSERT INTO media_files
                 (file_path, file_name, file_size, media_type, file_hash,
-                 mount_point_id, created_at, modified_at, indexed_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 mount_point_id, created_at, modified_at, indexed_at, subtitle_tracks)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     str(file_path),
@@ -158,6 +253,7 @@ async def index_file(
                     datetime.fromtimestamp(stat.st_ctime, UTC).isoformat(),
                     datetime.fromtimestamp(stat.st_mtime, UTC).isoformat(),
                     now,
+                    subtitle_tracks_json,
                 ),
             )
             return cursor.lastrowid

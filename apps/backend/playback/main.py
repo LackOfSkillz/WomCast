@@ -175,3 +175,53 @@ async def ping_kodi():
     async with KodiClient(kodi_config) as client:
         available = await client.ping()
         return {"available": available}
+
+
+@app.get("/v1/subtitles", response_model=list[dict])
+async def get_subtitles():
+    """Get available subtitle tracks for current media.
+
+    Returns:
+        List of subtitle tracks with index, language, and current status
+    """
+    async with KodiClient(kodi_config) as client:
+        return await client.get_subtitles()
+
+
+class SubtitleRequest(BaseModel):
+    """Request model for subtitle selection"""
+
+    subtitle_index: int
+
+
+@app.post("/v1/subtitles", response_model=dict[str, bool])
+async def set_subtitle(request: SubtitleRequest):
+    """Set active subtitle track.
+
+    Args:
+        request: Subtitle request with track index
+
+    Returns:
+        Success status
+    """
+    async with KodiClient(kodi_config) as client:
+        success = await client.set_subtitle(request.subtitle_index)
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to set subtitle")
+
+        return {"success": True}
+
+
+@app.post("/v1/subtitles/toggle", response_model=dict[str, bool])
+async def toggle_subtitles():
+    """Toggle subtitles on/off.
+
+    Returns:
+        Success status
+    """
+    async with KodiClient(kodi_config) as client:
+        success = await client.toggle_subtitles()
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to toggle subtitles")
+
+        return {"success": True}

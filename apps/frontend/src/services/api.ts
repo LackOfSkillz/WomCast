@@ -19,6 +19,7 @@ export interface MediaFile {
   indexed_at: string;
   play_count: number;
   resume_position_seconds: number;
+  subtitle_tracks?: string; // JSON string of subtitle track array
 }
 
 export interface VideoMetadata {
@@ -177,6 +178,75 @@ export async function seekPlayback(positionSeconds: number): Promise<void> {
 
   if (!response.ok) {
     throw new Error(`Failed to seek: ${response.statusText}`);
+  }
+}
+
+/**
+ * Update resume position for a media file
+ */
+export async function updateResumePosition(
+  mediaId: number,
+  positionSeconds: number
+): Promise<void> {
+  const response = await fetch(`${METADATA_API_URL}/v1/media/${mediaId.toString()}/resume`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ position_seconds: positionSeconds }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to update resume position: ${response.statusText}`);
+  }
+}
+
+export interface SubtitleTrack {
+  index: number;
+  language: string;
+  name: string;
+  current: boolean;
+}
+
+/**
+ * Get available subtitle tracks
+ */
+export async function getSubtitles(): Promise<SubtitleTrack[]> {
+  const response = await fetch(`${PLAYBACK_API_URL}/v1/subtitles`);
+  if (!response.ok) {
+    throw new Error(`Failed to get subtitles: ${response.statusText}`);
+  }
+
+  return response.json() as Promise<SubtitleTrack[]>;
+}
+
+/**
+ * Set active subtitle track
+ */
+export async function setSubtitle(subtitleIndex: number): Promise<void> {
+  const response = await fetch(`${PLAYBACK_API_URL}/v1/subtitles`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ subtitle_index: subtitleIndex }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to set subtitle: ${response.statusText}`);
+  }
+}
+
+/**
+ * Toggle subtitles on/off
+ */
+export async function toggleSubtitles(): Promise<void> {
+  const response = await fetch(`${PLAYBACK_API_URL}/v1/subtitles/toggle`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to toggle subtitles: ${response.statusText}`);
   }
 }
 
