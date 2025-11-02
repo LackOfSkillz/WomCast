@@ -2,7 +2,7 @@
   "meta": {
     "project": "WomCast",
     "version": "0.1.0",
-    "generated_at_utc": "2025-11-02T15:12:50.0330076Z",
+    "generated_at_utc": "2025-11-02T16:30:00.0000000Z",
     "project_started_at_utc": "2025-11-02T14:14:59.7965416Z"
   },
   "tasks": [
@@ -145,7 +145,8 @@
       "acceptance_criteria": [
         "Produces bootable .img.gz with Hello TV",
         "First-boot script expands FS and runs self-check",
-        "Systemd units for services present"
+        "Systemd units for services present",
+        "Includes Kodi JSON-RPC ping script and libcec enablement when Kodi path is used"
       ],
       "start_at_utc": null,
       "end_at_utc": null,
@@ -175,6 +176,88 @@
       "notes": ""
     },
     {
+      "id": "M1.9",
+      "title": "CODEOWNERS + Conventional Commits + PR templates",
+      "owner": "AI-Agent",
+      "estimate_d": 0.25,
+      "tags": ["ops", "docs"],
+      "milestone": "M1",
+      "parallelizable": true,
+      "dependencies": ["M1.1"],
+      "files": [".github/CODEOWNERS", ".github/pull_request_template.md", ".github/ISSUE_TEMPLATE/"],
+      "acceptance_criteria": [
+        ".github/ PR/issue templates present",
+        "CODEOWNERS enforces reviews",
+        "Conventional Commit check documented"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M1.10",
+      "title": "Logging/observability scaffold",
+      "owner": "AI-Agent",
+      "estimate_d": 0.5,
+      "tags": ["backend", "ops"],
+      "milestone": "M1",
+      "parallelizable": true,
+      "dependencies": ["M1.5"],
+      "files": ["apps/backend/common/logging.py", "apps/backend/common/metrics.py"],
+      "acceptance_criteria": [
+        "Structured logs (no PII), level via env",
+        "/healthz + /version implemented in all services"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M1.11",
+      "title": "License policy & scanners configuration",
+      "owner": "AI-Agent",
+      "estimate_d": 0.5,
+      "tags": ["security", "ops"],
+      "milestone": "M1",
+      "parallelizable": false,
+      "dependencies": ["M1.4"],
+      "files": ["docs/LICENSE_POLICY.md", ".github/workflows/license-check.yml"],
+      "acceptance_criteria": [
+        "pip-licenses and Node license checker configured",
+        "denylist documented",
+        "CI fails on violations"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M1.12",
+      "title": "VS Code launch configs & dev scripts",
+      "owner": "AI-Agent",
+      "estimate_d": 0.25,
+      "tags": ["ops"],
+      "milestone": "M1",
+      "parallelizable": true,
+      "dependencies": ["M1.5", "M1.6"],
+      "files": [".vscode/launch.json", "scripts/dev/lint-all.ps1", "scripts/dev/start-dev.ps1"],
+      "acceptance_criteria": [
+        "One-click launch for Electron + FastAPI services",
+        "scripts/dev/lint-all.ps1 added"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
       "id": "M2.1",
       "title": "udev automount rules for USB3",
       "owner": "AI-Agent",
@@ -186,7 +269,8 @@
       "files": ["build/scripts/udev/"],
       "acceptance_criteria": [
         "Drive mounts under /media/usb* reliably",
-        "Systemd triggers indexer scan on mount"
+        "Systemd triggers indexer scan on mount",
+        "Mount permissions verified; indexing excludes system dirs"
       ],
       "start_at_utc": null,
       "end_at_utc": null,
@@ -344,6 +428,86 @@
       "notes": ""
     },
     {
+      "id": "M2.9",
+      "title": "Network shares (SMB/NFS) mounting option",
+      "owner": "AI-Agent",
+      "estimate_d": 0.75,
+      "tags": ["backend", "ops"],
+      "milestone": "M2",
+      "parallelizable": true,
+      "dependencies": ["M2.1"],
+      "files": ["apps/backend/storage/network.py", "build/scripts/mount-shares.sh"],
+      "acceptance_criteria": [
+        "Optional SMB/NFS mounts via settings",
+        "excluded from auto-index unless enabled"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M2.10",
+      "title": "DB corruption & backup strategy",
+      "owner": "AI-Agent",
+      "estimate_d": 0.5,
+      "tags": ["backend", "security"],
+      "milestone": "M2",
+      "parallelizable": true,
+      "dependencies": ["M2.2"],
+      "files": ["apps/backend/indexer/db/backup.py", "scripts/cron/backup-db.sh"],
+      "acceptance_criteria": [
+        "SQLite WAL mode + PRAGMA",
+        "nightly backup and restore script validated"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M2.11",
+      "title": "Artwork/metadata legal filters",
+      "owner": "AI-Agent",
+      "estimate_d": 0.25,
+      "tags": ["backend", "security"],
+      "milestone": "M2",
+      "parallelizable": true,
+      "dependencies": ["M2.3"],
+      "files": ["apps/backend/indexer/metadata.py"],
+      "acceptance_criteria": [
+        "Fetchers use allowed sources",
+        "opt-out toggle",
+        "cache sanitization routine"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M2.12",
+      "title": "Settings persistence service",
+      "owner": "AI-Agent",
+      "estimate_d": 0.5,
+      "tags": ["backend", "ui"],
+      "milestone": "M2",
+      "parallelizable": true,
+      "dependencies": ["M2.2"],
+      "files": ["apps/backend/common/settings.py"],
+      "acceptance_criteria": [
+        "GET/PUT /v1/settings with persisted keys (models, shares, privacy flags, theme)"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
       "id": "M3.1",
       "title": "Connector: Internet Archive",
       "owner": "AI-Agent",
@@ -461,7 +625,8 @@
       "acceptance_criteria": [
         "Service advertises on LAN via mDNS",
         "POST /v1/session returns {session_id, pin}",
-        "WebSocket signaling established"
+        "WebSocket signaling established",
+        "mDNS TXT includes device name and version"
       ],
       "start_at_utc": null,
       "end_at_utc": null,
@@ -503,7 +668,8 @@
       "acceptance_criteria": [
         "POST /v1/voice/stt returns transcript",
         "p50 latency ≤1.2s",
-        "Small model used by default"
+        "Small model used by default",
+        "Quantized model option; p50/p95 latency recorded to local metrics"
       ],
       "start_at_utc": null,
       "end_at_utc": null,
@@ -567,6 +733,107 @@
         "ASBUILT + RUNBOOK sections complete",
         "CHANGELOG updated with 0.3.0 entries",
         "Troubleshooting for connectors and voice"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M3.12",
+      "title": "STUN/TURN config (LAN-first, TURN optional)",
+      "owner": "AI-Agent",
+      "estimate_d": 0.5,
+      "tags": ["backend", "ops"],
+      "milestone": "M3",
+      "parallelizable": true,
+      "dependencies": ["M3.6"],
+      "files": ["apps/backend/cast/stun_turn.py"],
+      "acceptance_criteria": [
+        "Defaults to no TURN on LAN",
+        "TURN fields validated",
+        "Phase-2 note documented"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M3.13",
+      "title": "QR pairing + mobile PWA deep link",
+      "owner": "AI-Agent",
+      "estimate_d": 0.5,
+      "tags": ["ui", "ops"],
+      "milestone": "M3",
+      "parallelizable": true,
+      "dependencies": ["M3.6"],
+      "files": ["apps/frontend/src/components/QRPairing/"],
+      "acceptance_criteria": [
+        "On-screen QR encodes womcast.local + {session_id,pin}",
+        "opens PWA"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M3.14",
+      "title": "Connector failure fallbacks & rate limits",
+      "owner": "AI-Agent",
+      "estimate_d": 0.5,
+      "tags": ["backend", "security"],
+      "milestone": "M3",
+      "parallelizable": true,
+      "dependencies": ["M3.1", "M3.2", "M3.3"],
+      "files": ["apps/backend/connectors/common/retry.py"],
+      "acceptance_criteria": [
+        "Backoff/retry",
+        "user messaging",
+        "per-host rate-limit to avoid bans"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M3.15",
+      "title": "Live TV EPG-lite (optional)",
+      "owner": "AI-Agent",
+      "estimate_d": 0.75,
+      "tags": ["backend", "ui"],
+      "milestone": "M3",
+      "parallelizable": true,
+      "dependencies": ["M3.4", "M3.5"],
+      "files": ["apps/backend/livetv/epg.py", "apps/frontend/src/views/LiveTV/EPG.tsx"],
+      "acceptance_criteria": [
+        "Now/Next derived from M3U hints or simple EPG URL when provided"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M3.16",
+      "title": "Subtitle font pack & fallback rules",
+      "owner": "AI-Agent",
+      "estimate_d": 0.25,
+      "tags": ["ui"],
+      "milestone": "M3",
+      "parallelizable": true,
+      "dependencies": ["M2.6"],
+      "files": ["apps/frontend/assets/fonts/", "apps/frontend/src/components/Player/subtitles.ts"],
+      "acceptance_criteria": [
+        "Bundled legible fonts",
+        "language fallback tested"
       ],
       "start_at_utc": null,
       "end_at_utc": null,
@@ -704,6 +971,46 @@
       "notes": ""
     },
     {
+      "id": "M4.7",
+      "title": "Legal notices & provider terms acknowledgment",
+      "owner": "AI-Agent",
+      "estimate_d": 0.25,
+      "tags": ["ui", "docs", "security"],
+      "milestone": "M4",
+      "parallelizable": true,
+      "dependencies": ["M4.1"],
+      "files": ["apps/frontend/src/views/Legal/", "docs/LEGAL.md"],
+      "acceptance_criteria": [
+        "First-use terms summary shown",
+        "acknowledgment stored in settings"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M4.8",
+      "title": "Privacy controls (data purge/export)",
+      "owner": "AI-Agent",
+      "estimate_d": 0.75,
+      "tags": ["ui", "backend", "security"],
+      "milestone": "M4",
+      "parallelizable": false,
+      "dependencies": ["M4.4", "M2.12"],
+      "files": ["apps/frontend/src/views/Settings/Privacy.tsx", "apps/backend/common/privacy.py"],
+      "acceptance_criteria": [
+        "Buttons to purge voice history, embeddings, recents",
+        "local export to file"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
       "id": "M5.1",
       "title": "Ollama model mgmt + intent API",
       "owner": "AI-Agent",
@@ -781,7 +1088,8 @@
         "Mobile browser on LAN can access PWA",
         "Navigate, play/pause controls work",
         "Push-to-talk voice button functional",
-        "PWA installable"
+        "PWA installable",
+        "mDNS discovery; show QR to open PWA on mobile"
       ],
       "start_at_utc": null,
       "end_at_utc": null,
@@ -804,6 +1112,69 @@
         "ASBUILT deltas complete",
         "CHANGELOG tagged 0.9.0-rc",
         "Sample M3U and media files documented"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M5.6",
+      "title": "Model download/space management",
+      "owner": "AI-Agent",
+      "estimate_d": 0.75,
+      "tags": ["ai", "ops"],
+      "milestone": "M5",
+      "parallelizable": true,
+      "dependencies": ["M5.1"],
+      "files": ["apps/frontend/src/views/Settings/Models.tsx", "apps/backend/ai/models.py"],
+      "acceptance_criteria": [
+        "UI shows model sizes",
+        "free-space check",
+        "cancelable downloads",
+        "failure UX"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M5.7",
+      "title": "PWA service worker + offline cache",
+      "owner": "AI-Agent",
+      "estimate_d": 0.5,
+      "tags": ["ui", "ops"],
+      "milestone": "M5",
+      "parallelizable": true,
+      "dependencies": ["M5.4"],
+      "files": ["apps/frontend/pwa/service-worker.ts"],
+      "acceptance_criteria": [
+        "Controls cached",
+        "reconnect handling",
+        "versioned cache busting"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M5.8",
+      "title": "Demo content pack + fake M3U generator",
+      "owner": "AI-Agent",
+      "estimate_d": 0.25,
+      "tags": ["ops", "perf"],
+      "milestone": "M5",
+      "parallelizable": true,
+      "dependencies": ["M3.4", "M2.3"],
+      "files": ["scripts/dev/generate-demo-content.ps1", "build/demo/sample.m3u"],
+      "acceptance_criteria": [
+        "Script generates 1k stub entries + safe streams",
+        "used in CI perf smoke"
       ],
       "start_at_utc": null,
       "end_at_utc": null,
@@ -912,6 +1283,66 @@
         "Hidden triggers wired (content TBD)",
         "Disabled by default",
         "Documentation for future implementation"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M6.6",
+      "title": "Bluetooth controller pairing UI + profiles",
+      "owner": "AI-Agent",
+      "estimate_d": 0.75,
+      "tags": ["retro", "ui", "ops"],
+      "milestone": "M6",
+      "parallelizable": true,
+      "dependencies": ["M6.1"],
+      "files": ["apps/frontend/src/views/Settings/Controllers.tsx", "apps/backend/retro/bluetooth.py"],
+      "acceptance_criteria": [
+        "Pairing flow in Settings",
+        "per-controller map save/restore"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M6.7",
+      "title": "First-boot wizard",
+      "owner": "AI-Agent",
+      "estimate_d": 0.75,
+      "tags": ["ui", "ops"],
+      "milestone": "M6",
+      "parallelizable": false,
+      "dependencies": ["M5.3", "M2.12"],
+      "files": ["apps/frontend/src/views/Setup/", "build/scripts/first-boot.sh"],
+      "acceptance_criteria": [
+        "Setup PIN, optional network shares, optional model download",
+        "skippable"
+      ],
+      "start_at_utc": null,
+      "end_at_utc": null,
+      "duration_h": null,
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "M6.8",
+      "title": "Image signing/checksums + release validation",
+      "owner": "AI-Agent",
+      "estimate_d": 0.25,
+      "tags": ["security", "ops"],
+      "milestone": "M6",
+      "parallelizable": true,
+      "dependencies": ["M6.4"],
+      "files": ["build/scripts/sign-image.ps1", "docs/RUNBOOK.md"],
+      "acceptance_criteria": [
+        "SHA256 + signature published",
+        "verify script in RUNBOOK"
       ],
       "start_at_utc": null,
       "end_at_utc": null,
