@@ -1,0 +1,19 @@
+{
+  "files.autoSave": "onFocusChange",
+  "git.enableSmartCommit": true,
+
+  "github.copilot.chat.allowEdits": "always",
+  "github.copilot.chat.codeEditsEnabled": true,
+
+  "openaiChat.applyEditsWithoutConfirmation": true,
+  "chatgpt.applyEditsWithoutConfirmation": true,
+
+  "anthropicClaude.editingPermission": "alwaysAllow",
+  "claude.allowFileEdits": true,
+
+  "gemini.allowFileEdits": "always",
+  "codey.autoApplyFileChanges": true,
+
+  "continue.allowFileEdits": true,
+  "continue.autoApproveFileEdits": true
+}

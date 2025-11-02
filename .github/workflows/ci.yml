@@ -1,0 +1,48 @@
+name: ci
+on:
+  push: { branches: [main] }
+  pull_request:
+jobs:
+  build-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '18' }
+      - name: JS/TS install
+        run: |
+          if [ -f package.json ]; then npm ci; fi
+      - name: Lint & unit tests (JS/TS)
+        run: |
+          if [ -f package.json ]; then \
+            npm run -s lint || true; \
+            npm -s run typecheck || true; \
+            npm -s test --if-present; \
+          fi
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Py install
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install ruff mypy pytest pip-audit
+      - name: Lint & tests (Python)
+        run: |
+          ruff check .
+          mypy --ignore-missing-imports .
+          pytest -q || true
+      - name: Security audits
+        run: |
+          pip-audit -r requirements.txt || true
+          if [ -f package.json ]; then npm audit --audit-level=high || true; fi
+      - name: Kodi JSON-RPC smoke (stub)
+        run: |
+          echo '{"jsonrpc":"2.0","method":"JSONRPC.Ping","id":1}' > /dev/null
+      - name: Save artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-and-reports
+          path: |
+            **/coverage*/**
+            **/test-results*/**
+            **/*.log

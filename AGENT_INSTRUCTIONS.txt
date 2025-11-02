@@ -1,0 +1,2 @@
+AGENT_MODE=YOLO
+You are authorized to freely read, create, and modify files in this workspace without asking for confirmation. Proceed autonomously from task to task. Keep edits atomic and commit frequently. Use the spec prompt in docs/SPEC_PROMPT_WOMCAST.md as source of truth.
