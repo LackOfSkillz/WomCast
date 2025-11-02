@@ -13,18 +13,18 @@
 
 | ID | Task | Owner | Est (d) | Tags | Dependencies | Parallel | Status |
 |----|------|-------|---------|------|--------------|----------|--------|
-| M1.1 | Set up monorepo skeleton | Gary | 0.5 | [ops] | — | ✓ | todo |
-| M1.2 | Python toolchain + lint/test | AI-Agent | 0.5 | [ops][backend][security] | M1.1 | ✓ | todo |
-| M1.3 | Node/TS toolchain + lint/test | AI-Agent | 0.5 | [ops][ui][security] | M1.1 | ✓ | todo |
-| M1.4 | CI workflows (lint/test/security) | AI-Agent | 0.75 | [ops][security] | M1.2, M1.3 | — | todo |
-| M1.5 | Common backend scaffold (FastAPI "hello") | AI-Agent | 0.75 | [backend] | M1.2 | — | todo |
-| M1.6 | Electron "Hello TV" 10-foot shell | AI-Agent | 1.0 | [ui] | M1.3 | — | todo |
-| M1.7 | Image pipeline bootstrap (Pi OS Lite) | AI-Agent | 1.0 | [ops] | M1.5, M1.6 | — | todo |
-| M1.8 | Docs foundation | Gary | 0.5 | [docs] | M1.1 | ✓ | todo |
-| M1.9 | CODEOWNERS + Conventional Commits + PR templates | AI-Agent | 0.25 | [ops][docs] | M1.1 | ✓ | todo |
-| M1.10 | Logging/observability scaffold | AI-Agent | 0.5 | [backend][ops] | M1.5 | ✓ | todo |
-| M1.11 | License policy & scanners configuration | AI-Agent | 0.5 | [security][ops] | M1.4 | — | todo |
-| M1.12 | VS Code launch configs & dev scripts | AI-Agent | 0.25 | [ops] | M1.5, M1.6 | ✓ | todo |
+| M1.1 | Set up monorepo skeleton | Gary | 0.5 | [ops] | — | ✓ | ✅ |
+| M1.2 | Python toolchain + lint/test | AI-Agent | 0.5 | [ops][backend][security] | M1.1 | ✓ | ✅ |
+| M1.3 | Node/TS toolchain + lint/test | AI-Agent | 0.5 | [ops][ui][security] | M1.1 | ✓ | ✅ |
+| M1.4 | CI workflows (lint/test/security) | AI-Agent | 0.75 | [ops][security] | M1.2, M1.3 | — | ✅ |
+| M1.5 | Common backend scaffold (FastAPI "hello") | AI-Agent | 0.75 | [backend] | M1.2 | — | ✅ |
+| M1.6 | Electron "Hello TV" 10-foot shell | AI-Agent | 1.0 | [ui] | M1.3 | — | ✅ |
+| M1.7 | Image pipeline bootstrap (Pi OS Lite) | AI-Agent | 1.0 | [ops] | M1.5, M1.6 | — | ✅ |
+| M1.8 | Docs foundation | Gary | 0.5 | [docs] | M1.1 | ✓ | ✅ |
+| M1.9 | CODEOWNERS + Conventional Commits + PR templates | AI-Agent | 0.25 | [ops][docs] | M1.1 | ✓ | ✅ |
+| M1.10 | Logging/observability scaffold | AI-Agent | 0.5 | [backend][ops] | M1.5 | ✓ | ✅ |
+| M1.11 | License policy & scanners configuration | AI-Agent | 0.5 | [security][ops] | M1.4 | — | ✅ |
+| M1.12 | VS Code launch configs & dev scripts | AI-Agent | 0.25 | [ops] | M1.5, M1.6 | ✓ | ✅ |
 
 **M1 Acceptance Criteria**:
 - All services return 200 on /healthz
@@ -43,9 +43,9 @@
 
 | ID | Task | Owner | Est (d) | Tags | Dependencies | Parallel | Status |
 |----|------|-------|---------|------|--------------|----------|--------|
-| M2.1 | udev automount rules for USB3 | AI-Agent | 0.75 | [backend][ops] | M1.7 | — | todo |
-| M2.2 | Library DB schema & migrations (SQLite) | AI-Agent | 1.0 | [backend] | M1.5 | ✓ | todo |
-| M2.3 | Indexer: scan + metadata extract + artwork cache | AI-Agent | 1.5 | [backend][perf] | M2.2 | — | todo |
+| M2.1 | udev automount rules for USB3 | AI-Agent | 0.75 | [backend][ops] | M1.7 | — | ✅ |
+| M2.2 | Library DB schema & migrations (SQLite) | AI-Agent | 1.0 | [backend] | M1.5 | ✓ | ✅ |
+| M2.3 | Indexer: scan + metadata extract + artwork cache | AI-Agent | 1.5 | [backend][perf] | M2.2 | — | ✅ |
 | M2.4 | Media service: Kodi JSON-RPC bridge | AI-Agent | 1.25 | [backend] | M1.5 | ✓ | todo |
 | M2.5 | Frontend: Library browse/detail screens | AI-Agent | 1.0 | [ui] | M2.3, M2.4 | — | todo |
 | M2.6 | Subtitles + resume position | AI-Agent | 0.75 | [backend][ui] | M2.4, M2.5 | — | todo |
