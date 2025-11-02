@@ -26,3 +26,4 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 - Updated M3.8 AC: Added quantized model option and p50/p95 latency recording
 - Updated M5.4 AC: Added mDNS discovery and QR to open PWA on mobile
 - Total estimated days increased from ~35-40 to ~43-49 days (with parallel optimization)
+- [2025-11-02T15:47:58.2099807Z] Completed tasks: M1.1
