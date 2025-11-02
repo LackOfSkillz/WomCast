@@ -65,9 +65,9 @@
                                                   "CI can run Python lint/test"
                                               ],
                       "start_at_utc":  "2025-11-02T15:47:58.2287173Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-02T15:59:00.5986505Z",
+                      "duration_h":  0.18,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -96,10 +96,10 @@
                                                   "Unit test scaffold passing",
                                                   "CI can run Node lint/test"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-02T15:59:00.6571387Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {
