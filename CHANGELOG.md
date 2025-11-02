@@ -2,6 +2,70 @@
 
 All notable changes to this project will be documented here. Timestamps are UTC (ISO-8601).
 
+## [Unreleased] - 2025-11-02T21:00:00.0000000Z
+
+### M2.5: Frontend Library browse/detail screens (Complete) - 2025-11-02
+**Duration**: ~1.5 hours (estimated 1.0 day)  
+**Task**: M2.5 - Frontend: Library browse/detail screens
+
+#### Implementation
+- **LibraryView**: Main container component with grid + detail pane layout
+  - State management for media list, filtered results, selected item
+  - Loading and error states with user-friendly messages
+  - Responsive layout: grid on left, detail pane on right
+- **MediaGrid**: Responsive grid layout component
+  - Auto-filling grid (280px minimum column width, 1fr max)
+  - Keyboard navigation support for 10-foot UI
+  - Empty state handling
+- **MediaCard**: Individual media item card
+  - Artwork placeholder with media type icons (🎬🎵📷🎮)
+  - Duration display overlay
+  - Resume position progress bar
+  - File size and play count metadata
+  - Hover and focus states
+- **DetailPane**: Full metadata display panel
+  - File information section (type, size, duration, resolution, play count)
+  - Video metadata section (title, year, genre, director, rating, plot)
+  - Audio metadata section (title, artist, album, year, genre, track number)
+  - Resume position indicator with progress bar
+  - Play button that calls playback API
+- **SearchBox**: Text search with debouncing
+  - 300ms debounce for performance
+  - Live filtering as user types
+  - Clear button (X) for quick reset
+  - Keyboard shortcuts (Escape to clear)
+  - Fallback to client-side filtering if API fails
+
+#### API Service Layer
+- **api.ts**: Complete backend integration (211 lines)
+  - Type-safe interfaces: MediaFile, VideoMetadata, AudioMetadata, PlayerState, MediaItem
+  - Metadata API: getMediaFiles(), searchMediaFiles(), getMediaItem()
+  - Playback API: playMedia(), stopPlayback(), pausePlayback(), seekPlayback(), getPlayerState()
+  - Utility functions: formatDuration() (HH:MM:SS), formatFileSize() (KB/MB/GB/TB)
+  - Environment configuration: VITE_METADATA_API_URL, VITE_PLAYBACK_API_URL
+  - Proper error handling and async/await patterns
+
+#### Styling
+- **10-foot UI optimized**: Large text, clear focus states, keyboard navigation
+- **Dark theme**: #1a1a1a background, #2a2a2a cards, #0078d4 accents
+- **Responsive design**: Grid layout adapts to screen size (1200px, 768px breakpoints)
+- **Total CSS**: 5 component stylesheets (441 lines total)
+
+#### Testing
+- LibraryView.test.tsx: Basic component rendering tests with API mocking
+- App.test.tsx: Updated for new LibraryView integration
+- All tests passing with vitest
+
+#### Quality Assurance
+- ✅ ESLint: Clean (strict TypeScript rules, no-floating-promises, restrict-template-expressions)
+- ✅ TypeScript: Clean (strict mode, noUncheckedIndexedAccess, proper types)
+- ✅ Pre-commit hooks: All checks passed
+- ✅ Acceptance Criteria:
+  - Grid view with artwork ✓ (placeholder icons, responsive grid)
+  - Search box (text) ✓ (debounced, live filtering)
+  - Details pane shows metadata ✓ (file info, video/audio metadata, resume position)
+  - Play action calls media API ✓ (playMedia() from api.ts)
+
 ## [Unreleased] - 2025-11-02T16:30:00.0000000Z
 
 ### M1: System Setup (Complete) - 2025-11-02
@@ -87,3 +151,5 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 - [2025-11-02T16:39:13.7690108Z] Completed tasks: M2.3
 
 - [2025-11-02T17:04:40.1006481Z] Completed tasks: M2.4
+
+- [2025-11-02T17:20:57.2021151Z] Completed tasks: M2.5
