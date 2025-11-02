@@ -256,6 +256,7 @@ WomCast/
 │       ├── livetv/        # M3U/HLS/DASH ingest, EPG parsing
 │       ├── cast/          # WebRTC signaling, mDNS advertisement
 │       └── ai/            # Whisper STT, Ollama intent, ChromaDB search
+├── packages/              # Shared libraries (optional)
 ├── build/
 │   ├── image/             # Pi OS customization scripts
 │   └── scripts/           # Build automation, image signing
@@ -273,9 +274,13 @@ WomCast/
 ├── .speckit/
 │   ├── constitution.md    # Project governance (20 sections)
 │   └── plan.md            # Technical implementation plan (7 ADRs)
+├── .editorconfig          # Consistent code formatting across editors
 ├── CHANGELOG.md           # Keep-a-Changelog format with UTC timestamps
 └── README.md              # This file
 ```
+
+**Current Status**: Monorepo skeleton established. Active development on M1 (System Setup).
+
 
 ### Key Design Decisions (ADRs)
 

@@ -19,5 +19,8 @@
     "url": "https://github.com/LackOfSkillz/WomCast/issues"
   },
   "homepage": "https://github.com/LackOfSkillz/WomCast#readme",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "specify-cli": "^0.1.0"
+  }
 }
