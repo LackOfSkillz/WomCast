@@ -8,3 +8,4 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 
 ### Changed
 - Simplified .gitignore format (removed section comments)
+- Refined MVP deliverables wording in spec prompt
