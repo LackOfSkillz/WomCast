@@ -2,13 +2,13 @@
 
 All notable changes to this project will be documented here. Timestamps are UTC (ISO-8601).
 
-## [0.2.0] - 2025-11-02 (In Progress)
+## [0.2.0] - 2025-11-02 (Complete!)
 
-**Milestone**: M2 Storage & Library (10/12 tasks complete)  
-**Focus**: Media library indexing, Kodi playback integration, frontend UI, network storage, database backup, metadata fetching
+**Milestone**: M2 Storage & Library (12/12 tasks complete) ✅  
+**Focus**: Media library indexing, Kodi playback integration, frontend UI, network storage, database backup, metadata fetching, settings persistence
 
 ### Summary
-Version 0.2.0 introduces the core media library functionality with automatic USB media indexing, Kodi-based playback, comprehensive subtitle support, network share mounting (SMB/NFS), database backup strategy with WAL mode, and legal metadata/artwork fetching. This release implements the foundation for local and network media management with external subtitle detection, resume position tracking, performance monitoring tools, automated database backups, and opt-in metadata enrichment from TMDB and MusicBrainz.
+Version 0.2.0 introduces the core media library functionality with automatic USB media indexing, Kodi-based playback, comprehensive subtitle support, network share mounting (SMB/NFS), database backup strategy with WAL mode, legal metadata/artwork fetching, and user settings persistence. This release implements the foundation for local and network media management with external subtitle detection, resume position tracking, performance monitoring tools, automated database backups, opt-in metadata enrichment from TMDB and MusicBrainz, and comprehensive user preference management.
 
 ### Breaking Changes
 - None (backward compatible with 0.1.0)
@@ -24,6 +24,7 @@ Version 0.2.0 introduces the core media library functionality with automatic USB
 - **Network Shares**: SMB/NFS mounting with REST API management
 - **Database Backup**: Automated backup strategy with WAL mode and integrity checking
 - **Metadata Fetchers**: Legal artwork/metadata from TMDB and MusicBrainz with opt-out controls
+- **Settings Persistence**: User preferences and application configuration management
 
 ### API Additions
 - `GET /v1/media` - List all media files (with optional type filter)
@@ -36,6 +37,109 @@ Version 0.2.0 introduces the core media library functionality with automatic USB
 - `GET /v1/metadata/config` - Get metadata fetcher configuration
 - `PUT /v1/metadata/config` - Update metadata settings (opt-in/opt-out)
 - `POST /v1/metadata/cache/sanitize` - Remove old cached metadata
+- `GET /v1/settings` - Get all user settings
+- `GET /v1/settings/{key}` - Get specific setting value
+- `PUT /v1/settings/{key}` - Update single setting
+- `PUT /v1/settings` - Update multiple settings
+- `DELETE /v1/settings/{key}` - Delete setting (revert to default)
+- `POST /v1/settings/reset` - Reset all settings to defaults
+
+---
+
+## [Unreleased] - 2025-11-02T23:50:00.0000000Z
+
+### M2.12: Settings persistence service (Complete) - 2025-11-02
+**Duration**: ~0.5 days (estimated 0.5 days)  
+**Task**: M2.12 - Settings: User preferences and application configuration
+
+#### Implementation
+- **SettingsManager** (apps/backend/common/settings.py)
+  - JSON-based settings persistence
+  - Default settings organized by category:
+    - Voice/AI models: voice_model, llm_model, stt_enabled, tts_enabled
+    - Network shares: auto_mount_shares, auto_index_shares
+    - Privacy: analytics_enabled, crash_reporting, metadata_fetching_enabled
+    - UI preferences: theme (dark/light/auto), language, grid_size, autoplay, subtitles
+    - Playback: default_volume (80), resume_threshold (60s), skip_intro (0s)
+    - Performance: cache_size_mb (500), thumbnail_quality (medium)
+    - Notifications: show_notifications, notification_duration_ms (3000)
+  - Operations:
+    - `load()`: Load settings from JSON file (merges with defaults)
+    - `save()`: Persist settings to JSON file
+    - `get(key, default)`: Get single setting with optional default
+    - `get_all()`: Get all settings
+    - `set(key, value)`: Update single setting
+    - `update(updates)`: Update multiple settings at once
+    - `reset()`: Reset all settings to defaults
+    - `delete(key)`: Delete setting (reverts to default if exists)
+  - Global singleton: `get_settings_manager(path)`
+- **Settings REST API Service** (apps/backend/settings/main.py)
+  - `GET /v1/settings`: Get all settings
+  - `GET /v1/settings/{key}`: Get specific setting (404 if not found)
+  - `PUT /v1/settings/{key}`: Update single setting
+  - `PUT /v1/settings`: Update multiple settings
+  - `DELETE /v1/settings/{key}`: Delete setting (revert to default)
+  - `POST /v1/settings/reset`: Reset all to defaults
+  - Startup: Automatically loads settings on service start
+  - Port: 3006 (configurable)
+- **CLI Interface** for testing and administration
+  - `python -m common.settings init`: Initialize with defaults
+  - `python -m common.settings get <key>`: Get a setting value
+  - `python -m common.settings set <key> <value>`: Set a setting
+  - `python -m common.settings list`: List all settings (formatted JSON)
+  - `python -m common.settings reset`: Reset all settings to defaults
+- **Settings File**: `apps/backend/settings.json`
+  - Human-readable JSON format
+  - Automatically created with defaults on first run
+  - Merges with defaults when new settings added (backward compatible)
+
+#### Default Settings
+```json
+{
+  "voice_model": "vosk-model-small-en-us-0.15",
+  "llm_model": null,
+  "stt_enabled": true,
+  "tts_enabled": true,
+  "auto_mount_shares": true,
+  "auto_index_shares": true,
+  "analytics_enabled": false,
+  "crash_reporting": false,
+  "metadata_fetching_enabled": true,
+  "theme": "dark",
+  "language": "en",
+  "grid_size": "medium",
+  "autoplay_next": true,
+  "show_subtitles": true,
+  "default_volume": 80,
+  "resume_threshold_seconds": 60,
+  "skip_intro_seconds": 0,
+  "cache_size_mb": 500,
+  "thumbnail_quality": "medium",
+  "show_notifications": true,
+  "notification_duration_ms": 3000
+}
+```
+
+#### Testing Results
+- ✅ CLI commands validated: init, list, get, set
+- ✅ Settings persistence verified (JSON file I/O)
+- ✅ Default merging works (new settings added automatically)
+- ✅ All linting checks passed (ruff, mypy)
+- ✅ Singleton pattern prevents duplicate instances
+- ✅ Error handling for file I/O failures
+
+#### Features
+- **Async-first design**: All operations use async/await
+- **Atomic file writes**: Settings safely persisted
+- **Error recovery**: Defaults used if file corrupted
+- **Logging**: All operations logged for debugging
+- **Type safety**: Full type hints for all methods
+- **Extensible**: Easy to add new settings categories
+
+#### Acceptance Criteria Met
+- ✅ **AC1**: GET/PUT /v1/settings with persisted keys
+- ✅ **AC2**: Models, shares, privacy flags, theme all supported
+- ✅ **AC3**: JSON persistence with default merging
 
 ---
 
