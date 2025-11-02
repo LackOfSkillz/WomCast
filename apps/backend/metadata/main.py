@@ -3,12 +3,19 @@ Metadata Service - Handles media library indexing and metadata management.
 """
 
 
+from pathlib import Path
+
 import aiosqlite
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from common.database import get_db_path, init_database
 from common.health import create_health_router
+from metadata.fetchers import (
+    load_config,
+    sanitize_cache,
+    save_config,
+)
 
 __version__ = "0.1.0"
 
@@ -20,11 +27,25 @@ app = FastAPI(
 
 create_health_router(app, "metadata-service", __version__)
 
+# Configuration file path
+CONFIG_PATH = Path(__file__).parent / "metadata_config.json"
+
 
 class ResumePositionUpdate(BaseModel):
     """Request model for updating resume position"""
 
     position_seconds: float
+
+
+class MetadataConfigUpdate(BaseModel):
+    """Request model for updating metadata configuration"""
+
+    enabled: bool | None = None
+    tmdb_api_key: str | None = None
+    use_tmdb: bool | None = None
+    use_musicbrainz: bool | None = None
+    cache_ttl_days: int | None = None
+    rate_limit_enabled: bool | None = None
 
 
 @app.on_event("startup")
@@ -221,3 +242,83 @@ async def update_resume_position(
             raise HTTPException(status_code=500, detail="Failed to retrieve updated record")
         columns = [desc[0] for desc in cursor.description]
         return dict(zip(columns, row, strict=True))
+
+
+@app.get("/v1/metadata/config")
+async def get_metadata_config() -> dict:
+    """
+    Get current metadata fetcher configuration.
+
+    Returns:
+        Configuration settings
+    """
+    config = await load_config(CONFIG_PATH)
+    return {
+        "enabled": config.enabled,
+        "tmdb_api_key": "***" if config.tmdb_api_key else None,
+        "use_tmdb": config.use_tmdb,
+        "use_musicbrainz": config.use_musicbrainz,
+        "cache_ttl_days": config.cache_ttl_days,
+        "rate_limit_enabled": config.rate_limit_enabled,
+    }
+
+
+@app.put("/v1/metadata/config")
+async def update_metadata_config(update: MetadataConfigUpdate) -> dict:
+    """
+    Update metadata fetcher configuration.
+
+    Args:
+        update: Configuration update data
+
+    Returns:
+        Updated configuration settings
+    """
+    config = await load_config(CONFIG_PATH)
+
+    # Update only provided fields
+    if update.enabled is not None:
+        config.enabled = update.enabled
+    if update.tmdb_api_key is not None:
+        config.tmdb_api_key = update.tmdb_api_key
+    if update.use_tmdb is not None:
+        config.use_tmdb = update.use_tmdb
+    if update.use_musicbrainz is not None:
+        config.use_musicbrainz = update.use_musicbrainz
+    if update.cache_ttl_days is not None:
+        config.cache_ttl_days = update.cache_ttl_days
+    if update.rate_limit_enabled is not None:
+        config.rate_limit_enabled = update.rate_limit_enabled
+
+    # Save updated configuration
+    await save_config(config, CONFIG_PATH)
+
+    return {
+        "enabled": config.enabled,
+        "tmdb_api_key": "***" if config.tmdb_api_key else None,
+        "use_tmdb": config.use_tmdb,
+        "use_musicbrainz": config.use_musicbrainz,
+        "cache_ttl_days": config.cache_ttl_days,
+        "rate_limit_enabled": config.rate_limit_enabled,
+    }
+
+
+@app.post("/v1/metadata/cache/sanitize")
+async def sanitize_metadata_cache(older_than_days: int = 90) -> dict:
+    """
+    Remove old metadata cache entries.
+
+    Args:
+        older_than_days: Remove entries older than this many days (default: 90)
+
+    Returns:
+        Statistics about sanitization
+    """
+    db_path = get_db_path()
+    videos_cleared, audio_cleared = await sanitize_cache(db_path, older_than_days)
+
+    return {
+        "videos_cleared": videos_cleared,
+        "audio_cleared": audio_cleared,
+        "older_than_days": older_than_days,
+    }

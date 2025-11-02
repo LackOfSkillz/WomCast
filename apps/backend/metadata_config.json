@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "tmdb_api_key": null,
+  "use_tmdb": true,
+  "use_musicbrainz": true,
+  "cache_ttl_days": 90,
+  "rate_limit_enabled": true
+}
