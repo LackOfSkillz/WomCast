@@ -46,6 +46,85 @@ Version 0.2.0 introduces the core media library functionality with automatic USB
 
 ---
 
+## [Unreleased] - 2025-11-03T00:30:00.0000000Z
+
+### M3.3: Frontend Connectors hub UI (Complete) - 2025-11-03
+**Task**: M3.3 - Frontend: Connectors hub UI  
+**Owner**: AI-Agent  
+**Estimate**: 0.75 days  
+**Actual**: 2.0 hours  
+**Tags**: ui, connectors, 10-foot  
+**Dependencies**: M3.1 (Internet Archive), M3.2 (PBS, NASA, Jamendo)
+
+**Implementation**:
+- ConnectorsView React component with two-view system (selector and browser)
+- 4 connector cards with distinct branding: Internet Archive (📚 blue), PBS (📺 dark blue), NASA (🚀 red-orange), Jamendo (🎵 orange)
+- Item browsing grids with thumbnails, titles, descriptions, durations, artist names, live badges
+- Full backend API integration: `/v1/connectors/{connector}/...` endpoints
+- Kodi bridge playback: POST to `/v1/playback/play` with stream URL
+- Navigation: Tab switching between Library and Connectors views
+- Error handling: Loading states, error messages with retry buttons, empty states
+- Accessibility: ARIA labels, keyboard focus indicators, semantic HTML
+- Responsive design: Mobile breakpoints (768px), flexible grids
+- 10-foot UI optimized: Large text, clear hover/focus states, color-coded borders
+
+**Files Created**:
+- `apps/frontend/src/views/Connectors/ConnectorsView.tsx` (301 lines)
+  - State management: useState for selectedConnector, items, loading, error
+  - Functions: loadConnectorContent(), handlePlay(), getDetailsEndpoint()
+  - Interfaces: Connector (id, name, description, icon, color), ConnectorItem (id, title, thumbnail_url, stream_url, etc.)
+- `apps/frontend/src/views/Connectors/ConnectorsView.css` (338 lines)
+  - Connector cards: Gradient backgrounds, hover effects, color-coded borders
+  - Item cards: Thumbnails, metadata display, play buttons
+  - Loading/error/empty states with animations
+  - Spinner animation with keyframes
+
+**Files Updated**:
+- `apps/frontend/src/App.tsx` - Added navigation bar with Library and Connectors tabs
+  - View state management with useState ('library' | 'connectors')
+  - Active tab highlighting
+  - Conditional rendering based on currentView
+- `apps/frontend/src/App.css` - Navigation bar styles
+  - Flexbox layout for app structure
+  - Nav button hover/active states
+  - Backdrop filter blur effect
+
+**API Endpoints Used**:
+- Internet Archive: `/v1/connectors/internet-archive/collections`, `/search`, `/items/{id}`
+- PBS: `/v1/connectors/pbs/featured`, `/search`, `/items/{id}`
+- NASA: `/v1/connectors/nasa/live`, `/search`, `/items/{id}`
+- Jamendo: `/v1/connectors/jamendo/popular`, `/search`, `/tracks/{id}`
+- Playback: `/v1/playback/play` (POST with stream_url and title)
+
+**TypeScript Compliance**:
+- Strict mode enabled with all linting checks passing
+- No `any` types in production code
+- Explicit type casts for API responses: `(await response.json()) as { ... }`
+- Proper void expression handling in useEffect: `void loadConnectorContent()`
+- Template literal type safety with `String()` cast
+
+**UI Features**:
+- Connector cards: Icon, name, description, color-coded accents
+- Item grids: Thumbnail images, titles, descriptions, durations, metadata
+- Empty states: "No items found" messages
+- Error states: Error messages with "Retry" buttons
+- Loading states: Spinner animation with "Loading..." text
+- Back navigation: "← Back to Connectors" button
+- Play buttons: "▶ Play" on hover over items
+
+**Testing Results**:
+- ✅ ESLint: 0 errors, 0 warnings
+- ✅ TypeScript: tsc --noEmit passed, no type errors
+- ✅ All pre-commit hooks passed (ruff, mypy, eslint, tsc)
+- ✅ Commit successful: e5c3f44 "feat(M3.3): Add Connectors hub UI"
+
+**Acceptance Criteria**:
+✓ Cards for each source (4 connector cards with distinct icons and colors)  
+✓ Browse lists per connector (item grids with thumbnails and metadata)  
+✓ Play action works (handlePlay() integrates with Kodi bridge)
+
+---
+
 ## [Unreleased] - 2025-11-03T00:15:00.0000000Z
 
 ### M3.2: PBS, NASA TV, and Jamendo connectors (Complete) - 2025-11-03
