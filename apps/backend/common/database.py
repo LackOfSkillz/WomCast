@@ -230,8 +230,15 @@ INSERT OR IGNORE INTO schema_metadata (key, value) VALUES ('created_at', datetim
 
 
 async def init_database(db_path: Path) -> None:
-    """Initialize database with schema."""
+    """Initialize database with schema and enable WAL mode."""
     async with aiosqlite.connect(db_path) as db:
+        # Enable WAL mode for better concurrency and crash recovery
+        await db.execute("PRAGMA journal_mode=WAL")
+        await db.execute("PRAGMA wal_autocheckpoint=1000")
+        await db.execute("PRAGMA auto_vacuum=FULL")
+        await db.execute("PRAGMA synchronous=NORMAL")
+        await db.execute("PRAGMA foreign_keys=ON")
+
         await db.executescript(SCHEMA_SQL)
         await db.commit()
 

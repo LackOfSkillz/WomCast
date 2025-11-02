@@ -619,9 +619,9 @@
                                                   "excluded from auto-index unless enabled"
                                               ],
                       "start_at_utc":  "2025-11-02T18:32:07.5036983Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-02T18:34:56.0415483Z",
+                      "duration_h":  0.05,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -646,10 +646,10 @@
                                                   "SQLite WAL mode + PRAGMA",
                                                   "nightly backup and restore script validated"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-02T18:35:24.5500611Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {

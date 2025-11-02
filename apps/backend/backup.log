@@ -1,0 +1,4 @@
+[2025-11-02 13:39:51] === Starting database backup ===
+[2025-11-02 13:39:51] Database: C:\Dev\WomCast\apps\backend\womcast.db
+[2025-11-02 13:39:51] Backup directory: C:\Dev\WomCast\apps\backend\backups
+[2025-11-02 13:39:51] Creating backup...
