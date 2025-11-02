@@ -1,0 +1,23 @@
+{
+  "voice_model": "vosk-model-small-en-us-0.15",
+  "llm_model": null,
+  "stt_enabled": true,
+  "tts_enabled": true,
+  "auto_mount_shares": true,
+  "auto_index_shares": true,
+  "analytics_enabled": false,
+  "crash_reporting": false,
+  "metadata_fetching_enabled": true,
+  "theme": "light",
+  "language": "en",
+  "grid_size": "medium",
+  "autoplay_next": true,
+  "show_subtitles": true,
+  "default_volume": 80,
+  "resume_threshold_seconds": 60,
+  "skip_intro_seconds": 0,
+  "cache_size_mb": 500,
+  "thumbnail_quality": "medium",
+  "show_notifications": true,
+  "notification_duration_ms": 3000
+}

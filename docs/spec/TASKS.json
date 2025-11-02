@@ -675,9 +675,9 @@
                                                   "cache sanitization routine"
                                               ],
                       "start_at_utc":  "2025-11-02T18:43:05.1981192Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-02T18:50:25.3998687Z",
+                      "duration_h":  0.12,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -700,10 +700,10 @@
                       "acceptance_criteria":  [
                                                   "GET/PUT /v1/settings with persisted keys (models, shares, privacy flags, theme)"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-02T18:50:29.7482979Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {
