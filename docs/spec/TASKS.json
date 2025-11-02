@@ -183,9 +183,9 @@
                                                   "CEC input handling scaffold present"
                                               ],
                       "start_at_utc":  "2025-11-02T16:07:36.1628097Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-02T16:11:44.9514374Z",
+                      "duration_h":  0.07,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -212,10 +212,10 @@
                                                   "Systemd units for services present",
                                                   "Includes Kodi JSON-RPC ping script and libcec enablement when Kodi path is used"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-02T16:11:44.9597760Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {

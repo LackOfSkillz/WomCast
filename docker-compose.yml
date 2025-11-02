@@ -1,0 +1,118 @@
+# WomCast Docker Compose - Development Environment
+version: '3.8'
+
+services:
+  # API Gateway
+  gateway:
+    build:
+      context: .
+      dockerfile: build/image/Dockerfile
+    container_name: womcast-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - SERVICE_NAME=gateway
+      - METADATA_URL=http://metadata:3001
+      - PLAYBACK_URL=http://playback:3002
+      - VOICE_URL=http://voice:3003
+      - SEARCH_URL=http://search:3004
+    networks:
+      - womcast
+    depends_on:
+      - metadata
+      - playback
+      - voice
+      - search
+
+  # Metadata Service
+  metadata:
+    build:
+      context: .
+      dockerfile: build/image/Dockerfile
+    container_name: womcast-metadata
+    ports:
+      - "3001:3001"
+    environment:
+      - SERVICE_NAME=metadata
+      - DB_PATH=/data/metadata.db
+    volumes:
+      - metadata-data:/data
+    networks:
+      - womcast
+    command: ["/opt/womcast/.venv/bin/uvicorn", "metadata.main:app", "--host", "0.0.0.0", "--port", "3001"]
+
+  # Playback Service
+  playback:
+    build:
+      context: .
+      dockerfile: build/image/Dockerfile
+    container_name: womcast-playback
+    ports:
+      - "3002:3002"
+    environment:
+      - SERVICE_NAME=playback
+      - KODI_HOST=localhost
+      - KODI_PORT=8080
+    devices:
+      - /dev/dri:/dev/dri  # GPU access for hardware decode
+    networks:
+      - womcast
+    command: ["/opt/womcast/.venv/bin/uvicorn", "playback.main:app", "--host", "0.0.0.0", "--port", "3002"]
+
+  # Voice Service
+  voice:
+    build:
+      context: .
+      dockerfile: build/image/Dockerfile
+    container_name: womcast-voice
+    ports:
+      - "3003:3003"
+    environment:
+      - SERVICE_NAME=voice
+      - WHISPER_MODEL=small
+    volumes:
+      - voice-models:/data/models
+    networks:
+      - womcast
+    command: ["/opt/womcast/.venv/bin/uvicorn", "voice.main:app", "--host", "0.0.0.0", "--port", "3003"]
+
+  # Search Service
+  search:
+    build:
+      context: .
+      dockerfile: build/image/Dockerfile
+    container_name: womcast-search
+    ports:
+      - "3004:3004"
+    environment:
+      - SERVICE_NAME=search
+      - CHROMA_DB_PATH=/data/chroma
+      - OLLAMA_HOST=http://ollama:11434
+    volumes:
+      - search-data:/data
+    networks:
+      - womcast
+    depends_on:
+      - ollama
+    command: ["/opt/womcast/.venv/bin/uvicorn", "search.main:app", "--host", "0.0.0.0", "--port", "3004"]
+
+  # Ollama (LLM backend for search)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: womcast-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - womcast
+
+networks:
+  womcast:
+    driver: bridge
+
+volumes:
+  metadata-data:
+  voice-models:
+  search-data:
+  ollama-data:
