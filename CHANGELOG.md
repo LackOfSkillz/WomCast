@@ -3,6 +3,36 @@
 All notable changes to this project will be documented here. Timestamps are UTC (ISO-8601).
 
 ## [Unreleased] - 2025-11-02T16:30:00.0000000Z
+
+### M1: System Setup (Complete) - 2025-11-02
+**Duration**: ~1.5 hours (estimated 5.5 days, high parallelization)  
+**Tasks Completed**: M1.1 through M1.12 (12/12)
+
+#### Infrastructure
+- Monorepo structure established (apps/, packages/, build/, docs/spec/)
+- Python 3.11+ toolchain: FastAPI, ruff, mypy, pytest with 100% coverage
+- Node.js 20 toolchain: React 18, TypeScript 5, Vite 6, Vitest, ESLint strict
+- CI/CD: GitHub Actions workflows for lint/test/security (pip-audit, npm audit, license check)
+- Pre-commit hooks: Quality gates enforcing ruff/mypy/eslint/tsc before commit
+
+#### Services
+- Backend: 5 FastAPI microservices (gateway, metadata, playback, voice, search)
+- Shared health module: GET /healthz and GET /version endpoints
+- Frontend: Electron 31 + React 18 app with main/preload/renderer architecture
+- All services pass type checks, linting, and unit tests
+
+#### Deployment
+- Dockerfile: Debian Bookworm base for Pi OS Lite, Python + Node + Kodi + GPU drivers
+- docker-compose.yml: Full stack with 6 services (5 WomCast + Ollama)
+- Environment config: 157-line .env.template with all service settings
+- Documentation: Comprehensive README with setup/deployment/troubleshooting
+
+#### Quality Assurance
+- Test coverage: Python 100% (2 tests), Node.js 100% (3 tests)
+- Static analysis: ruff (E/W/F/I/B/C4/UP), mypy (strict), eslint (TypeScript strict)
+- Security: Automated audits fail on high/critical CVEs
+- ASBUILT.md: Living document with 5 deviations documented
+
 ### Added
 - Project initialized.
 - Comprehensive project constitution with 20 sections covering mission, architecture, quality gates, and governance
@@ -45,3 +75,5 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 - [2025-11-02T16:16:25.8281080Z] Completed tasks: M1.9
 
 - [2025-11-02T16:17:46.6849149Z] Completed tasks: M1.10
+
+- [2025-11-02T16:20:08.2146444Z] Completed tasks: M1.11
