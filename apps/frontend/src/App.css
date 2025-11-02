@@ -4,6 +4,55 @@
   width: 100%;
   height: 100vh;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-nav {
+  background: rgba(20, 20, 30, 0.95);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.nav-button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #aaa;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.nav-button.active {
+  background: linear-gradient(135deg, #4a9eff, #357abd);
+  border-color: #4a9eff;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+}
+
+.nav-button:focus {
+  outline: 2px solid #4a9eff;
+  outline-offset: 2px;
+}
+
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 * {
