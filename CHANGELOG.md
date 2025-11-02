@@ -4,11 +4,11 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 
 ## [0.2.0] - 2025-11-02 (In Progress)
 
-**Milestone**: M2 Storage & Library (9/12 tasks complete)  
-**Focus**: Media library indexing, Kodi playback integration, frontend UI, network storage, database backup
+**Milestone**: M2 Storage & Library (10/12 tasks complete)  
+**Focus**: Media library indexing, Kodi playback integration, frontend UI, network storage, database backup, metadata fetching
 
 ### Summary
-Version 0.2.0 introduces the core media library functionality with automatic USB media indexing, Kodi-based playback, comprehensive subtitle support, network share mounting (SMB/NFS), and database backup strategy with WAL mode. This release implements the foundation for local and network media management with external subtitle detection, resume position tracking, performance monitoring tools, and automated database backups.
+Version 0.2.0 introduces the core media library functionality with automatic USB media indexing, Kodi-based playback, comprehensive subtitle support, network share mounting (SMB/NFS), database backup strategy with WAL mode, and legal metadata/artwork fetching. This release implements the foundation for local and network media management with external subtitle detection, resume position tracking, performance monitoring tools, automated database backups, and opt-in metadata enrichment from TMDB and MusicBrainz.
 
 ### Breaking Changes
 - None (backward compatible with 0.1.0)
@@ -23,6 +23,7 @@ Version 0.2.0 introduces the core media library functionality with automatic USB
 - **Performance Testing**: Cold/warm cache benchmarking scripts
 - **Network Shares**: SMB/NFS mounting with REST API management
 - **Database Backup**: Automated backup strategy with WAL mode and integrity checking
+- **Metadata Fetchers**: Legal artwork/metadata from TMDB and MusicBrainz with opt-out controls
 
 ### API Additions
 - `GET /v1/media` - List all media files (with optional type filter)
@@ -32,6 +33,90 @@ Version 0.2.0 introduces the core media library functionality with automatic USB
 - `GET /v1/subtitles` - Get available subtitle tracks
 - `POST /v1/subtitles` - Set active subtitle track
 - `POST /v1/subtitles/toggle` - Toggle subtitles on/off
+- `GET /v1/metadata/config` - Get metadata fetcher configuration
+- `PUT /v1/metadata/config` - Update metadata settings (opt-in/opt-out)
+- `POST /v1/metadata/cache/sanitize` - Remove old cached metadata
+
+---
+
+## [Unreleased] - 2025-11-02T23:43:00.0000000Z
+
+### M2.11: Legal metadata/artwork fetchers (Complete) - 2025-11-02
+**Duration**: ~0.25 days (estimated 0.25 days)  
+**Task**: M2.11 - Metadata: Legal artwork/metadata fetching with opt-out
+
+#### Implementation
+- **Metadata Fetchers Module** (apps/backend/metadata/fetchers.py)
+  - TMDBFetcher: Movie/TV metadata from The Movie Database API
+    - Rate limiting: 40 requests per 10 seconds (free tier)
+    - Fetches: title, year, genre, director, cast, plot, rating, poster, backdrop
+    - IMDb ID + TMDB ID linking
+    - `search_movie()`: Search by title and optional year
+    - `get_movie_details()`: Fetch full metadata by TMDB ID
+    - `search_and_fetch()`: Combined search + details
+  - MusicBrainzFetcher: Music metadata from open-source encyclopedia
+    - Rate limiting: 1 request per second (respectful crawling)
+    - Fetches: title, artist, album, year, genre, MusicBrainz ID
+    - `search_recording()`: Search by title and optional artist
+    - `get_recording_details()`: Fetch full metadata by MBID
+  - MetadataConfig: Configuration dataclass
+    - `enabled`: Global toggle for all metadata fetching
+    - `tmdb_api_key`: API key from https://www.themoviedb.org/
+    - `use_tmdb`: Enable/disable TMDB specifically
+    - `use_musicbrainz`: Enable/disable MusicBrainz specifically
+    - `cache_ttl_days`: Metadata retention period (default: 90 days)
+    - `rate_limit_enabled`: Respect API rate limits (default: true)
+  - Session Management: Async context manager for HTTP sessions
+  - Error Handling: Network failures, invalid responses, rate limiting
+- **REST API Endpoints** (apps/backend/metadata/main.py)
+  - `GET /v1/metadata/config`: View current configuration
+  - `PUT /v1/metadata/config`: Update settings (partial updates supported)
+  - `POST /v1/metadata/cache/sanitize?older_than_days=90`: Remove old metadata
+- **Cache Sanitization** (`sanitize_cache()`)
+  - Removes poster_url, backdrop_url, plot, director, cast, genre, rating
+  - Configurable age threshold (default: 90 days)
+  - Returns statistics: videos_cleared, audio_cleared
+- **Configuration File** (metadata_config.json)
+  - JSON-based persistent configuration
+  - API key masked in REST responses (shows ***)
+  - Default: All fetchers enabled, 90-day cache TTL
+- **CLI Tools**
+  - `python -m metadata.fetchers search-movie <title> [year]`
+  - `python -m metadata.fetchers search-music <title> [artist]`
+  - `python -m metadata.fetchers sanitize <db_path> [days]`
+- **Documentation** (README_FETCHERS.md)
+  - Setup instructions for TMDB API key
+  - Legal compliance notes (attribution requirements)
+  - Privacy policy (no personal data sent to APIs)
+  - Troubleshooting guide
+  - Opt-out instructions
+
+#### Legal Compliance
+- **TMDB**: Free tier with attribution, non-commercial use allowed
+- **MusicBrainz**: Open-source, no API key required, CC0 license
+- **No Content Downloading**: Only metadata and artwork URLs (not files)
+- **No DRM Bypass**: Strictly metadata enrichment
+- **User Privacy**: No personal data sent to external services
+- **Opt-Out Capable**: Global and per-source toggles
+
+#### Security Features
+- API keys stored in configuration file (not hardcoded)
+- API keys masked in REST API responses
+- Configurable opt-out at multiple levels
+- Rate limiting prevents API abuse
+- Cache sanitization prevents unlimited database growth
+
+#### Testing Results
+- ✅ All linting checks passed (ruff, mypy)
+- ✅ Type annotations complete with proper error handling
+- ✅ Rate limiting validated (sleep between requests)
+- ✅ Session management: Proper context manager lifecycle
+- ✅ Configuration persistence: Save/load from JSON
+
+#### Acceptance Criteria Met
+- ✅ **AC1**: Fetchers use allowed sources (TMDB API, MusicBrainz only)
+- ✅ **AC2**: Opt-out toggle (global `enabled` + per-source `use_tmdb`/`use_musicbrainz`)
+- ✅ **AC3**: Cache sanitization routine (`sanitize_cache()` with configurable TTL)
 
 ---
 
