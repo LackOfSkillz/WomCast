@@ -272,9 +272,9 @@
                                                   "Conventional Commit check documented"
                                               ],
                       "start_at_utc":  "2025-11-02T16:14:02.6100853Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-02T16:16:25.8281080Z",
+                      "duration_h":  0.04,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -299,10 +299,10 @@
                                                   "Structured logs (no PII), level via env",
                                                   "/healthz + /version implemented in all services"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-02T16:16:25.8318422Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {

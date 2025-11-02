@@ -402,14 +402,21 @@ See [docs/RUNBOOK.md](docs/RUNBOOK.md) for detailed build instructions.
 
 **Prerequisites**
 - Node 20 LTS
-- Python 3.11
+- Python 3.11+
 - Git
+- Docker (optional, for containerized deployment)
 
 **Clone and Setup**
 
 ```bash
 git clone https://github.com/LackOfSkillz/WomCast.git
 cd WomCast
+
+# Install git hooks (recommended)
+# Windows:
+.\scripts\install-hooks.ps1
+# Unix/Mac/Linux:
+./scripts/install-hooks.sh
 
 # Install frontend dependencies
 cd apps/frontend
@@ -418,36 +425,98 @@ cd ../..
 
 # Install backend dependencies
 cd apps/backend
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -e .
+python -m venv ../../.venv
+# Windows:
+..\..\venv\Scripts\activate
+# Unix/Mac/Linux:
+source ../../.venv/bin/activate
+
+pip install -e ".[dev]"
 cd ../..
+```
+
+**Environment Configuration**
+
+```bash
+# Copy environment template and customize
+cp .env.template .env
+
+# Edit .env to set:
+# - Media paths (MEDIA_ROOT, VIDEO_PATHS, etc.)
+# - Service ports (default: 3000-3004)
+# - Kodi/mpv settings
+# - Voice/search model preferences
 ```
 
 **Run Development Environment**
 
 ```bash
-# Option 1: VS Code launch configs (F5)
-# Open in VS Code, press F5, select "Launch All"
+# Option 1: Docker Compose (recommended for full-stack testing)
+docker-compose up
 
-# Option 2: Manual launch
-# Terminal 1: Backend services
+# Option 2: Manual launch (for development)
+# Terminal 1: Backend services (run each in separate terminals or use & for background)
 cd apps/backend
-uvicorn indexer.main:app --reload --port 8001 &
-uvicorn media.main:app --reload --port 8002 &
-uvicorn cast.main:app --reload --port 8003 &
-uvicorn ai.main:app --reload --port 8004 &
 
-# Terminal 2: Frontend
+# Gateway (port 3000)
+../../.venv/Scripts/python -m uvicorn gateway.main:app --reload --host 0.0.0.0 --port 3000
+
+# Metadata (port 3001)
+../../.venv/Scripts/python -m uvicorn metadata.main:app --reload --host 0.0.0.0 --port 3001
+
+# Playback (port 3002)
+../../.venv/Scripts/python -m uvicorn playback.main:app --reload --host 0.0.0.0 --port 3002
+
+# Voice (port 3003)
+../../.venv/Scripts/python -m uvicorn voice.main:app --reload --host 0.0.0.0 --port 3003
+
+# Search (port 3004)
+../../.venv/Scripts/python -m uvicorn search.main:app --reload --host 0.0.0.0 --port 3004
+
+# Terminal 2: Frontend (Vite dev server)
 cd apps/frontend
 npm run dev
+
+# Terminal 3: Electron (once Vite is running)
+npm run dev:electron
+```
+
+**Verify Installation**
+
+```bash
+# Check backend health endpoints
+curl http://localhost:3000/healthz  # Gateway
+curl http://localhost:3001/healthz  # Metadata
+curl http://localhost:3002/healthz  # Playback
+curl http://localhost:3003/healthz  # Voice
+curl http://localhost:3004/healthz  # Search
+
+# Check frontend
+# Open http://localhost:5173 in browser (Vite dev server)
+# Or run Electron: npm run dev:electron
 ```
 
 **Run Tests**
 
 ```bash
-# Python
-pytest -q
+# Python (backend)
+cd apps/backend
+../../.venv/Scripts/python -m pytest -v
+../../.venv/Scripts/python -m ruff check .
+../../.venv/Scripts/python -m mypy common/ gateway/ metadata/ playback/ voice/ search/ tests/ --ignore-missing-imports
+
+# Node.js (frontend)
+cd apps/frontend
+npm test          # Vitest unit tests
+npm run lint      # ESLint
+npm run type-check  # TypeScript type checking
+
+# Run all checks (as CI does)
+# Windows:
+cd ..; cd ..
+.venv\Scripts\python -m pytest apps/backend/tests/ -q
+cd apps\frontend; npm run lint; npm test; cd ..\..
+```
 
 # JavaScript
 npm test --silent
@@ -455,6 +524,102 @@ npm test --silent
 # All quality gates
 npm run gate:all  # Runs lint + test for both Python and JS
 ```
+
+### Deployment
+
+**Option 1: Docker (Recommended for Development/Testing)**
+
+```bash
+# Build and run all services
+docker-compose up --build
+
+# Services available at:
+# - Gateway: http://localhost:3000
+# - Metadata: http://localhost:3001
+# - Playback: http://localhost:3002
+# - Voice: http://localhost:3003
+# - Search: http://localhost:3004
+# - Ollama: http://localhost:11434
+
+# Stop services
+docker-compose down
+
+# Clean volumes (reset databases)
+docker-compose down -v
+```
+
+**Option 2: Raspberry Pi 5 Image (Production)**
+
+*Coming in M6.4 (final release)*
+
+```bash
+# Download latest release image
+wget https://github.com/LackOfSkillz/WomCast/releases/latest/womcast-pi5-vX.X.X.img.gz
+
+# Flash to microSD (64GB+ recommended)
+# Windows: Use Raspberry Pi Imager
+# macOS/Linux:
+gunzip womcast-pi5-vX.X.X.img.gz
+sudo dd if=womcast-pi5-vX.X.X.img of=/dev/sdX bs=4M status=progress
+sync
+
+# Boot Pi from microSD
+# Default credentials: womcast / womcast (change on first login)
+# Web UI available at: http://womcast.local:3000
+```
+
+**Option 3: Manual Build for Pi 5**
+
+```bash
+# On Raspberry Pi 5 (8GB) running Pi OS Lite 64-bit
+
+# Install system dependencies
+sudo apt update && sudo apt install -y \
+  python3 python3-pip python3-venv \
+  curl gnupg git \
+  kodi kodi-eventclients-kodi-send \
+  libgles2-mesa pulseaudio pulseaudio-utils \
+  avahi-daemon avahi-utils
+
+# Install Node.js 20 LTS
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Clone and build
+git clone https://github.com/LackOfSkillz/WomCast.git /opt/womcast
+cd /opt/womcast
+
+# Setup Python environment
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e "apps/backend[dev]"
+
+# Setup Node.js
+cd apps/frontend
+npm ci --only=production
+npm run build
+cd ../..
+
+# Configure systemd services (see build/scripts/install-pi5.sh)
+sudo ./build/scripts/install-pi5.sh
+
+# Start services
+sudo systemctl start womcast-gateway
+sudo systemctl start womcast-metadata
+sudo systemctl start womcast-playback
+sudo systemctl start womcast-voice
+sudo systemctl start womcast-search
+```
+
+**Environment Variables**
+
+See `.env.template` for all available configuration options. Key settings:
+
+- `MEDIA_ROOT`: Base path for media scanning (default: `/media`)
+- `KODI_HOST`: Kodi instance for playback (default: `localhost`)
+- `WHISPER_MODEL`: Voice recognition model size (default: `small`)
+- `OLLAMA_MODEL`: LLM for semantic search (default: `llama2`)
+- `ENABLE_GPU_DECODE`: Hardware acceleration on Pi 5 (default: `true`)
 
 ### Project Milestones
 
