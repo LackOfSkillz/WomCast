@@ -386,9 +386,9 @@
                                                   "Mount permissions verified; indexing excludes system dirs"
                                               ],
                       "start_at_utc":  "2025-11-02T16:21:26.4735047Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-02T16:26:23.8444798Z",
+                      "duration_h":  0.08,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -412,10 +412,10 @@
                                                   "Migration script works with Alembic-style approach",
                                                   "DB initializes on first boot"
                                               ],
-                      "start_at_utc":  null,
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "todo",
+                      "start_at_utc":  "2025-11-02T16:26:32.9725881Z",
+                      "end_at_utc":  "2025-11-02T16:34:31.8838402Z",
+                      "duration_h":  0.13,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -441,10 +441,10 @@
                                                   "Artwork cached locally",
                                                   "Metadata extracted (title, album, artist, duration)"
                                               ],
-                      "start_at_utc":  null,
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "todo",
+                      "start_at_utc":  "2025-11-02T16:34:41.4669695Z",
+                      "end_at_utc":  "2025-11-02T16:39:13.7690108Z",
+                      "duration_h":  0.08,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -468,10 +468,10 @@
                                                   "Stop, pause, resume endpoints work",
                                                   "GET /v1/player/state returns current position"
                                               ],
-                      "start_at_utc":  null,
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "todo",
+                      "start_at_utc":  "2025-11-02T17:02:00.6229046Z",
+                      "end_at_utc":  "2025-11-02T17:04:40.1006481Z",
+                      "duration_h":  0.04,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
