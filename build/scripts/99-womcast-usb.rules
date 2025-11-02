@@ -1,0 +1,22 @@
+# WomCast USB Auto-Mount udev Rule
+# Triggers usb-mount.sh on USB drive insertion/removal
+# Install to: /etc/udev/rules.d/99-womcast-usb.rules
+
+# Match USB storage devices (block devices only, exclude system partitions)
+# Trigger on add/remove events for partitions
+
+# Add rule: Trigger on USB partition addition
+ACTION=="add", KERNEL=="sd[a-z][0-9]", SUBSYSTEM=="block", ENV{ID_BUS}=="usb", \
+    ENV{ID_FS_USAGE}=="filesystem", \
+    RUN+="/opt/womcast/build/scripts/usb-mount.sh /dev/%k add"
+
+# Remove rule: Trigger on USB partition removal  
+ACTION=="remove", KERNEL=="sd[a-z][0-9]", SUBSYSTEM=="block", ENV{ID_BUS}=="usb", \
+    RUN+="/opt/womcast/build/scripts/usb-mount.sh /dev/%k remove"
+
+# Exclude system directories (boot, root, etc.)
+# Skip if mounted on /boot or /
+ACTION=="add", KERNEL=="sd[a-z][0-9]", SUBSYSTEM=="block", ENV{DEVNAME}=="/dev/mmcblk*", \
+    GOTO="womcast_usb_end"
+
+LABEL="womcast_usb_end"
