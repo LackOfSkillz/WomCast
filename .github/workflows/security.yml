@@ -1,0 +1,85 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday at midnight UTC
+
+jobs:
+  python-security:
+    name: Python Security Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/backend
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: apps/backend/pyproject.toml
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit
+          pip install -e ".[dev]"
+      
+      - name: Run pip-audit
+        run: pip-audit --desc --skip-editable
+        continue-on-error: false
+
+  node-security:
+    name: Node Security Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/frontend
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/frontend/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run npm audit
+        run: npm audit --audit-level=high
+        continue-on-error: false
+
+  license-check:
+    name: License Compatibility Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install license-checker
+        run: npm install -g license-checker
+      
+      - name: Check Python licenses (placeholder)
+        run: echo "Python license checking - to be implemented with pip-licenses"
+      
+      - name: Check Node licenses
+        working-directory: apps/frontend
+        run: |
+          npm ci
+          license-checker --summary --excludePrivatePackages --onlyAllow "MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;0BSD;Unlicense"
