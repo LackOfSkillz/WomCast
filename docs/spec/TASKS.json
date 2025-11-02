@@ -242,9 +242,9 @@
                                                   "ASBUILT template filled"
                                               ],
                       "start_at_utc":  "2025-11-02T16:13:03.8847919Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-02T16:14:02.6007275Z",
+                      "duration_h":  0.02,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -271,10 +271,10 @@
                                                   "CODEOWNERS enforces reviews",
                                                   "Conventional Commit check documented"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-02T16:14:02.6100853Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {
