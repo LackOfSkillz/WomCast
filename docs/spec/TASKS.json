@@ -213,9 +213,9 @@
                                                   "Includes Kodi JSON-RPC ping script and libcec enablement when Kodi path is used"
                                               ],
                       "start_at_utc":  "2025-11-02T16:11:44.9597760Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-02T16:12:57.1469763Z",
+                      "duration_h":  0.02,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -241,10 +241,10 @@
                                                   "CHANGELOG with 0.1.0-alpha tag",
                                                   "ASBUILT template filled"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-02T16:13:03.8847919Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {
