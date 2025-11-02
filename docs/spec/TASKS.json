@@ -300,9 +300,9 @@
                                                   "/healthz + /version implemented in all services"
                                               ],
                       "start_at_utc":  "2025-11-02T16:16:25.8318422Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-02T16:17:46.6849149Z",
+                      "duration_h":  0.02,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -328,10 +328,10 @@
                                                   "denylist documented",
                                                   "CI fails on violations"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-02T16:17:54.3524653Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {
