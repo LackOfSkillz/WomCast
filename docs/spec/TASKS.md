@@ -46,15 +46,15 @@
 | M2.1 | udev automount rules for USB3 | AI-Agent | 0.75 | [backend][ops] | M1.7 | — | ✅ |
 | M2.2 | Library DB schema & migrations (SQLite) | AI-Agent | 1.0 | [backend] | M1.5 | ✓ | ✅ |
 | M2.3 | Indexer: scan + metadata extract + artwork cache | AI-Agent | 1.5 | [backend][perf] | M2.2 | — | ✅ |
-| M2.4 | Media service: Kodi JSON-RPC bridge | AI-Agent | 1.25 | [backend] | M1.5 | ✓ | todo |
-| M2.5 | Frontend: Library browse/detail screens | AI-Agent | 1.0 | [ui] | M2.3, M2.4 | — | todo |
-| M2.6 | Subtitles + resume position | AI-Agent | 0.75 | [backend][ui] | M2.4, M2.5 | — | todo |
-| M2.7 | Perf script: cold/warm index timers | AI-Agent | 0.25 | [perf][ops] | M2.3 | ✓ | todo |
-| M2.8 | Docs & CHANGELOG updates | Gary | 0.25 | [docs] | M2.* | — | todo |
-| M2.9 | Network shares (SMB/NFS) mounting option | AI-Agent | 0.75 | [backend][ops] | M2.1 | ✓ | todo |
-| M2.10 | DB corruption & backup strategy | AI-Agent | 0.5 | [backend][security] | M2.2 | ✓ | todo |
-| M2.11 | Artwork/metadata legal filters | AI-Agent | 0.25 | [backend][security] | M2.3 | ✓ | todo |
-| M2.12 | Settings persistence service | AI-Agent | 0.5 | [backend][ui] | M2.2 | ✓ | todo |
+| M2.4 | Media service: Kodi JSON-RPC bridge | AI-Agent | 1.25 | [backend] | M1.5 | ✓ | ✅ |
+| M2.5 | Frontend: Library browse/detail screens | AI-Agent | 1.0 | [ui] | M2.3, M2.4 | — | ✅ |
+| M2.6 | Subtitles + resume position | AI-Agent | 0.75 | [backend][ui] | M2.4, M2.5 | — | ✅ |
+| M2.7 | Perf script: cold/warm index timers | AI-Agent | 0.25 | [perf][ops] | M2.3 | ✓ | ✅ |
+| M2.8 | Docs & CHANGELOG updates | Gary | 0.25 | [docs] | M2.* | — | ✅ |
+| M2.9 | Network shares (SMB/NFS) mounting option | AI-Agent | 0.75 | [backend][ops] | M2.1 | ✓ | ✅ |
+| M2.10 | DB corruption & backup strategy | AI-Agent | 0.5 | [backend][security] | M2.2 | ✓ | ✅ |
+| M2.11 | Artwork/metadata legal filters | AI-Agent | 0.25 | [backend][security] | M2.3 | ✓ | ✅ |
+| M2.12 | Settings persistence service | AI-Agent | 0.5 | [backend][ui] | M2.2 | ✓ | ✅ |
 
 **M2 Acceptance Criteria**:
 - USB drive auto-mounts and indexes 1k files ≤5s
