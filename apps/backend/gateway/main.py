@@ -12,6 +12,7 @@ from connectors.internet_archive import main as ia_connector
 from connectors.jamendo import main as jamendo_connector
 from connectors.nasa import main as nasa_connector
 from connectors.pbs import main as pbs_connector
+from livetv import main as livetv
 
 __version__ = "0.1.0"
 
@@ -48,6 +49,9 @@ app.include_router(ia_connector.router)
 app.include_router(pbs_connector.router)
 app.include_router(nasa_connector.router)
 app.include_router(jamendo_connector.router)
+
+# Include live TV router
+app.include_router(livetv.app)
 
 
 @app.get("/")

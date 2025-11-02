@@ -1,0 +1,11 @@
+#EXTM3U
+#EXTINF:-1 tvg-id="bbc1" tvg-name="BBC One" tvg-logo="https://i.imgur.com/BBC1.png" group-title="UK TV" language="en",BBC One
+https://example.com/bbc1/playlist.m3u8
+#EXTINF:-1 tvg-id="bbc2" tvg-name="BBC Two" tvg-logo="https://i.imgur.com/BBC2.png" group-title="UK TV" language="en",BBC Two
+https://example.com/bbc2/playlist.m3u8
+#EXTINF:-1 tvg-id="cnn" tvg-name="CNN International" tvg-logo="https://i.imgur.com/CNN.png" group-title="News" language="en",CNN International
+https://example.com/cnn/manifest.mpd
+#EXTINF:-1 tvg-id="eurosport" tvg-name="Eurosport 1" group-title="Sports",Eurosport 1
+https://example.com/eurosport/stream.m3u8
+#EXTINF:-1 tvg-id="discovery" tvg-name="Discovery Channel" tvg-logo="https://i.imgur.com/Discovery.png" group-title="Documentary",Discovery Channel
+https://example.com/discovery/playlist.m3u8
