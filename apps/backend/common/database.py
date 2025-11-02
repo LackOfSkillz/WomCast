@@ -18,9 +18,10 @@ CREATE TABLE IF NOT EXISTS media_files (
     file_path TEXT NOT NULL UNIQUE,
     file_name TEXT NOT NULL,
     file_size INTEGER NOT NULL,
-    file_hash TEXT,  -- SHA256 hash for deduplication
+    file_hash TEXT,  -- Fast hash for change detection (size:mtime)
     media_type TEXT NOT NULL CHECK(media_type IN ('video', 'audio', 'photo', 'game')),
     mime_type TEXT,
+    mount_point_id INTEGER,  -- NULL for local files, ID for USB files
     duration_seconds INTEGER,  -- For video/audio
     width INTEGER,  -- For video/photo
     height INTEGER,  -- For video/photo
@@ -31,7 +32,8 @@ CREATE TABLE IF NOT EXISTS media_files (
     last_played_at TEXT,
     play_count INTEGER DEFAULT 0,
     resume_position_seconds INTEGER DEFAULT 0,
-    UNIQUE(file_path)
+    UNIQUE(file_path),
+    FOREIGN KEY (mount_point_id) REFERENCES mount_points(id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_media_files_type ON media_files(media_type);
@@ -171,16 +173,19 @@ CREATE TABLE IF NOT EXISTS mount_points (
     filesystem TEXT,
     total_bytes INTEGER,
     used_bytes INTEGER,
-    mounted_at TEXT NOT NULL,
-    last_scanned_at TEXT
+    mounted_at TEXT,
+    last_scanned_at TEXT,
+    is_active INTEGER NOT NULL DEFAULT 1  -- 0=unmounted, 1=active
 );
 
 -- Scan History
 CREATE TABLE IF NOT EXISTS scan_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     mount_point_id INTEGER,
-    scan_started_at TEXT NOT NULL,
-    scan_completed_at TEXT,
+    started_at TEXT NOT NULL,
+    completed_at TEXT,
+    files_scanned INTEGER DEFAULT 0,
+    files_indexed INTEGER DEFAULT 0,
     files_added INTEGER DEFAULT 0,
     files_updated INTEGER DEFAULT 0,
     files_removed INTEGER DEFAULT 0,
@@ -190,7 +195,7 @@ CREATE TABLE IF NOT EXISTS scan_history (
     FOREIGN KEY (mount_point_id) REFERENCES mount_points(id) ON DELETE SET NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_scan_history_started ON scan_history(scan_started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_scan_history_started ON scan_history(started_at DESC);
 
 -- Playlists
 CREATE TABLE IF NOT EXISTS playlists (
