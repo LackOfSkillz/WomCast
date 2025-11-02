@@ -4,23 +4,25 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 
 ## [0.2.0] - 2025-11-02 (In Progress)
 
-**Milestone**: M2 Storage & Library (7/12 tasks complete)  
-**Focus**: Media library indexing, Kodi playback integration, frontend UI, subtitle support
+**Milestone**: M2 Storage & Library (9/12 tasks complete)  
+**Focus**: Media library indexing, Kodi playback integration, frontend UI, network storage, database backup
 
 ### Summary
-Version 0.2.0 introduces the core media library functionality with automatic USB media indexing, Kodi-based playback, comprehensive subtitle support, and a polished frontend UI. This release implements the foundation for local media management with external subtitle detection, resume position tracking, and performance monitoring tools.
+Version 0.2.0 introduces the core media library functionality with automatic USB media indexing, Kodi-based playback, comprehensive subtitle support, network share mounting (SMB/NFS), and database backup strategy with WAL mode. This release implements the foundation for local and network media management with external subtitle detection, resume position tracking, performance monitoring tools, and automated database backups.
 
 ### Breaking Changes
 - None (backward compatible with 0.1.0)
 
 ### New Features
 - **Media Indexer**: Recursive file scanning with metadata extraction
-- **SQLite Database**: 13-table schema for media files, artists, albums, playlists
+- **SQLite Database**: 13-table schema for media files, artists, albums, playlists with WAL mode
 - **Kodi Integration**: Full JSON-RPC wrapper with playback and subtitle control
 - **Frontend Library UI**: Grid view, detail pane, search, responsive layout
 - **Subtitle Support**: External file detection (.srt/.vtt/.ass/.ssa/.sub) with 30+ language codes
 - **Resume Position**: Persistent playback position tracking
 - **Performance Testing**: Cold/warm cache benchmarking scripts
+- **Network Shares**: SMB/NFS mounting with REST API management
+- **Database Backup**: Automated backup strategy with WAL mode and integrity checking
 
 ### API Additions
 - `GET /v1/media` - List all media files (with optional type filter)
@@ -30,6 +32,64 @@ Version 0.2.0 introduces the core media library functionality with automatic USB
 - `GET /v1/subtitles` - Get available subtitle tracks
 - `POST /v1/subtitles` - Set active subtitle track
 - `POST /v1/subtitles/toggle` - Toggle subtitles on/off
+
+---
+
+## [Unreleased] - 2025-11-02T23:39:00.0000000Z
+
+### M2.10: Database backup strategy (Complete) - 2025-11-02
+**Duration**: ~0.5 days (estimated 0.5 days)  
+**Task**: M2.10 - Storage: SQLite backup automation with WAL mode
+
+#### Implementation
+- **DatabaseBackupManager** (apps/backend/common/backup.py)
+  - SQLite WAL mode configuration with optimal PRAGMAs
+  - `enable_wal_mode()`: Sets journal_mode=WAL, wal_autocheckpoint=1000, auto_vacuum=FULL, synchronous=NORMAL, foreign_keys=ON
+  - `create_backup()`: Uses SQLite backup API for consistent snapshots (not file copy)
+  - `restore_backup()`: Includes integrity verification and pre-restore safety backup
+  - `verify_database()`: Runs PRAGMA integrity_check
+  - `cleanup_old_backups()`: Removes old backups, keeps N most recent (default: 7)
+  - `optimize_database()`: VACUUM and ANALYZE operations
+  - CLI interface with 6 commands: enable-wal, backup, restore, verify, cleanup, optimize
+- **Bash Automation Script** (scripts/cron/backup-db.sh)
+  - For cron scheduling on Linux systems
+  - Configurable via environment variables (DB_PATH, BACKUP_DIR, KEEP_BACKUPS, LOG_FILE)
+  - Logging to /var/log/womcast/backup.log
+  - Exit codes for success/failure monitoring
+  - Displays backup size and listing after cleanup
+- **PowerShell Automation Script** (scripts/cron/backup-db.ps1)
+  - For Windows Task Scheduler
+  - Parameters: DbPath, BackupDir, KeepBackups (default: 7)
+  - Formatted table output for backup listing
+  - Timestamped logging with Write-Log function
+  - Calculates total backup size in MB
+- **Database Initialization** (apps/backend/common/database.py)
+  - WAL mode enabled automatically on database creation
+  - Optimal PRAGMA settings for production use
+
+#### WAL Mode Benefits
+- Multiple readers + single writer concurrency (no reader blocking)
+- Better crash recovery with persistent WAL file
+- No database locking during reads
+- Atomic commits with WAL checkpointing
+
+#### Backup Strategy
+- SQLite backup API ensures consistent snapshots during active use
+- Includes .db, -wal, and -shm files in backup
+- Default retention: 7 backups (configurable)
+- Integrity verification before restore prevents corrupted restores
+- Pre-restore safety backup created automatically
+
+#### Testing Results
+- ✅ WAL mode activation: journal_mode=wal confirmed
+- ✅ Backup creation: womcast_backup_YYYYMMDD_HHMMSS.db format
+- ✅ Integrity verification: PRAGMA integrity_check passed
+- ✅ PowerShell automation script: backup/verify/cleanup workflow validated
+- ✅ Linting checks: ruff and mypy passed
+
+#### Acceptance Criteria Met
+- ✅ **AC1**: SQLite WAL mode + PRAGMA configuration implemented
+- ✅ **AC2**: Nightly backup and restore script validated (both bash and PowerShell)
 
 ---
 
