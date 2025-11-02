@@ -15,5 +15,6 @@
   "codey.autoApplyFileChanges": true,
 
   "continue.allowFileEdits": true,
-  "continue.autoApproveFileEdits": true
+"continue.autoApproveFileEdits": true,
+"chat.agent.maxRequests": 250
 }
