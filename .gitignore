@@ -1,20 +1,13 @@
-# Node
 node_modules/
-npm-debug.log*
-pnpm-lock.yaml
-# Python
 .venv/
 __pycache__/
 *.pyc
-# Builds/Images
 out/
 dist/
 build/
 *.img
 *.img.gz
-# Editors
 .vscode/*
 !.vscode/settings.json
-# OS
 .DS_Store
 Thumbs.db
