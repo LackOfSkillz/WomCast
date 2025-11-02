@@ -358,9 +358,9 @@
                                                   "scripts/dev/lint-all.ps1 added"
                                               ],
                       "start_at_utc":  "2025-11-02T16:20:08.2277772Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-02T16:20:52.1814080Z",
+                      "duration_h":  0.01,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -385,10 +385,10 @@
                                                   "Systemd triggers indexer scan on mount",
                                                   "Mount permissions verified; indexing excludes system dirs"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-02T16:21:26.4735047Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {
