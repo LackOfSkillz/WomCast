@@ -46,7 +46,54 @@ Version 0.2.0 introduces the core media library functionality with automatic USB
 
 ---
 
-## [Unreleased] - 2025-11-02T23:50:00.0000000Z
+## [Unreleased] - 2025-11-03T00:00:00.0000000Z
+
+### M3.1: Internet Archive connector (Complete) - 2025-11-03
+**Task**: M3.1 - Connector: Internet Archive  
+**Owner**: AI-Agent  
+**Estimate**: 1.0 days  
+**Actual**: 1.0 hours  
+**Tags**: backend, connectors  
+**Dependencies**: M1.5 (FastAPI scaffold)
+
+**Implementation**:
+- Internet Archive API integration with public domain content access
+- Search and browse functionality for curated collections (Prelinger, NASA, etc.)
+- Item details retrieval with metadata (title, creator, duration, etc.)
+- Direct streaming URL generation for video (MP4, OGV) and audio (MP3) playback
+- Legal content filtering (public domain collections only)
+- Rate limiting (1 request/second) for respectful API usage
+- REST API endpoints: `/v1/connectors/internet-archive/search`, `/items/{id}`, `/collections`
+- Lifespan management for HTTP session pooling
+- CLI interface for testing and debugging
+
+**Files Created**:
+- `apps/backend/connectors/__init__.py` - Package initialization with legal compliance docstring
+- `apps/backend/connectors/internet_archive/__init__.py` - InternetArchiveConnector implementation (408 lines)
+- `apps/backend/connectors/internet_archive/main.py` - REST API endpoints with FastAPI router (151 lines)
+- `apps/backend/gateway/main.py` - Updated with IA connector routing and lifespan hooks
+
+**Testing**:
+- Search functionality verified with real API calls to archive.org
+- Item details and streaming URLs confirmed working (MP4/OGV format detection)
+- Legal filtering validated with Prelinger Archives (public domain)
+- Rate limiting implemented and respected (1 req/sec)
+- Linting passed: ruff check, mypy (all checks green)
+- Unit tests passed: pytest (no regressions)
+
+**Acceptance Criteria**:
+✓ Browse public-domain collections (search with filters, get_collections)  
+✓ Play video/audio items (stream_url generation with format detection)  
+✓ Legal content filtering applied (curated PD collections only)
+
+**API Additions**:
+- `GET /v1/connectors/internet-archive/collections` - Get featured public domain collections
+- `GET /v1/connectors/internet-archive/search?q={query}&mediatype={type}` - Search content
+- `GET /v1/connectors/internet-archive/items/{identifier}` - Get item details with stream URL
+
+---
+
+## [0.2.0] - 2025-11-02 (Complete!)
 
 ### M2.12: Settings persistence service (Complete) - 2025-11-02
 **Duration**: ~0.5 days (estimated 0.5 days)  
@@ -578,3 +625,7 @@ Version 0.2.0 introduces the core media library functionality with automatic USB
 - [2025-11-02T18:43:01.9355462Z] Completed tasks: M2.10
 
 - [2025-11-02T18:50:25.3998687Z] Completed tasks: M2.11
+
+- [2025-11-02T18:54:50.7016070Z] Completed tasks: M2.12
+
+- [2025-11-02T19:02:29.1328294Z] Completed tasks: M3.1

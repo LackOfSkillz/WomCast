@@ -73,7 +73,7 @@
 
 | ID | Task | Owner | Est (d) | Tags | Dependencies | Parallel | Status |
 |----|------|-------|---------|------|--------------|----------|--------|
-| M3.1 | Connector: Internet Archive | AI-Agent | 1.0 | [backend] | M1.5 | ✓ | todo |
+| M3.1 | Connector: Internet Archive | AI-Agent | 1.0 | [backend] | M1.5 | ✓ | ✅ |
 | M3.2 | Connectors: PBS, NASA TV, Jamendo | AI-Agent | 1.5 | [backend] | M3.1 | ✓ | todo |
 | M3.3 | Frontend: Connectors hub UI | AI-Agent | 0.75 | [ui] | M3.1, M3.2 | — | todo |
 | M3.4 | Live TV ingest (M3U/HLS/DASH) | AI-Agent | 1.0 | [backend] | M1.5 | ✓ | todo |
