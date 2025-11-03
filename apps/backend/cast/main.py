@@ -10,6 +10,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
+from cast.audio_relay import AudioRelay
 from cast.mdns import MDNSAdvertiser
 from cast.sessions import SessionManager
 
@@ -73,12 +74,13 @@ class WebRTCSignal(BaseModel):
 # Global session manager
 session_manager: SessionManager | None = None
 mdns_advertiser: MDNSAdvertiser | None = None
+audio_relay: AudioRelay | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialize session manager and mDNS on startup."""
-    global session_manager, mdns_advertiser
+    """Initialize session manager, mDNS, and audio relay on startup."""
+    global session_manager, mdns_advertiser, audio_relay
     session_manager = SessionManager(session_ttl=300, cleanup_interval=60)
     await session_manager.start()
     logger.info("SessionManager started")
@@ -88,9 +90,13 @@ async def lifespan(app: FastAPI):
         service_name="WomCast",
         service_type="_womcast-cast._tcp.local.",
         port=3005,
-        properties={"version": __version__, "features": "webrtc,pairing"},
+        properties={"version": __version__, "features": "webrtc,pairing,audio"},
     )
     mdns_advertiser.start()
+
+    # Initialize audio relay
+    audio_relay = AudioRelay()
+    logger.info("AudioRelay initialized")
 
     yield
 
@@ -261,6 +267,109 @@ async def list_sessions():
     return {"sessions": [s.to_dict() for s in sessions]}
 
 
+@app.post("/v1/cast/audio/start/{session_id}")
+async def start_audio_stream(session_id: str):
+    """
+    Start audio streaming for session.
+
+    Args:
+        session_id: Session ID
+
+    Returns:
+        Success message with stream info
+
+    Raises:
+        HTTPException: 404 if session not found
+        HTTPException: 500 if audio relay not initialized
+    """
+    if audio_relay is None:
+        raise HTTPException(status_code=500, detail="Audio relay not initialized")
+
+    if session_manager is None:
+        raise HTTPException(status_code=500, detail="Session manager not initialized")
+
+    session = session_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found or expired")
+
+    buffer = audio_relay.start_stream(session_id)
+
+    return {
+        "status": "ok",
+        "message": "Audio stream started",
+        "sample_rate": buffer.sample_rate,
+        "channels": buffer.channels,
+        "sample_width": buffer.sample_width,
+    }
+
+
+@app.post("/v1/cast/audio/stop/{session_id}")
+async def stop_audio_stream(session_id: str):
+    """
+    Stop audio streaming and get recorded audio.
+
+    Args:
+        session_id: Session ID
+
+    Returns:
+        Audio stats and WAV data (base64 encoded)
+
+    Raises:
+        HTTPException: 404 if stream not found
+        HTTPException: 500 if audio relay not initialized
+    """
+    if audio_relay is None:
+        raise HTTPException(status_code=500, detail="Audio relay not initialized")
+
+    buffer = audio_relay.stop_stream(session_id)
+    if not buffer:
+        raise HTTPException(status_code=404, detail="Audio stream not found")
+
+    import base64
+
+    wav_bytes = buffer.to_wav_bytes()
+    wav_base64 = base64.b64encode(wav_bytes).decode("utf-8")
+
+    return {
+        "status": "ok",
+        "duration_seconds": buffer.get_duration_seconds(),
+        "audio_data": wav_base64,
+        "format": "wav",
+        "sample_rate": buffer.sample_rate,
+    }
+
+
+@app.get("/v1/cast/audio/{session_id}")
+async def get_audio_info(session_id: str):
+    """
+    Get audio stream information.
+
+    Args:
+        session_id: Session ID
+
+    Returns:
+        Audio stream stats
+
+    Raises:
+        HTTPException: 404 if stream not found
+        HTTPException: 500 if audio relay not initialized
+    """
+    if audio_relay is None:
+        raise HTTPException(status_code=500, detail="Audio relay not initialized")
+
+    buffer = audio_relay.get_buffer(session_id)
+    if not buffer:
+        raise HTTPException(status_code=404, detail="Audio stream not found")
+
+    return {
+        "session_id": session_id,
+        "duration_seconds": buffer.get_duration_seconds(),
+        "sample_rate": buffer.sample_rate,
+        "channels": buffer.channels,
+        "is_active": True,
+    }
+
+
 @app.websocket("/v1/cast/ws/{session_id}")
 async def websocket_endpoint(websocket: WebSocket, session_id: str):
     """
@@ -288,15 +397,41 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
 
     try:
         while True:
-            data = await websocket.receive_json()
+            # Check if message is binary (audio) or text (signaling)
+            try:
+                message = await websocket.receive()
+            except Exception as e:
+                logger.error(f"WebSocket receive error: {e}")
+                break
 
-            # Echo signaling messages (simple relay)
-            # In production, you'd validate and route to specific peers
-            await websocket.send_json(
-                {"type": "ack", "message_type": data.get("type"), "timestamp": "now"}
-            )
+            # Handle binary audio data
+            if "bytes" in message:
+                if audio_relay is None:
+                    logger.error("Audio relay not initialized")
+                    continue
 
-            logger.info(f"Received WebRTC signal: {data.get('type')} for {session_id}")
+                audio_chunk = message["bytes"]
+                try:
+                    await audio_relay.add_audio_chunk(session_id, audio_chunk)
+                    # Send acknowledgment
+                    await websocket.send_json({"type": "audio_ack", "bytes": len(audio_chunk)})
+                except Exception as e:
+                    logger.error(f"Error adding audio chunk: {e}")
+                    await websocket.send_json({"type": "error", "message": str(e)})
+
+            # Handle text signaling messages
+            elif "text" in message:
+                import json
+
+                data = json.loads(message["text"])
+
+                # Echo signaling messages (simple relay)
+                # In production, you'd validate and route to specific peers
+                await websocket.send_json(
+                    {"type": "ack", "message_type": data.get("type"), "timestamp": "now"}
+                )
+
+                logger.info(f"Received WebRTC signal: {data.get('type')} for {session_id}")
 
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected for session {session_id}")

@@ -4,13 +4,52 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 
 ## [Unreleased]
 
-**Milestone**: M3 External Content (11/16 tasks complete)  
-**Focus**: Content connectors, live TV, voice casting, performance optimization, connector resilience, subtitle rendering, EPG support, casting service, documentation
+**Milestone**: M3 External Content (12/16 tasks complete)  
+**Focus**: Content connectors, live TV, voice casting, performance optimization, connector resilience, subtitle rendering, EPG support, casting service, phone-mic relay, documentation
 
 ### Summary
-M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH) with Electronic Program Guide (EPG), casting service with mDNS discovery and WebRTC signaling, connector resilience patterns (circuit breaker, rate limiting, retry), comprehensive subtitle font support, performance benchmarking tools, and updated documentation reflecting all M3 implementations.
+M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH) with Electronic Program Guide (EPG), casting service with mDNS discovery and WebRTC signaling, phone microphone audio relay for voice input, connector resilience patterns (circuit breaker, rate limiting, retry), comprehensive subtitle font support, performance benchmarking tools, and updated documentation reflecting all M3 implementations.
 
 ### New Features
+- **M3.7: Phone-mic relay via WebRTC** (2025-01-XX)
+  - Implemented real-time audio streaming from phone/tablet microphones to backend
+  - **Audio Buffer** (`apps/backend/cast/audio_relay.py`):
+    - `AudioBuffer` class for PCM audio buffering with automatic size limiting
+    - Format: 16kHz mono 16-bit PCM (Whisper STT compatible)
+    - Maximum duration: 30 seconds (configurable)
+    - Duration tracking: Calculates audio duration from byte count and sample rate
+    - Size limiting: Automatically removes oldest chunks when max duration exceeded
+    - WAV export: `save_wav()` to file, `to_wav_bytes()` in-memory conversion
+    - Buffer management: `clear()` for reset, `get_audio_bytes()` for concatenation
+  - **Audio Relay** (`apps/backend/cast/audio_relay.py`):
+    - `AudioRelay` class for managing multiple concurrent audio streams
+    - Session-based: Maps session_id to AudioBuffer instances
+    - Thread-safe: asyncio.Lock per session for safe concurrent chunk appending
+    - Stream lifecycle: `start_stream()`, `stop_stream()` with cleanup
+    - Operations: `add_audio_chunk()` (async-safe), `get_buffer()`, `clear_stream()`
+    - Monitoring: `get_active_streams()` lists all active session IDs
+  - **REST API Endpoints** (`apps/backend/cast/main.py`):
+    - POST `/v1/cast/audio/start/{session_id}` - Start audio stream for session
+    - POST `/v1/cast/audio/stop/{session_id}` - Stop stream and return WAV data
+    - GET `/v1/cast/audio/{session_id}` - Get stream status and buffer info
+  - **WebSocket Audio Handler** (`apps/backend/cast/main.py`):
+    - Updated `/v1/cast/ws/{session_id}` to handle binary audio chunks
+    - Detects message type: JSON (signaling) vs bytes (audio)
+    - Routes binary data to `audio_relay.add_audio_chunk()`
+    - Sends acknowledgments for received audio chunks
+    - Preserves existing WebRTC signaling functionality
+  - **Integration**:
+    - AudioRelay initialized in cast service lifespan
+    - mDNS updated to advertise "audio" feature
+    - Reuses M3.6 session infrastructure for stream identification
+  - **Testing** (`apps/backend/cast/test_audio_relay.py`):
+    - 25 comprehensive tests covering AudioBuffer and AudioRelay
+    - 98% code coverage for audio_relay.py
+    - Tests: buffering, duration tracking, WAV export, size limiting
+    - Tests: multi-session management, concurrent access, async operations
+    - Integration tests: WebSocket binary streaming, cleanup
+  - **Acceptance Criteria**: ✅ AC1: Phone microphone audio streams to backend, ✅ AC2: WebRTC data channel functional, ✅ AC3: Audio buffered for STT processing (16kHz mono 16-bit PCM format with WAV export)
+
 - **M3.6: Casting Service (mDNS + WebRTC)** (2025-01-XX)
   - Implemented casting service for phone/tablet pairing and remote control
   - **Session Management** (`apps/backend/cast/sessions.py`):
@@ -1102,3 +1141,5 @@ ChannelResponse: {id, name, stream_url, logo_url, group_title, language, tvg_id,
 - [2025-11-03T01:40:28.8307262Z] Completed tasks: M3.11
 
 - [2025-11-03T02:12:10.9433120Z] Completed tasks: M3.15
+
+- [2025-11-03T02:16:49.9093232Z] Completed tasks: M3.6
