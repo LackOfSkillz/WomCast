@@ -4,11 +4,11 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 
 ## [Unreleased]
 
-**Milestone**: M3 External Content (15/16 tasks complete)  
-**Focus**: Content connectors, live TV, voice casting, Whisper STT, voice UX, performance optimization, connector resilience, subtitle rendering, EPG support, casting service, phone-mic relay, STUN/TURN config, documentation
+**Milestone**: M3 External Content (16/16 tasks complete) ✅  
+**Focus**: Content connectors, live TV, voice casting, Whisper STT, voice UX, performance optimization, connector resilience, subtitle rendering, EPG support, casting service, phone-mic relay, STUN/TURN config, QR pairing, documentation
 
 ### Summary
-M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH) with Electronic Program Guide (EPG), casting service with mDNS discovery and WebRTC signaling, phone microphone audio relay for voice input, Whisper STT integration for speech-to-text transcription, push-to-talk voice UX with WebRTC audio capture, STUN/TURN ICE server configuration for WebRTC connections, connector resilience patterns (circuit breaker, rate limiting, retry), comprehensive subtitle font support, performance benchmarking tools, and updated documentation reflecting all M3 implementations.
+M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH) with Electronic Program Guide (EPG), casting service with mDNS discovery and WebRTC signaling, phone microphone audio relay for voice input, Whisper STT integration for speech-to-text transcription, push-to-talk voice UX with WebRTC audio capture, STUN/TURN ICE server configuration for WebRTC connections, QR code pairing with PWA deep link support for mobile devices, connector resilience patterns (circuit breaker, rate limiting, retry), comprehensive subtitle font support, performance benchmarking tools, and updated documentation reflecting all M3 implementations.
 
 ### New Features
 - **M3.9: Voice UX (push-to-talk frontend interface)** (2025-01-XX)
@@ -188,6 +188,47 @@ M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jame
     - Production-ready: TURN authentication support for enterprise deployments
     - Cost-optimized: LAN-first minimizes need for TURN infrastructure
   - **Acceptance Criteria**: ✅ AC1: ICE config endpoint returns STUN/TURN servers, ✅ AC2: Default Google STUN servers configured, ✅ AC3: Custom TURN server support via environment variables, ✅ AC4: LAN-first policy for peer-to-peer optimization
+
+- **M3.13: QR pairing + mobile PWA deep link** (2025-01-XX)
+  - Implemented QR code generation and PWA deep link support for seamless mobile pairing
+  - **QR Code Generation** (`apps/backend/cast/main.py`):
+    - GET `/v1/cast/session/{session_id}/qr` endpoint returns PNG QR code image
+    - QR encodes womcast:// deep link URL with session credentials
+    - Deep link format: womcast://pair?session_id=xxx&service=womcast-cast&version=x.x.x
+    - Fallback HTTPS URL for web browsers: https://womcast.local:5173/cast/pair
+    - QRCode library integration (qrcode[pil]) for image generation
+    - Medium error correction, auto-sizing for optimal scanning
+    - StreamingResponse for efficient image delivery
+  - **PWA Manifest** (`apps/frontend/public/manifest.json`):
+    - Protocol handler registration for womcast:// deep links
+    - Manifest enables "Add to Home Screen" on mobile devices
+    - Standalone display mode for native app-like experience
+    - Theme color #7c3aed (purple gradient) matching WomCast branding
+    - Share target configuration for future content sharing features
+  - **Cast View UI** (`apps/frontend/src/views/Cast/CastView.tsx`):
+    - Session creation with "Generate Pairing Code" button
+    - Large 6-digit PIN display for manual entry fallback
+    - QR code image display (300px, white border, rounded corners)
+    - Real-time countdown timer showing session expiration (5 minutes)
+    - "Generate New Code" button to refresh expired sessions
+    - Responsive design: adapts to phone/tablet screens
+    - Error handling: network failures, session creation errors
+    - Loading states: spinner during async operations
+  - **Testing** (`apps/backend/cast/test_qr.py`, `apps/frontend/src/views/Cast/CastView.test.tsx`):
+    - 3 backend tests: QR generation, not found, post-pairing access
+    - 4 frontend tests: initial render, session creation, error handling, countdown timer
+    - 100% coverage on backend QR endpoint
+    - Mock fetch/blob APIs for isolated testing
+  - **HTML Integration** (`apps/frontend/index.html`):
+    - Manifest link: `<link rel="manifest" href="/manifest.json" />`
+    - Theme color meta tag for mobile browser chrome
+    - PWA meta description for app stores
+  - **User Experience**:
+    - Scan-to-pair: Open phone camera → Scan QR → Auto-open PWA → Instant pairing
+    - Manual pairing: Enter 6-digit PIN if camera unavailable
+    - Session expiry: Visual countdown prevents confusion with expired codes
+    - Zero-config: Works immediately without network setup
+  - **Acceptance Criteria**: ✅ AC1: QR code generated for each session, ✅ AC2: womcast:// deep link registered in PWA manifest, ✅ AC3: QR scan opens PWA with pre-filled credentials, ✅ AC4: Manual PIN entry fallback available, ✅ AC5: Session expiry clearly indicated with countdown timer
 
 - **M3.6: Casting Service (mDNS + WebRTC)** (2025-01-XX)
   - Implemented casting service for phone/tablet pairing and remote control
@@ -1286,3 +1327,5 @@ ChannelResponse: {id, name, stream_url, logo_url, group_title, language, tvg_id,
 - [2025-11-03T03:49:47.3301056Z] Completed tasks: M3.7
 
 - [2025-11-03T03:58:35.9300135Z] Completed tasks: M3.8
+
+- [2025-11-03T18:10:47.0768151Z] Completed tasks: M3.12

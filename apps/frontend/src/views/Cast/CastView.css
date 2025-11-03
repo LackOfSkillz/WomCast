@@ -1,0 +1,155 @@
+.cast-view {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.cast-view h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary, #ffffff);
+}
+
+.cast-description {
+  color: var(--text-secondary, #a0a0a0);
+  margin-bottom: 2rem;
+}
+
+.create-session-btn,
+.refresh-btn {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.create-session-btn:hover,
+.refresh-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.create-session-btn:active,
+.refresh-btn:active {
+  transform: translateY(0);
+}
+
+.loading-spinner {
+  color: var(--text-secondary, #a0a0a0);
+  padding: 2rem;
+}
+
+.error-message {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+.session-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pin-display {
+  padding: 1rem;
+}
+
+.pin-display h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary, #ffffff);
+}
+
+.pin-code {
+  font-size: 3rem;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5rem;
+  color: #a855f7;
+  padding: 1rem;
+  background: rgba(168, 85, 247, 0.1);
+  border-radius: 0.5rem;
+  border: 2px solid rgba(168, 85, 247, 0.3);
+  margin: 1rem 0;
+}
+
+.pin-helper {
+  color: var(--text-secondary, #a0a0a0);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.qr-code {
+  max-width: 300px;
+  width: 100%;
+  height: auto;
+  border: 8px solid white;
+  border-radius: 0.5rem;
+  background: white;
+}
+
+.qr-helper {
+  color: var(--text-secondary, #a0a0a0);
+  font-size: 0.875rem;
+}
+
+.session-info {
+  padding: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.875rem;
+}
+
+.expires-timer {
+  color: var(--text-secondary, #a0a0a0);
+  margin-bottom: 0.5rem;
+}
+
+.expires-timer strong {
+  color: #a855f7;
+  font-size: 1.125rem;
+}
+
+.session-id {
+  color: var(--text-secondary, #606060);
+  font-family: monospace;
+  margin-top: 0.5rem;
+}
+
+.refresh-btn {
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .cast-view {
+    padding: 1rem;
+  }
+
+  .pin-code {
+    font-size: 2rem;
+    letter-spacing: 0.25rem;
+  }
+
+  .qr-code {
+    max-width: 250px;
+  }
+}

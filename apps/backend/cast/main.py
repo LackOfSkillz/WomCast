@@ -5,9 +5,12 @@ WebRTC signaling and session management for phone/tablet casting.
 
 import logging
 from contextlib import asynccontextmanager
+from io import BytesIO
 from typing import Any
 
+import qrcode
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from cast.audio_relay import AudioRelay
@@ -284,6 +287,62 @@ async def get_ice_config():
     # For now, return default public STUN servers
     config = get_ice_configuration()
     return {"ice_configuration": config}
+
+
+@app.get("/v1/cast/session/{session_id}/qr")
+async def get_session_qr(session_id: str):
+    """
+    Generate QR code for session pairing.
+
+    Creates a QR code image containing session connection details and deep link
+    for mobile PWA pairing. The QR encodes a womcast:// URL that can be scanned
+    by phones/tablets to auto-open the PWA with pre-filled session credentials.
+
+    Args:
+        session_id: ID of the session to generate QR code for
+
+    Returns:
+        PNG image of QR code as streaming response
+
+    Raises:
+        HTTPException: 404 if session not found or expired
+        HTTPException: 500 if session manager not initialized
+    """
+    if session_manager is None:
+        raise HTTPException(status_code=500, detail="Session manager not initialized")
+
+    session = session_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found or expired")
+
+    # Generate deep link URL for PWA
+    # Format: womcast://pair?session_id=xxx&service=womcast-cast&version=x.x.x
+    # Falls back to https://womcast.local:5173/cast/pair?session_id=xxx for web browsers
+    qr_url = (
+        f"womcast://pair?session_id={session_id}"
+        f"&service=womcast-cast&version={__version__}"
+        f"&fallback=https://womcast.local:5173/cast/pair?session_id={session_id}"
+    )
+
+    # Generate QR code
+    qr = qrcode.QRCode(
+        version=1,  # Auto-size
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(qr_url)
+    qr.make(fit=True)
+
+    # Create image
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    # Convert to bytes
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+
+    return StreamingResponse(buf, media_type="image/png")
 
 
 @app.post("/v1/cast/audio/start/{session_id}")
