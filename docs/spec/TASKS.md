@@ -182,6 +182,43 @@
 
 ---
 
+## Milestone M7 — Live TV Dashboard Integration
+
+**Goal**: Home dashboard Live TV entry points, IPTV-org US channels, custom M3U/M3U8 support, FAST apps launcher  
+**Duration**: 4.5 days
+
+| ID | Task | Owner | Est (d) | Tags | Dependencies | Parallel | Status |
+|----|------|-------|---------|------|--------------|----------|--------|
+| M7.1 | Dashboard Live TV tiles row | AI-Agent | 0.5 | [ui] | M2.5 | ✓ | todo |
+| M7.2 | Data schemas & persistence (sources.json) | AI-Agent | 0.5 | [backend] | M2.2, M2.12 | ✓ | todo |
+| M7.3 | Add M3U/M3U8 modal with disclaimer | AI-Agent | 0.75 | [ui][security] | M7.1 | — | todo |
+| M7.4 | Backend playlist cache & normalization | AI-Agent | 1.0 | [backend] | M3.4, M7.2 | — | todo |
+| M7.5 | US Live TV playlist view (IPTV-org) | AI-Agent | 0.75 | [ui][backend] | M7.4 | — | todo |
+| M7.6 | Custom playlist view & routing | AI-Agent | 0.5 | [ui] | M7.4, M7.5 | — | todo |
+| M7.7 | Favorites toggle & persistence | AI-Agent | 0.5 | [ui][backend] | M7.5, M7.6 | ✓ | todo |
+| M7.8 | FAST Apps launcher tiles (Pluto/Xumo/Tubi/etc) | AI-Agent | 0.5 | [ui] | M7.1 | ✓ | todo |
+| M7.9 | Live TV API endpoints & helpers | AI-Agent | 0.75 | [backend] | M7.4 | ✓ | todo |
+| M7.10 | URL validation & error states | AI-Agent | 0.25 | [ui][backend][security] | M7.3, M7.9 | ✓ | todo |
+| M7.11 | Accessibility (modal focus trap, CEC nav) | AI-Agent | 0.5 | [ui] | M7.3, M7.5 | ✓ | todo |
+| M7.12 | Tests & performance validation | AI-Agent | 0.5 | [backend][ui][perf] | M7.* | — | todo |
+
+**M7 Acceptance Criteria**:
+- Home dashboard shows "Live TV & FAST" row with tiles: US Live TV, Add M3U/M3U8, FAST apps
+- Clicking **US Live TV** opens /live/us with IPTV-org channels list
+- Clicking **Add your own M3U/M3U8** opens modal with disclaimer; adding URL saves to sources.json and navigates to /live/custom/<id>
+- Custom playlists load, normalize, and display channels with categories/search
+- Favorites toggle works and persists to favorites.json
+- FAST app tiles open respective launcher URLs (Pluto, Xumo, Tubi, Plex Live TV, STIRR, Local Now, Samsung TV Plus)
+- Modal meets accessibility requirements: ARIA role=dialog, focus trap, ESC to close, high-contrast focus ring
+- Keyboard/CEC navigation works on all tiles and channel lists
+- URL validator accepts .m3u/.m3u8/https and rejects invalid schemes
+- List scroll maintains 60 fps; async fetching with loading states
+- Disclaimer text clearly states user responsibility for content rights
+- No DRM circumvention, no unlicensed scrapers
+- EPG integration optional (displays Now/Next if guide.xml present)
+
+---
+
 ## CI/Gate Tasks
 
 | ID | Task | Owner | Est (d) | Tags | Status |
@@ -198,7 +235,7 @@
 
 ## Summary
 
-- **Total Tasks**: 73 (68 milestone tasks + 5 CI tasks)
+- **Total Tasks**: 85 (80 milestone tasks + 5 CI tasks)
 - **Milestone Breakdown**:
   - M1: 12 tasks (5.5 days)
   - M2: 12 tasks (7.5 days)
@@ -206,8 +243,9 @@
   - M4: 8 tasks (5 days)
   - M5: 8 tasks (7 days)
   - M6: 8 tasks (5.75 days)
+  - M7: 12 tasks (4.5 days)
   - CI: 5 tasks (continuous)
-- **Total Estimated Days**: 43.25 days (serial path ~43-49 days with parallel optimization)
+- **Total Estimated Days**: 47.75 days (serial path ~48-54 days with parallel optimization)
 
 ---
 
