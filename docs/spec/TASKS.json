@@ -1222,9 +1222,9 @@
                                                   "Fallback when CEC unavailable"
                                               ],
                       "start_at_utc":  "2025-11-03T20:07:56.7123605Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-03T20:16:22.0601466Z",
+                      "duration_h":  0.14,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -1249,10 +1249,10 @@
                                                   "Server processes STT",
                                                   "Intent routed to actions"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-03T22:37:25.2512718Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {

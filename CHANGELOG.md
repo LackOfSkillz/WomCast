@@ -4,14 +4,61 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 
 ## [Unreleased]
 
-**Milestone**: M4 Cloud Mapper + CEC Fallback + Server Voice (1/8 tasks complete) 🔄  
+**Milestone**: M4 Cloud Mapper + CEC Fallback + Server Voice (3/8 tasks complete) 🔄  
 **Focus**: Cloud service integration, HDMI-CEC control, server-side voice relay, settings panel, hardening, PWA icon, update manager, privacy controls
 
 ### Summary
-M4 milestone adds legal cloud streaming service integration (Netflix, Disney+, HBO Max, etc.) with QR code handoff to native apps, HDMI-CEC automatic TV input switching, server-side voice relay for devices without microphones, comprehensive settings management panel, production hardening (HTTPS, auth, deployment configs), custom PWA icons and manifest, automatic update checker for backend services, and privacy controls for voice/casting. **M4.1 complete: Cloud service QR codes enable legal streaming app discovery (NO DRM bypass).**
+M4 milestone adds legal cloud streaming service integration (Netflix, Disney+, HBO Max, etc.) with QR code handoff to native apps, HDMI-CEC automatic TV input switching, server-side voice relay for devices without microphones, comprehensive settings management panel, production hardening (HTTPS, auth, deployment configs), custom PWA icons and manifest, automatic update checker for backend services, and privacy controls for voice/casting. **M4.1-M4.3 complete: Cloud QR codes, HDMI-CEC input switching, and server-side voice relay fully operational.**
 
 ### New Features
-- **M4.1: Cloud Badge & QR Passthrough** (2025-01-03) ✅
+- **M4.3: Server-Side Voice Relay** (2025-01-03) ✅
+  - Implemented local microphone audio capture for devices with built-in mics
+  - **AudioBuffer Class** (`apps/backend/voice/server_audio.py`, 120 lines):
+    - Shared audio buffer implementation (compatible with cast audio_relay)
+    - Buffer management: max_duration_seconds (default 30s), auto-trimming oldest chunks when exceeding duration
+    - Audio format: 16kHz, mono, 16-bit PCM (optimized for Whisper STT)
+    - Methods: add_chunk(bytes), get_audio_bytes(), get_duration_seconds(), clear(), save_wav(path), to_wav_bytes()
+    - WAV conversion: In-memory BytesIO buffering with wave module, proper header generation
+    - Duration calculation: total_bytes / (sample_rate * channels * sample_width)
+    - Created timestamp tracking: datetime.now(UTC) on init/clear
+  - **ServerAudioCapture Class** (`apps/backend/voice/server_audio.py`, 174 lines):
+    - PyAudio wrapper for local microphone recording
+    - Lazy initialization: Import pyaudio only when needed, graceful fallback if not installed
+    - Configuration: sample_rate (16000 Hz), channels (1 mono), chunk_size (1024), device_index (None for default)
+    - Device discovery: get_devices() returns list of input devices with name, index, channels, sample_rate
+    - Availability check: is_available() tests PyAudio presence and default input device
+    - Recording control: start_recording() opens stream and spawns async _record_loop(), stop_recording() closes stream and returns audio bytes
+    - Async recording loop: asyncio.get_event_loop().run_in_executor() for blocking PyAudio stream.read() calls
+    - Error handling: RuntimeError if already recording, ImportError if PyAudio missing
+    - WAV export: to_wav_bytes(audio_data), save_wav(audio_data, file_path) with proper wave formatting
+    - Cleanup: cleanup() method terminates PyAudio and closes streams, __del__ fallback
+    - Singleton: get_server_audio() returns global _server_audio instance
+  - **Voice Service API Extensions** (`apps/backend/voice/main.py`, +186 lines):
+    - Version bump: 0.1.0 → 0.2.0
+    - Lifespan management: Initialize server_audio = get_server_audio(), cleanup on shutdown
+    - New Pydantic models: ServerAudioDeviceInfo, ServerAudioAvailableResponse, StartRecordingRequest, StartRecordingResponse, StopRecordingResponse
+    - GET /v1/voice/server-audio/available: Check PyAudio availability, list input devices, return default device index
+    - POST /v1/voice/server-audio/start: Start recording from device_index (optional), return recording status message
+    - POST /v1/voice/server-audio/stop: Stop recording, convert to WAV, transcribe with Whisper STT, return text + duration + language + audio_duration_seconds
+    - Error responses: 400 if already recording/not recording/no audio captured, 500 if PyAudio unavailable or transcription fails
+    - Integration: Stop endpoint calls stt_engine.transcribe_bytes(wav_bytes) for immediate transcription
+  - **Comprehensive Tests** (`apps/backend/voice/test_server_audio.py`, 348 lines):
+    - 23 tests total, 100% pass rate, 94% code coverage
+    - AudioBuffer tests (10): init, add_chunk, max_duration trimming, get_audio_bytes, duration calculation, clear, to_wav_bytes (empty/filled), save_wav (empty/filled)
+    - ServerAudioCapture tests (12): init, is_available (success/no devices/no pyaudio), get_devices, start_recording, start_recording_already_recording, stop_recording, stop_recording_not_recording, to_wav_bytes, save_wav, cleanup
+    - Singleton test (1): get_server_audio returns same instance
+    - Mock strategy: patch("builtins.__import__") to mock pyaudio dynamic imports (not module-level), side_effect returns mock PyAudio with configured methods
+    - Async test support: pytest-asyncio for start/stop recording async tests
+    - File I/O tests: tmp_path fixture for WAV file saving validation
+  - **Use Cases**:
+    - Raspberry Pi with USB mic: Direct local voice input without phone relay
+    - TV set-top box with built-in mic array: Hands-free voice control
+    - Desktop/laptop development: Test voice features without mobile device
+    - Fallback mode: When WebRTC phone relay unavailable (network issues, no paired device)
+    - Hybrid setup: Switch between phone mic (portable) and local mic (stationary) seamlessly
+  - **Dependencies**: PyAudio (optional), graceful degradation if not installed
+
+- **M4.2: HDMI-CEC Input Switch Helper** (2025-01-03) ✅
   - Implemented legal cloud streaming service integration (NO DRM circumvention)
   - **Cloud Service Registry** (`apps/backend/connectors/cloud/__init__.py`, 279 lines):
     - `CloudProvider` enum: 10 streaming services (NETFLIX, DISNEY_PLUS, HBO_MAX, AMAZON_PRIME, HULU, APPLE_TV_PLUS, PEACOCK, PARAMOUNT_PLUS, YOUTUBE, YOUTUBE_TV)
@@ -1430,3 +1477,5 @@ ChannelResponse: {id, name, stream_url, logo_url, group_title, language, tvg_id,
 - [2025-11-03T18:18:20.1283645Z] Completed tasks: M3.13
 
 - [2025-11-03T20:06:46.4315955Z] Completed tasks: M4.1
+
+- [2025-11-03T20:16:22.0601466Z] Completed tasks: M4.2
