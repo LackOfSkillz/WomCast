@@ -1,0 +1,1 @@
+export { CloudBadge } from './CloudBadge';

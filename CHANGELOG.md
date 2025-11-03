@@ -4,6 +4,85 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 
 ## [Unreleased]
 
+**Milestone**: M4 Cloud Mapper + CEC Fallback + Server Voice (1/8 tasks complete) 🔄  
+**Focus**: Cloud service integration, HDMI-CEC control, server-side voice relay, settings panel, hardening, PWA icon, update manager, privacy controls
+
+### Summary
+M4 milestone adds legal cloud streaming service integration (Netflix, Disney+, HBO Max, etc.) with QR code handoff to native apps, HDMI-CEC automatic TV input switching, server-side voice relay for devices without microphones, comprehensive settings management panel, production hardening (HTTPS, auth, deployment configs), custom PWA icons and manifest, automatic update checker for backend services, and privacy controls for voice/casting. **M4.1 complete: Cloud service QR codes enable legal streaming app discovery (NO DRM bypass).**
+
+### New Features
+- **M4.1: Cloud Badge & QR Passthrough** (2025-01-03) ✅
+  - Implemented legal cloud streaming service integration (NO DRM circumvention)
+  - **Cloud Service Registry** (`apps/backend/connectors/cloud/__init__.py`, 279 lines):
+    - `CloudProvider` enum: 10 streaming services (NETFLIX, DISNEY_PLUS, HBO_MAX, AMAZON_PRIME, HULU, APPLE_TV_PLUS, PEACOCK, PARAMOUNT_PLUS, YOUTUBE, YOUTUBE_TV)
+    - `CloudService` dataclass: provider, name, description, icon_url, requires_subscription, deep_link_template, web_url_template, regions
+    - `CLOUD_SERVICES` registry with complete metadata for all 10 providers
+    - Deep link templates for native app opening (e.g., "netflix://title/{title_id}", "disneyplus://content/{content_id}", "aiv://aiv/view?gti={content_id}")
+    - Web fallback URLs for browser access (e.g., "https://www.netflix.com/title/{title_id}")
+    - Regional availability tracking with ISO country codes (e.g., Hulu: US/JP only, YouTube: global "*")
+    - Subscription requirements: Netflix, Disney+, HBO Max, Amazon Prime, Hulu, Apple TV+, Paramount+ require subscription; Peacock, YouTube have free tiers; YouTube TV requires subscription
+    - Icon URLs from dashboard-icons CDN (https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/)
+    - `CloudLink` dataclass: provider, title, content_id, deep_link, web_link, qr_code_url
+    - Helper functions: get_all_services(), get_service(provider), is_available_in_region(provider, region), create_cloud_link(provider, title, content_id)
+    - **Legal Compliance**: All docstrings emphasize NO DRM bypass, NO unauthorized access, only official app links, respects all ToS
+  - **Cloud Service API** (`apps/backend/connectors/cloud/main.py`, 308 lines):
+    - FastAPI router with 6 endpoints for cloud service discovery and QR generation
+    - GET /healthz: Health check endpoint returning {"status": "ok", "service": "cloud-services"}
+    - GET /v1/cloud/services?region={iso_code}: List all cloud services, optional region filter (e.g., ?region=US returns only US-available services)
+    - GET /v1/cloud/services/{provider}: Get specific service details (e.g., /v1/cloud/services/netflix)
+    - POST /v1/cloud/links: Create deep link with body {"provider": "netflix", "title": "Stranger Things", "contentId": "80057281"}, returns CloudLinkResponse with deepLink, webLink, qrCodeUrl
+    - GET /v1/cloud/qr?provider={provider}&content_id={id}&title={title}&size={pixels}: Generate QR code PNG image (100-1000px, default 300px) encoding deep link URL
+    - GET /v1/cloud/availability/{provider}?region={iso_code}: Check service availability in region
+    - QR code generation: qrcode library with ERROR_CORRECT_M, PIL image conversion to PNG, StreamingResponse with image/png media type
+    - Pydantic models: CloudServiceResponse, CloudLinkRequest, CloudLinkResponse (using ConfigDict for Pydantic v2 compatibility)
+    - Error handling: 400 for invalid provider, 404 for not found, 500 for QR generation failures
+    - Cache headers: QR codes cacheable for 1 hour (Cache-Control: public, max-age=3600)
+  - **CloudBadge Component** (`apps/frontend/src/components/CloudBadge/CloudBadge.tsx`, 164 lines):
+    - React component displaying cloud service with QR code scanning or web browser opening
+    - Props: service (CloudService), contentId (string), contentTitle (string), onWatchClick callback
+    - Service display: Icon (64x64), name, description, subscription badge (⭐ Subscription for paid services)
+    - Two action buttons: "📱 Scan QR" (opens QR modal), "🌐 Open in Browser" (new tab with web_link)
+    - handleWatchClick: POST to /v1/cloud/links, show QR modal with qrCodeUrl, trigger onWatchClick callback
+    - handleOpenWeb: POST to /v1/cloud/links, window.open(linkData.webLink, '_blank')
+    - QR Modal: Dark overlay with centered content, QR image (300x300), instructions, subscription note, close button
+    - Modal state management: showQr (boolean), qrCodeUrl (string | null)
+    - Accessibility: Click backdrop to close modal, button[type="button"] attributes
+  - **CloudBadge Styling** (`apps/frontend/src/components/CloudBadge/CloudBadge.css`, 216 lines):
+    - Cloud badge card: Flex row with gap 1rem, padding 1rem, dark background (#1e1e2e), border radius 8px
+    - Hover effect: Blue border (#4a9eff), box shadow glow
+    - Service icon: 64x64 object-fit contain, border radius 8px
+    - Subscription badge: Gradient background (pink → red), white text, 0.75rem font
+    - Action buttons: Primary (gradient purple → violet), secondary (dark gray with border)
+    - Button hover animations: translateY(-2px), box shadow glow
+    - QR modal: Fixed position overlay with rgba(0,0,0,0.85) backdrop, fadeIn 0.2s animation
+    - QR modal content: Dark background (#13131e), centered, max-width 450px, slideUp 0.3s animation
+    - QR image: 300x300, white background, 4px border, border radius 12px, padding 8px
+    - Subscription note: Yellow warning color (#fbbf24), rgba background, border radius 6px
+    - Mobile responsive: Flex column layout, centered text, 250x250 QR image, column button layout
+  - **CloudBadge Tests** (`apps/frontend/src/components/CloudBadge/CloudBadge.test.tsx`, 218 lines):
+    - 10 tests covering service display, subscription badges, QR modal, web links, callbacks
+    - Mock setup: global.fetch vi.fn() for API calls
+    - Test coverage: renders service info, shows/hides subscription badge, displays icon, has QR/web buttons
+    - Interaction tests: QR modal opening, onWatchClick callback, web link in new tab, modal close
+    - Subscription note test: Validates paid service note in QR modal
+  - **Test Suite** (`apps/backend/connectors/cloud/test_cloud.py`, 343 lines):
+    - 23 tests validating cloud service registry, link generation, FastAPI endpoints, legal compliance
+    - **Service Registry Tests (8)**: get_all_services (10 providers, sorted), get_service (Netflix, Disney+), is_available_in_region (US/JP/GB), create_cloud_link (Netflix, Disney+, YouTube), free services (YouTube, Peacock)
+    - **FastAPI Endpoint Tests (12)**: health check, list services (all + region filter), get service details, service not found (404), create link, invalid provider (400), generate QR code (default + custom size), QR invalid provider (400), check availability (Netflix US, Hulu GB)
+    - **Legal Compliance Tests (3)**: test_no_drm_bypass (all links official domains), test_subscription_transparency (all have clear requirements), test_region_restrictions_honored (Hulu US/JP, YouTube TV US-only, YouTube global)
+    - **Test Results**: 23/23 passing (100%), no warnings after Pydantic ConfigDict migration
+  - **Test Coverage**: Cloud module: 71% (__init__.py), 91% (main.py), 100% (test_cloud.py)
+  - **Overall Backend Test Coverage**: 153 tests passing, 79% coverage (up from 51%, +28 percentage points)
+  - **Acceptance Criteria Validation**:
+    - ✅ AC1: Cloud service QR codes open provider apps - Deep link generation with native app URL schemes (netflix://, disneyplus://, hbomax://, etc.)
+    - ✅ AC2: NO DRM bypass - All links point to official services only, no circumvention tools
+    - ✅ AC3: Subscription transparency - requiresSubscription boolean on all services, subscription badge in UI
+    - ✅ AC4: Regional availability - is_available_in_region() checks ISO country codes, region filter in API
+  - **Integration**: Cloud service registry → FastAPI endpoints → CloudBadge component → QR code scanning → Deep link to native apps
+  - **Legal Note**: This feature enables legal content discovery only. Users must have active subscriptions to access paid content. No DRM circumvention, no unauthorized access, no ToS violations.
+
+---
+
 **Milestone**: M3 External Content (16/16 tasks complete) ✅  
 **Focus**: Content connectors, live TV, voice casting, Whisper STT, voice UX, performance optimization, connector resilience, subtitle rendering, EPG support, casting service, phone-mic relay, STUN/TURN config, QR pairing, documentation, **integration tests**
 

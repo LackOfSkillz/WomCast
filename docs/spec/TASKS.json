@@ -1079,9 +1079,9 @@
                                                   "opens PWA"
                                               ],
                       "start_at_utc":  "2025-11-03T18:11:01.6559438Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-03T18:18:20.1283645Z",
+                      "duration_h":  0.12,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -1193,10 +1193,10 @@
                                                   "No DRM bypass attempted",
                                                   "Success tracked locally"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-03T18:18:35.1137447Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {
