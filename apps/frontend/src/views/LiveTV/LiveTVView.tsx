@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { getLiveTVChannels, playLiveTVChannel, type LiveTVChannel } from '../../services/api';
+import { getLiveTVChannels, playLiveTVChannel, getAllEPG, type LiveTVChannel, type EPGData } from '../../services/api';
 import './LiveTVView.css';
 
 export function LiveTVView() {
   const [channels, setChannels] = useState<LiveTVChannel[]>([]);
+  const [epgData, setEpgData] = useState<Map<string, EPGData>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
@@ -21,6 +22,16 @@ export function LiveTVView() {
         new Set(channelList.map((ch) => ch.group_title).filter((g): g is string => g !== null))
       );
       setGroups(uniqueGroups.sort());
+
+      // Load EPG data
+      try {
+        const epgList = await getAllEPG();
+        const epgMap = new Map(epgList.map((epg) => [epg.channel_id, epg]));
+        setEpgData(epgMap);
+      } catch (epgErr) {
+        // EPG is optional, log but don't fail
+        console.warn('Failed to load EPG:', epgErr);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load channels';
       setError(message);
@@ -107,33 +118,63 @@ export function LiveTVView() {
       </div>
 
       <div className="channel-grid">
-        {channels.map((channel) => (
-          <div key={channel.id} className="channel-card">
-            <div className="channel-logo">
-              {channel.logo_url ? (
-                <img src={channel.logo_url} alt={channel.name} />
-              ) : (
-                <div className="logo-placeholder">📺</div>
-              )}
+        {channels.map((channel) => {
+          const epg = channel.tvg_id ? epgData.get(channel.tvg_id) : null;
+          const currentProgram = epg?.current_program;
+          const nextProgram = epg?.next_program;
+
+          return (
+            <div key={channel.id} className="channel-card">
+              <div className="channel-logo">
+                {channel.logo_url ? (
+                  <img src={channel.logo_url} alt={channel.name} />
+                ) : (
+                  <div className="logo-placeholder">📺</div>
+                )}
+              </div>
+              <div className="channel-info">
+                <h3 className="channel-name">{channel.name}</h3>
+                {channel.group_title && (
+                  <p className="channel-group">{channel.group_title}</p>
+                )}
+                {channel.language && (
+                  <p className="channel-language">🌐 {channel.language}</p>
+                )}
+
+                {/* EPG Now/Next */}
+                {currentProgram && (
+                  <div className="channel-epg">
+                    <div className="epg-current">
+                      <span className="epg-label">Now:</span>
+                      <span className="epg-title">{currentProgram.title}</span>
+                      {currentProgram.progress_percent > 0 && (
+                        <div className="epg-progress">
+                          <div
+                            className="epg-progress-bar"
+                            style={{ width: `${currentProgram.progress_percent.toString()}%` }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    {nextProgram && (
+                      <div className="epg-next">
+                        <span className="epg-label">Next:</span>
+                        <span className="epg-title">{nextProgram.title}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <button
+                className="play-button"
+                onClick={() => { void handlePlay(channel); }}
+                aria-label={`Play ${channel.name}`}
+              >
+                ▶ Play
+              </button>
             </div>
-            <div className="channel-info">
-              <h3 className="channel-name">{channel.name}</h3>
-              {channel.group_title && (
-                <p className="channel-group">{channel.group_title}</p>
-              )}
-              {channel.language && (
-                <p className="channel-language">🌐 {channel.language}</p>
-              )}
-            </div>
-            <button
-              className="play-button"
-              onClick={() => { void handlePlay(channel); }}
-              aria-label={`Play ${channel.name}`}
-            >
-              ▶ Play
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

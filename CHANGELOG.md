@@ -4,13 +4,49 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 
 ## [Unreleased]
 
-**Milestone**: M3 External Content (9/16 tasks complete)  
-**Focus**: Content connectors, live TV, voice casting, performance optimization, connector resilience, subtitle rendering, documentation
+**Milestone**: M3 External Content (10/16 tasks complete)  
+**Focus**: Content connectors, live TV, voice casting, performance optimization, connector resilience, subtitle rendering, EPG support, documentation
 
 ### Summary
-M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH), connector resilience patterns (circuit breaker, rate limiting, retry), comprehensive subtitle font support, performance benchmarking tools, and updated documentation reflecting all M3 implementations.
+M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH) with Electronic Program Guide (EPG), connector resilience patterns (circuit breaker, rate limiting, retry), comprehensive subtitle font support, performance benchmarking tools, and updated documentation reflecting all M3 implementations.
 
 ### New Features
+- **M3.15: Live TV EPG-lite** (2025-01-XX)
+  - Implemented Electronic Program Guide (EPG) functionality for Live TV channels
+  - **EPG Manager** (`apps/backend/livetv/epg.py`):
+    - `Program` dataclass with title, start/end times, description, category, episode info, icon
+    - `EPGManager` class for EPG data management with in-memory storage
+    - XMLTV parser supporting standard EPG format (channel, programme, title, desc, category, episode-num)
+    - Time parsing for XMLTV format (`YYYYMMDDHHmmss +HHMM` with timezone support)
+    - Current/next program lookup by channel ID
+    - Program progress calculation (0-100%) for visual timeline
+    - Multi-channel EPG data aggregation
+  - **REST API Endpoints** (`apps/backend/livetv/main.py`):
+    - POST `/v1/livetv/epg/url` - Configure external XMLTV EPG URL
+    - GET `/v1/livetv/epg` - Get EPG data for all channels (current + next programs)
+    - GET `/v1/livetv/epg/{channel_id}` - Get EPG for specific channel by tvg_id
+    - Response models: `EPGRequest`, `ProgramResponse`, `EPGResponse`
+  - **Frontend EPG Display** (`apps/frontend/src/views/LiveTV/LiveTVView.tsx`):
+    - Now/Next program info display in channel cards
+    - Program progress bar with gradient animation (0-100%)
+    - EPG data fetching on channel load (optional, non-blocking)
+    - Graceful fallback when EPG unavailable
+  - **Frontend API Client** (`apps/frontend/src/services/api.ts`):
+    - `getAllEPG()` - Fetch EPG for all channels
+    - `getChannelEPG(channelId)` - Fetch EPG for specific channel
+    - `setEPGUrl(url)` - Configure external EPG URL
+    - TypeScript interfaces: `EPGProgram`, `EPGData`
+  - **CSS Styling** (`apps/frontend/src/views/LiveTV/LiveTVView.css`):
+    - EPG section styling with border separator
+    - Current program highlight (blue color, bold font)
+    - Progress bar with gradient animation (blue → light blue)
+    - Responsive EPG layout
+  - **Testing** (`apps/backend/livetv/test_epg.py`):
+    - 12 comprehensive tests covering all EPG functionality
+    - XMLTV parsing, time formatting, program lookup, progress calculation
+    - Sample XMLTV file (`test-media/sample-epg.xml`) for manual testing
+  - **Acceptance Criteria**: ✅ AC1: EPG data extracted from XMLTV hints, ✅ AC2: XMLTV parser functional, ✅ AC3: Now/Next displayed in UI
+
 - **M3.11: Documentation Updates** (2025-01-XX)
   - **ASBUILT.md**: Updated milestone header (M3 8/16→9/16 tasks), current status reflects M1 complete + M2 complete + M3 in progress
   - **ASBUILT.md**: Added Services & Ports table entries for 4 connectors and Live TV service with endpoint documentation
@@ -1025,3 +1061,5 @@ ChannelResponse: {id, name, stream_url, logo_url, group_title, language, tvg_id,
 - [2025-11-03T01:25:58.2549906Z] Completed tasks: M3.16
 
 - [2025-11-03T01:30:23.2014256Z] Completed tasks: M3.10
+
+- [2025-11-03T01:40:28.8307262Z] Completed tasks: M3.11

@@ -330,3 +330,52 @@ export async function playLiveTVChannel(streamUrl: string, title: string): Promi
     throw new Error(`Failed to play channel: ${statusText}`);
   }
 }
+
+export interface EPGProgram {
+  channel_id: string;
+  title: string;
+  start_time: string;
+  end_time: string;
+  description: string | null;
+  category: string | null;
+  episode: string | null;
+  icon: string | null;
+  is_current: boolean;
+  progress_percent: number;
+}
+
+export interface EPGData {
+  channel_id: string;
+  current_program: EPGProgram | null;
+  next_program: EPGProgram | null;
+}
+
+export async function getAllEPG(): Promise<EPGData[]> {
+  const response = await fetch(`${LIVETV_API_URL}/v1/livetv/epg`);
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to get EPG: ${statusText}`);
+  }
+  return (await response.json()) as EPGData[];
+}
+
+export async function getChannelEPG(channelId: string): Promise<EPGData> {
+  const response = await fetch(`${LIVETV_API_URL}/v1/livetv/epg/${channelId}`);
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to get channel EPG: ${statusText}`);
+  }
+  return (await response.json()) as EPGData;
+}
+
+export async function setEPGUrl(url: string): Promise<void> {
+  const response = await fetch(`${LIVETV_API_URL}/v1/livetv/epg/url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+  });
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to set EPG URL: ${statusText}`);
+  }
+}

@@ -87,7 +87,7 @@
 | M3.12 | STUN/TURN config (LAN-first, TURN optional) | AI-Agent | 0.5 | [backend][ops] | M3.6 | ✓ | todo |
 | M3.13 | QR pairing + mobile PWA deep link | AI-Agent | 0.5 | [ui][ops] | M3.6 | ✓ | todo |
 | M3.14 | Connector failure fallbacks & rate limits | AI-Agent | 0.5 | [backend][security] | M3.1–M3.3 | ✓ | ✅ |
-| M3.15 | Live TV EPG-lite (optional) | AI-Agent | 0.75 | [backend][ui] | M3.4, M3.5 | ✓ | todo |
+| M3.15 | Live TV EPG-lite (optional) | AI-Agent | 0.75 | [backend][ui] | M3.4, M3.5 | ✓ | ✅ |
 | M3.16 | Subtitle font pack & fallback rules | AI-Agent | 0.25 | [ui] | M2.6 | ✓ | ✅ |
 
 **M3 Acceptance Criteria**:

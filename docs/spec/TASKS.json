@@ -1023,10 +1023,10 @@
                                                   "CHANGELOG updated with 0.3.0 entries",
                                                   "Troubleshooting for connectors and voice"
                                               ],
-                      "start_at_utc":  null,
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "todo",
+                      "start_at_utc":  "2025-11-03T01:40:28.8307262Z",
+                      "end_at_utc":  "2025-11-03T01:40:28.8307262Z",
+                      "duration_h":  0,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {

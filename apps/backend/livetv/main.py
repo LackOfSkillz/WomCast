@@ -10,6 +10,7 @@ from fastapi import FastAPI, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from livetv import LiveTVManager
+from livetv.epg import EPGManager
 
 
 class PlaylistUploadRequest(BaseModel):
@@ -40,17 +41,48 @@ class ChannelResponse(BaseModel):
     codec_info: str | None
 
 
+class EPGRequest(BaseModel):
+    """Request model for EPG URL configuration."""
+
+    url: str
+
+
+class ProgramResponse(BaseModel):
+    """Response model for program data."""
+
+    channel_id: str
+    title: str
+    start_time: str
+    end_time: str
+    description: str | None
+    category: str | None
+    episode: str | None
+    icon: str | None
+    is_current: bool
+    progress_percent: float
+
+
+class EPGResponse(BaseModel):
+    """Response model for EPG data."""
+
+    channel_id: str
+    current_program: ProgramResponse | None
+    next_program: ProgramResponse | None
+
+
 # Global manager instance
 manager: LiveTVManager | None = None
+epg_manager: EPGManager | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize LiveTV manager on startup."""
-    global manager
+    global manager, epg_manager
     db_path = Path(__file__).parent.parent / "womcast.db"
     manager = LiveTVManager(db_path)
     await manager.init_database()
+    epg_manager = EPGManager()
     yield
 
 
@@ -211,6 +243,164 @@ async def get_channel(channel_id: int):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get channel: {e}") from e
+
+
+@app.post("/v1/livetv/epg/url")
+async def set_epg_url(request: EPGRequest):
+    """
+    Configure external XMLTV EPG URL.
+
+    Args:
+        request: EPG URL request
+
+    Returns:
+        Success status
+
+    Raises:
+        HTTPException: 400 if URL is invalid
+        HTTPException: 500 if EPG manager not initialized
+    """
+    if epg_manager is None:
+        raise HTTPException(status_code=500, detail="EPG manager not initialized")
+
+    success = await epg_manager.set_epg_url(request.url)
+    if not success:
+        raise HTTPException(status_code=400, detail="Failed to fetch EPG from URL")
+
+    return {"status": "ok", "message": f"EPG updated from {request.url}"}
+
+
+@app.get("/v1/livetv/epg", response_model=list[EPGResponse])
+async def get_all_epg():
+    """
+    Get EPG data for all channels.
+
+    Returns:
+        List of EPG entries with current/next programs
+
+    Raises:
+        HTTPException: 500 if EPG manager not initialized
+    """
+    if epg_manager is None:
+        raise HTTPException(status_code=500, detail="EPG manager not initialized")
+
+    if not epg_manager.has_epg_data:
+        return []
+
+    try:
+        current_programs = epg_manager.get_all_current_programs()
+        epg_data = []
+
+        for channel_id, current_program in current_programs.items():
+            next_program = epg_manager.get_next_program(channel_id)
+
+            current_response = ProgramResponse(
+                channel_id=current_program.channel_id,
+                title=current_program.title,
+                start_time=current_program.start_time.isoformat(),
+                end_time=current_program.end_time.isoformat(),
+                description=current_program.description,
+                category=current_program.category,
+                episode=current_program.episode,
+                icon=current_program.icon,
+                is_current=current_program.is_current,
+                progress_percent=current_program.progress_percent,
+            )
+
+            next_response = None
+            if next_program:
+                next_response = ProgramResponse(
+                    channel_id=next_program.channel_id,
+                    title=next_program.title,
+                    start_time=next_program.start_time.isoformat(),
+                    end_time=next_program.end_time.isoformat(),
+                    description=next_program.description,
+                    category=next_program.category,
+                    episode=next_program.episode,
+                    icon=next_program.icon,
+                    is_current=next_program.is_current,
+                    progress_percent=next_program.progress_percent,
+                )
+
+            epg_data.append(
+                EPGResponse(
+                    channel_id=channel_id,
+                    current_program=current_response,
+                    next_program=next_response,
+                )
+            )
+
+        return epg_data
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get EPG data: {e}") from e
+
+
+@app.get("/v1/livetv/epg/{channel_id}", response_model=EPGResponse)
+async def get_channel_epg(channel_id: str):
+    """
+    Get EPG data for specific channel.
+
+    Args:
+        channel_id: Channel tvg_id
+
+    Returns:
+        EPG entry with current/next programs
+
+    Raises:
+        HTTPException: 404 if no EPG data for channel
+        HTTPException: 500 if EPG manager not initialized
+    """
+    if epg_manager is None:
+        raise HTTPException(status_code=500, detail="EPG manager not initialized")
+
+    try:
+        current_program = epg_manager.get_current_program(channel_id)
+        next_program = epg_manager.get_next_program(channel_id)
+
+        if not current_program and not next_program:
+            raise HTTPException(status_code=404, detail="No EPG data for channel")
+
+        current_response = None
+        if current_program:
+            current_response = ProgramResponse(
+                channel_id=current_program.channel_id,
+                title=current_program.title,
+                start_time=current_program.start_time.isoformat(),
+                end_time=current_program.end_time.isoformat(),
+                description=current_program.description,
+                category=current_program.category,
+                episode=current_program.episode,
+                icon=current_program.icon,
+                is_current=current_program.is_current,
+                progress_percent=current_program.progress_percent,
+            )
+
+        next_response = None
+        if next_program:
+            next_response = ProgramResponse(
+                channel_id=next_program.channel_id,
+                title=next_program.title,
+                start_time=next_program.start_time.isoformat(),
+                end_time=next_program.end_time.isoformat(),
+                description=next_program.description,
+                category=next_program.category,
+                episode=next_program.episode,
+                icon=next_program.icon,
+                is_current=next_program.is_current,
+                progress_percent=next_program.progress_percent,
+            )
+
+        return EPGResponse(
+            channel_id=channel_id,
+            current_program=current_response,
+            next_program=next_response,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get channel EPG: {e}") from e
 
 
 if __name__ == "__main__":

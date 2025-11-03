@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tv>
+  <channel id="cnn">
+    <display-name>CNN</display-name>
+  </channel>
+  <channel id="bbc">
+    <display-name>BBC World News</display-name>
+  </channel>
+  <channel id="nasa">
+    <display-name>NASA TV</display-name>
+  </channel>
+
+  <!-- CNN Programs -->
+  <programme start="20250102120000 +0000" stop="20250102130000 +0000" channel="cnn">
+    <title>CNN Newsroom</title>
+    <desc>Breaking news and analysis from around the world</desc>
+    <category>News</category>
+  </programme>
+  <programme start="20250102130000 +0000" stop="20250102140000 +0000" channel="cnn">
+    <title>Anderson Cooper 360</title>
+    <desc>In-depth coverage of today's top stories</desc>
+    <category>News</category>
+  </programme>
+
+  <!-- BBC Programs -->
+  <programme start="20250102120000 +0000" stop="20250102123000 +0000" channel="bbc">
+    <title>World News Today</title>
+    <desc>The latest international news and analysis</desc>
+    <category>News</category>
+  </programme>
+  <programme start="20250102123000 +0000" stop="20250102130000 +0000" channel="bbc">
+    <title>BBC Business Live</title>
+    <desc>Global business news and market updates</desc>
+    <category>Business</category>
+  </programme>
+
+  <!-- NASA Programs -->
+  <programme start="20250102120000 +0000" stop="20250102150000 +0000" channel="nasa">
+    <title>ISS Live Stream</title>
+    <desc>Live view from the International Space Station</desc>
+    <category>Science</category>
+    <icon src="https://www.nasa.gov/sites/default/files/thumbnails/image/nasa-logo.png"/>
+  </programme>
+  <programme start="20250102150000 +0000" stop="20250102160000 +0000" channel="nasa">
+    <title>This Week at NASA</title>
+    <desc>Weekly roundup of NASA missions and discoveries</desc>
+    <category>Science</category>
+    <episode>S01E42</episode>
+  </programme>
+</tv>
