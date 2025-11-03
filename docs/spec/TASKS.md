@@ -78,7 +78,7 @@
 | M3.3 | Frontend: Connectors hub UI | AI-Agent | 0.75 | [ui] | M3.1, M3.2 | — | ✅ |
 | M3.4 | Live TV ingest (M3U/HLS/DASH) | AI-Agent | 1.0 | [backend] | M1.5 | ✓ | ✅ |
 | M3.5 | Live TV UI: channel list + play | AI-Agent | 0.75 | [ui] | M3.4, M2.4 | — | ✅ |
-| M3.6 | Casting service: mDNS advert + signaling | AI-Agent | 1.0 | [backend][ops] | M1.5 | ✓ | todo |
+| M3.6 | Casting service: mDNS advert + signaling | AI-Agent | 1.0 | [backend][ops] | M1.5 | ✓ | ✅ |
 | M3.7 | Phone-mic relay via WebRTC | AI-Agent | 1.0 | [backend][ai] | M3.6 | — | todo |
 | M3.8 | Whisper STT (small) integration | AI-Agent | 1.0 | [ai][backend] | M3.7 | — | todo |
 | M3.9 | Voice UX in frontend (push-to-talk) | AI-Agent | 0.75 | [ui][ai] | M3.8 | — | todo |

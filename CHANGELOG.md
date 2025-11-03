@@ -4,13 +4,50 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 
 ## [Unreleased]
 
-**Milestone**: M3 External Content (10/16 tasks complete)  
-**Focus**: Content connectors, live TV, voice casting, performance optimization, connector resilience, subtitle rendering, EPG support, documentation
+**Milestone**: M3 External Content (11/16 tasks complete)  
+**Focus**: Content connectors, live TV, voice casting, performance optimization, connector resilience, subtitle rendering, EPG support, casting service, documentation
 
 ### Summary
-M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH) with Electronic Program Guide (EPG), connector resilience patterns (circuit breaker, rate limiting, retry), comprehensive subtitle font support, performance benchmarking tools, and updated documentation reflecting all M3 implementations.
+M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH) with Electronic Program Guide (EPG), casting service with mDNS discovery and WebRTC signaling, connector resilience patterns (circuit breaker, rate limiting, retry), comprehensive subtitle font support, performance benchmarking tools, and updated documentation reflecting all M3 implementations.
 
 ### New Features
+- **M3.6: Casting Service (mDNS + WebRTC)** (2025-01-XX)
+  - Implemented casting service for phone/tablet pairing and remote control
+  - **Session Management** (`apps/backend/cast/sessions.py`):
+    - `Session` dataclass with PIN-based pairing (6-digit PIN, 5-minute TTL)
+    - `SessionManager` class for session lifecycle management
+    - Automatic cleanup of expired sessions (background task)
+    - PIN security: Hidden after pairing, short-lived tokens
+    - Device info storage for paired sessions
+    - Session states: new, connecting, connected, closed
+  - **mDNS Advertisement** (`apps/backend/cast/mdns.py`):
+    - `MDNSAdvertiser` using Zeroconf/Bonjour protocol
+    - Service type: `_womcast-cast._tcp.local.`
+    - Automatic LAN discovery (no manual IP entry)
+    - Service properties: version, features (webrtc, pairing)
+    - Graceful start/stop with context manager support
+  - **REST API Endpoints** (`apps/backend/cast/main.py`):
+    - POST `/v1/cast/session` - Create new session with PIN and QR data
+    - POST `/v1/cast/session/pair` - Pair session using PIN code
+    - GET `/v1/cast/session/{id}` - Get session information
+    - DELETE `/v1/cast/session/{id}` - Unpair and remove session
+    - GET `/v1/cast/sessions` - List all active sessions
+    - WS `/v1/cast/ws/{id}` - WebSocket for WebRTC signaling
+  - **WebRTC Signaling**:
+    - WebSocket-based signaling server for peer connection
+    - SDP offer/answer relay
+    - ICE candidate exchange
+    - Session-based routing
+  - **Dependencies**:
+    - Added `zeroconf>=0.132.0` for mDNS advertisement
+    - Updated `pyproject.toml` with new dependency
+  - **Testing** (`apps/backend/cast/test_sessions.py`):
+    - 20 comprehensive tests covering all session management
+    - 98% code coverage for sessions.py
+    - PIN uniqueness, expiration, pairing, cleanup tested
+    - Async lifecycle tests (start/stop, cleanup loop)
+  - **Acceptance Criteria**: ✅ AC1: mDNS advertisement functional, ✅ AC2: PIN-based pairing works, ✅ AC3: WebRTC signaling server operational
+
 - **M3.15: Live TV EPG-lite** (2025-01-XX)
   - Implemented Electronic Program Guide (EPG) functionality for Live TV channels
   - **EPG Manager** (`apps/backend/livetv/epg.py`):
@@ -1063,3 +1100,5 @@ ChannelResponse: {id, name, stream_url, logo_url, group_title, language, tvg_id,
 - [2025-11-03T01:30:23.2014256Z] Completed tasks: M3.10
 
 - [2025-11-03T01:40:28.8307262Z] Completed tasks: M3.11
+
+- [2025-11-03T02:12:10.9433120Z] Completed tasks: M3.15
