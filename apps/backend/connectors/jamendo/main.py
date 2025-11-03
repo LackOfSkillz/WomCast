@@ -4,6 +4,8 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
+from common.resilience import with_resilience
+
 from . import JamendoConnector
 
 logger = logging.getLogger(__name__)
@@ -34,7 +36,10 @@ async def get_popular(limit: int = Query(20, ge=1, le=100)):
     connector = await get_connector()
 
     try:
-        tracks = await connector.get_popular(limit=limit)
+        async def _get_popular():
+            return await connector.get_popular(limit=limit)
+
+        tracks = await with_resilience("jamendo", _get_popular)
 
         return {
             "tracks": [
@@ -57,7 +62,8 @@ async def get_popular(limit: int = Query(20, ge=1, le=100)):
 
     except Exception as e:
         logger.error(f"Get popular error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get popular tracks") from e
+        # Graceful degradation
+        return {"tracks": [], "count": 0}
 
 
 @router.get("/search")
@@ -79,7 +85,10 @@ async def search_tracks(
     connector = await get_connector()
 
     try:
-        tracks = await connector.search(query=q, limit=limit, genre=genre)
+        async def _search():
+            return await connector.search(query=q, limit=limit, genre=genre)
+
+        tracks = await with_resilience("jamendo", _search)
 
         return {
             "tracks": [
@@ -103,7 +112,8 @@ async def search_tracks(
 
     except Exception as e:
         logger.error(f"Search error: {e}")
-        raise HTTPException(status_code=500, detail="Search failed") from e
+        # Graceful degradation
+        return {"tracks": [], "count": 0, "query": q}
 
 
 @router.get("/tracks/{track_id}")
@@ -119,7 +129,10 @@ async def get_track_details(track_id: str):
     connector = await get_connector()
 
     try:
-        track = await connector.get_track_details(track_id)
+        async def _get_track():
+            return await connector.get_track_details(track_id)
+
+        track = await with_resilience("jamendo", _get_track)
 
         if not track:
             raise HTTPException(status_code=404, detail="Track not found")
@@ -141,7 +154,7 @@ async def get_track_details(track_id: str):
         raise
     except Exception as e:
         logger.error(f"Get track error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get track details") from e
+        raise HTTPException(status_code=503, detail="Service temporarily unavailable") from e
 
 
 # Lifespan management

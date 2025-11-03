@@ -839,10 +839,10 @@
                                                   "Play/stop works",
                                                   "Error toasts for bad streams"
                                               ],
-                      "start_at_utc":  null,
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "todo",
+                      "start_at_utc":  "2025-11-03T01:09:23.8414704Z",
+                      "end_at_utc":  "2025-11-03T01:09:23.8414704Z",
+                      "duration_h":  0,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {

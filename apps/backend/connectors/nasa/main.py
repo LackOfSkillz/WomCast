@@ -1,8 +1,10 @@
-"""NASA TV REST API endpoints for WomCast."""
+"""NASA REST API endpoints for WomCast."""
 
 import logging
 
 from fastapi import APIRouter, HTTPException, Query
+
+from common.resilience import with_resilience
 
 from . import NASAConnector
 
@@ -31,7 +33,10 @@ async def get_live_streams():
     connector = await get_connector()
 
     try:
-        streams = await connector.get_live_streams()
+        async def _get_streams():
+            return await connector.get_live_streams()
+
+        streams = await with_resilience("nasa", _get_streams)
 
         return {
             "streams": [
@@ -50,7 +55,8 @@ async def get_live_streams():
 
     except Exception as e:
         logger.error(f"Get live streams error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get live streams") from e
+        # Graceful degradation
+        return {"streams": [], "count": 0}
 
 
 @router.get("/search")
@@ -72,7 +78,10 @@ async def search_items(
     connector = await get_connector()
 
     try:
-        items = await connector.search(query=q, media_type=media_type, limit=limit)
+        async def _search():
+            return await connector.search(query=q, media_type=media_type, limit=limit)
+
+        items = await with_resilience("nasa", _search)
 
         return {
             "items": [
@@ -97,6 +106,8 @@ async def search_items(
 
     except Exception as e:
         logger.error(f"Search error: {e}")
+        # Graceful degradation
+        return {"items": [], "count": 0, "query": q}
         raise HTTPException(status_code=500, detail="Search failed") from e
 
 
@@ -113,7 +124,10 @@ async def get_item_details(item_id: str):
     connector = await get_connector()
 
     try:
-        item = await connector.get_item_details(item_id)
+        async def _get_item():
+            return await connector.get_item_details(item_id)
+
+        item = await with_resilience("nasa", _get_item)
 
         if not item:
             raise HTTPException(status_code=404, detail="Item not found")
@@ -136,7 +150,7 @@ async def get_item_details(item_id: str):
         raise
     except Exception as e:
         logger.error(f"Get item error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get item details") from e
+        raise HTTPException(status_code=503, detail="Service temporarily unavailable") from e
 
 
 # Lifespan management

@@ -4,6 +4,8 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
+from common.resilience import with_resilience
+
 from . import InternetArchiveConnector
 
 logger = logging.getLogger(__name__)
@@ -29,8 +31,17 @@ async def get_collections():
         List of collection objects with id, title, description
     """
     connector = await get_connector()
-    collections = await connector.get_collections()
-    return {"collections": collections}
+
+    try:
+        async def _get_collections():
+            return await connector.get_collections()
+
+        collections = await with_resilience("internet_archive", _get_collections)
+        return {"collections": collections}
+    except Exception as e:
+        logger.error(f"Collections error: {e}")
+        # Graceful degradation: return empty list
+        return {"collections": []}
 
 
 @router.get("/search")
@@ -56,9 +67,12 @@ async def search_items(
     connector = await get_connector()
 
     try:
-        items = await connector.search(
-            query=q, mediatype=mediatype, collection=collection, rows=rows, page=page
-        )
+        async def _search():
+            return await connector.search(
+                query=q, mediatype=mediatype, collection=collection, rows=rows, page=page
+            )
+
+        items = await with_resilience("internet_archive", _search)
 
         # Convert dataclass to dict
         return {
@@ -87,7 +101,8 @@ async def search_items(
 
     except Exception as e:
         logger.error(f"Search error: {e}")
-        raise HTTPException(status_code=500, detail="Search failed") from e
+        # Graceful degradation: return empty results
+        return {"items": [], "count": 0, "page": page, "rows": rows}
 
 
 @router.get("/items/{identifier}")
@@ -103,7 +118,10 @@ async def get_item_details(identifier: str):
     connector = await get_connector()
 
     try:
-        item = await connector.get_item_details(identifier)
+        async def _get_item():
+            return await connector.get_item_details(identifier)
+
+        item = await with_resilience("internet_archive", _get_item)
 
         if not item:
             raise HTTPException(status_code=404, detail="Item not found")
@@ -129,7 +147,7 @@ async def get_item_details(identifier: str):
         raise
     except Exception as e:
         logger.error(f"Get item error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get item details") from e
+        raise HTTPException(status_code=503, detail="Service temporarily unavailable") from e
 
 
 # Lifespan management
