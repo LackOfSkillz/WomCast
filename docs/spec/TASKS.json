@@ -897,9 +897,9 @@
                                                   "Latency acceptable for voice"
                                               ],
                       "start_at_utc":  "2025-11-03T02:29:32.6681399Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-03T03:49:47.3301056Z",
+                      "duration_h":  1.34,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -925,10 +925,10 @@
                                                   "Small model used by default",
                                                   "Quantized model option; p50/p95 latency recorded to local metrics"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-03T03:50:08.2507061Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {

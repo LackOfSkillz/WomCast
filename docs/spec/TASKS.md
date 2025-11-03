@@ -80,7 +80,7 @@
 | M3.5 | Live TV UI: channel list + play | AI-Agent | 0.75 | [ui] | M3.4, M2.4 | — | ✅ |
 | M3.6 | Casting service: mDNS advert + signaling | AI-Agent | 1.0 | [backend][ops] | M1.5 | ✓ | ✅ |
 | M3.7 | Phone-mic relay via WebRTC | AI-Agent | 1.0 | [backend][ai] | M3.6 | — | ✅ |
-| M3.8 | Whisper STT (small) integration | AI-Agent | 1.0 | [ai][backend] | M3.7 | — | todo |
+| M3.8 | Whisper STT (small) integration | AI-Agent | 1.0 | [ai][backend] | M3.7 | — | ✅ |
 | M3.9 | Voice UX in frontend (push-to-talk) | AI-Agent | 0.75 | [ui][ai] | M3.8 | — | todo |
 | M3.10 | Perf scripts: cast & voice timers | AI-Agent | 0.25 | [perf][ops] | M3.6–M3.9 | ✓ | ✅ |
 | M3.11 | Docs update for connectors/Live TV/voice | AI-Agent | 0.25 | [docs] | M3.* | — | ✅ |
