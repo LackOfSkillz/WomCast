@@ -4,13 +4,27 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 
 ## [Unreleased]
 
-**Milestone**: M3 External Content (6/16 tasks complete)  
-**Focus**: Content connectors, live TV, voice casting, performance optimization, connector resilience
+**Milestone**: M3 External Content (7/16 tasks complete)  
+**Focus**: Content connectors, live TV, voice casting, performance optimization, connector resilience, subtitle rendering
 
 ### Summary
-M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH), connector resilience patterns (circuit breaker, rate limiting, retry), with voice casting and AI features in progress.
+M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH), connector resilience patterns (circuit breaker, rate limiting, retry), and comprehensive subtitle font support with voice casting and AI features in progress.
 
 ### New Features
+- **M3.16: Subtitle Font Pack & Fallback Rules** (2025-01-XX)
+  - Added Noto Sans font family via Google Fonts CDN (Latin, CJK, Arabic scripts)
+  - Configured comprehensive font fallback stack: Noto Sans → Liberation Sans → Arial/Helvetica → system sans-serif
+  - Created subtitle CSS module (`apps/frontend/src/styles/subtitles.css`) with:
+    - Responsive font sizing (1.2rem mobile, 1.5rem desktop, 2rem 4K)
+    - High contrast mode for improved readability (yellow text, enhanced shadows)
+    - Language-specific styling for CJK (Chinese, Japanese, Korean) with letter-spacing
+    - RTL (right-to-left) support for Arabic and Hebrew scripts
+    - Position variants (bottom/top) with fade-in animations
+    - Text shadow and background for clear subtitle visibility
+  - Updated CSP (Content Security Policy) to allow Google Fonts
+  - Font documentation in `apps/frontend/public/fonts/README.md`
+  - **Acceptance Criteria**: ✅ AC1: Multi-language font support (Latin, CJK, Arabic), ✅ AC2: Graceful fallback to system fonts, ✅ AC3: Responsive sizing and accessibility
+
 - **M3.14: Connector Resilience** (2025-01-XX)
   - Centralized resilience module with circuit breaker, rate limiting, and exponential backoff retry
   - CircuitBreaker: Three-state machine (CLOSED/OPEN/HALF_OPEN) with failure threshold (5 failures → OPEN, 30s timeout, 2 successes → CLOSED)

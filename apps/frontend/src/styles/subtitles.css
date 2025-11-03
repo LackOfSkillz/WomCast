@@ -1,0 +1,118 @@
+/* Subtitle Font Styles */
+
+/* Global subtitle font fallback stack */
+:root {
+  --font-subtitle: 'Noto Sans', 'Noto Sans SC', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans Arabic', 
+                   'Liberation Sans', 'Arial', 'Helvetica Neue', 'Helvetica', sans-serif;
+  --font-subtitle-cjk: 'Noto Sans SC', 'Noto Sans JP', 'Noto Sans KR', 'Microsoft YaHei', 'SimSun', 
+                       'PingFang SC', 'Hiragino Sans GB', sans-serif;
+  --font-subtitle-arabic: 'Noto Sans Arabic', 'Arial', 'Tahoma', sans-serif;
+}
+
+/* Base subtitle styling for Kodi player */
+.subtitle-container {
+  font-family: var(--font-subtitle);
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: center;
+  color: #ffffff;
+  text-shadow: 
+    -1px -1px 0 #000,  
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000,
+     0 0 5px rgba(0, 0, 0, 0.8);
+  padding: 0.5rem 1rem;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  max-width: 80%;
+  margin: 0 auto;
+  word-wrap: break-word;
+}
+
+/* Bold subtitle styling */
+.subtitle-container strong,
+.subtitle-container b {
+  font-weight: 700;
+}
+
+/* CJK language-specific styling */
+.subtitle-container[lang="zh"],
+.subtitle-container[lang="ja"],
+.subtitle-container[lang="ko"] {
+  font-family: var(--font-subtitle-cjk);
+  letter-spacing: 0.05em;
+}
+
+/* Arabic language-specific styling */
+.subtitle-container[lang="ar"],
+.subtitle-container[lang="he"] {
+  font-family: var(--font-subtitle-arabic);
+  direction: rtl;
+  text-align: right;
+}
+
+/* Responsive font sizing */
+@media screen and (max-width: 768px) {
+  .subtitle-container {
+    font-size: 1.2rem;
+    max-width: 90%;
+  }
+}
+
+@media screen and (min-width: 1920px) {
+  .subtitle-container {
+    font-size: 2rem;
+  }
+}
+
+/* High contrast mode for better readability */
+.subtitle-container.high-contrast {
+  color: #ffff00;
+  text-shadow: 
+    -2px -2px 0 #000,  
+     2px -2px 0 #000,
+    -2px  2px 0 #000,
+     2px  2px 0 #000,
+     0 0 8px rgba(0, 0, 0, 1);
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+/* Position variants */
+.subtitle-container.bottom {
+  position: fixed;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.subtitle-container.top {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Animation for subtitle appearance */
+.subtitle-container.fade-in {
+  animation: subtitleFadeIn 0.2s ease-in;
+}
+
+@keyframes subtitleFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Fallback for older browsers */
+@supports not (font-variation-settings: normal) {
+  .subtitle-container {
+    font-family: 'Arial', 'Helvetica', sans-serif;
+  }
+}
