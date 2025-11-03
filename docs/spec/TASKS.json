@@ -1108,10 +1108,10 @@
                                                   "user messaging",
                                                   "per-host rate-limit to avoid bans"
                                               ],
-                      "start_at_utc":  null,
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "todo",
+                      "start_at_utc":  "2025-11-03T01:21:18.5958125Z",
+                      "end_at_utc":  "2025-11-03T01:21:18.5958125Z",
+                      "duration_h":  0,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {

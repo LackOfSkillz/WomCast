@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented here. Timestamps are UTC (ISO-8601).
 
+## [Unreleased]
+
+**Milestone**: M3 External Content (6/16 tasks complete)  
+**Focus**: Content connectors, live TV, voice casting, performance optimization, connector resilience
+
+### Summary
+M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH), connector resilience patterns (circuit breaker, rate limiting, retry), with voice casting and AI features in progress.
+
+### New Features
+- **M3.14: Connector Resilience** (2025-01-XX)
+  - Centralized resilience module with circuit breaker, rate limiting, and exponential backoff retry
+  - CircuitBreaker: Three-state machine (CLOSED/OPEN/HALF_OPEN) with failure threshold (5 failures → OPEN, 30s timeout, 2 successes → CLOSED)
+  - RateLimiter: Token bucket algorithm with configurable rates per connector (Internet Archive: 1 req/s, PBS/NASA/Jamendo: 2 req/s)
+  - RetryConfig: Exponential backoff with 3 attempts, base delay 1s, max delay 60s
+  - `with_resilience()`: Master wrapper combining rate limiting, retry logic, and circuit breaker protection
+  - All 4 connector REST endpoints wrapped: Internet Archive (3/3), NASA (3/3), PBS (3/3), Jamendo (3/3)
+  - Graceful degradation: Empty results for search/list endpoints, 503 (service unavailable) for detail endpoints
+  - Preserve 404 errors for not found items (not retried)
+  - Comprehensive error logging before degradation
+  - **Acceptance Criteria**: ✅ AC1: Connector backoff/retry functional, ✅ AC2: Rate-limiting functional, ✅ AC3: Circuit breaker prevents cascading failures
+
+---
+
 ## [0.2.0] - 2025-11-02 (Complete!)
 
 **Milestone**: M2 Storage & Library (12/12 tasks complete) ✅  
@@ -932,3 +955,5 @@ ChannelResponse: {id, name, stream_url, logo_url, group_title, language, tvg_id,
 - [2025-11-02T23:48:50.3225453Z] Completed tasks: M3.4
 
 - [2025-11-03T01:09:23.8414704Z] Completed tasks: M3.5
+
+- [2025-11-03T01:21:18.5958125Z] Completed tasks: M3.14
