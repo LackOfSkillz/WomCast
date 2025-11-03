@@ -46,6 +46,74 @@ Version 0.2.0 introduces the core media library functionality with automatic USB
 
 ---
 
+## [Unreleased] - 2025-11-03T01:30:00.0000000Z
+
+### M3.5: Live TV UI with channel list and playback (Complete) - 2025-11-03
+**Task**: M3.5 - Live TV UI: channel list + play  
+**Owner**: AI-Agent  
+**Estimate**: 0.75 days  
+**Actual**: 0.75 hours  
+**Tags**: ui, livetv, 10-foot  
+**Dependencies**: M3.4 (Live TV ingest), M2.4 (Kodi bridge)
+
+**Implementation**:
+- LiveTVView React component with responsive channel grid
+- Group filtering UI: "All Channels" + individual group buttons with counts
+- Channel cards: Logo (or placeholder), name, group, language display
+- Play button: Kodi bridge integration via playLiveTVChannel()
+- API client: getLiveTVChannels(), getLiveTVChannel(), playLiveTVChannel()
+- Navigation: Added 📺 Live TV tab to app nav bar (3 tabs: Library, Connectors, Live TV)
+- 10-foot UI optimized: Large touch targets (320px cards), clear focus states, hover effects
+- State management: Loading, error, empty states with retry functionality
+- TypeScript: Full type safety with LiveTVChannel interface
+- Responsive design: Mobile breakpoints (768px), flexible grid layout
+
+**LiveTVView Features**:
+- Channel grid: Auto-fill layout (minmax(320px, 1fr))
+- Group filter buttons: Dynamic generation from channel metadata
+- Channel counts: Real-time filtering and display
+- Logo support: img tag for logo_url or 📺 placeholder
+- Metadata display: Group title, language (🌐 icon)
+- Empty state: "No channels found" with upload hint
+- Error handling: Error message with retry button
+- Loading state: Spinner animation with "Loading channels..." text
+
+**API Integration**:
+- getLiveTVChannels(group?, limit): Fetch channels with optional group filter
+- playLiveTVChannel(streamUrl, title): POST to Kodi bridge for playback
+- Error handling: Proper try/catch with user-friendly messages
+- Type safety: String() casting for template literals, proper statusText handling
+
+**UI/UX**:
+- Color scheme: Dark theme (#1a1a1a bg, #2a2a2a cards, #0078d4 accents)
+- Typography: 2.5rem h1, 1.25rem card titles, 1rem body text
+- Interactions: Hover lift (translateY(-4px)), scale on button press
+- Accessibility: ARIA labels, focus outlines (3px solid), keyboard navigation
+- Animations: Spinner rotation (1s linear), smooth transitions (0.2s)
+
+**Files Created**:
+- `apps/frontend/src/views/LiveTV/LiveTVView.tsx` (144 lines) - Main component
+- `apps/frontend/src/views/LiveTV/LiveTVView.css` (274 lines) - 10-foot UI styles
+
+**Files Updated**:
+- `apps/frontend/src/App.tsx` - Added Live TV navigation tab and routing
+- `apps/frontend/src/services/api.ts` - Added LiveTV API functions (3 new exports)
+
+**Testing Results**:
+- ✅ ESLint: 0 errors, 0 warnings
+- ✅ TypeScript: tsc --noEmit passed, no type errors
+- ✅ All pre-commit hooks passed (ruff, mypy, eslint, tsc)
+- ✅ Component rendering: Loading/error/empty/channels states functional
+- ✅ Group filtering: Dynamic button generation and filtering works
+- ✅ Play integration: playLiveTVChannel() calls Kodi bridge
+
+**Acceptance Criteria**:
+✓ Channel list displays with groups (group filter buttons with dynamic counts)  
+✓ Play button starts stream via Kodi (playLiveTVChannel → POST /v1/playback/play)  
+✓ Group filtering functional (selectedGroup state updates, UI filters correctly)
+
+---
+
 ## [Unreleased] - 2025-11-03T01:00:00.0000000Z
 
 ### M3.4: Live TV ingest with M3U/HLS/DASH support (Complete) - 2025-11-03
@@ -862,3 +930,5 @@ ChannelResponse: {id, name, stream_url, logo_url, group_title, language, tvg_id,
 - [2025-11-02T22:15:12.4529215Z] Completed tasks: M3.3
 
 - [2025-11-02T23:48:50.3225453Z] Completed tasks: M3.4
+
+- [2025-11-03T01:09:23.8414704Z] Completed tasks: M3.5
