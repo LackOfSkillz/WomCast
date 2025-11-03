@@ -701,9 +701,9 @@
                                                   "GET/PUT /v1/settings with persisted keys (models, shares, privacy flags, theme)"
                                               ],
                       "start_at_utc":  "2025-11-02T18:50:29.7482979Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-02T18:54:50.7016070Z",
+                      "duration_h":  0.07,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -727,10 +727,10 @@
                                                   "Play video/audio items",
                                                   "Legal content filtering applied"
                                               ],
-                      "start_at_utc":  null,
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "todo",
+                      "start_at_utc":  "2025-11-02T18:56:57.3709171Z",
+                      "end_at_utc":  "2025-11-02T19:02:29.1328294Z",
+                      "duration_h":  0.09,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -756,10 +756,10 @@
                                                   "Free/legal content only",
                                                   "Adapter pattern consistent"
                                               ],
-                      "start_at_utc":  null,
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "todo",
+                      "start_at_utc":  "2025-11-02T19:03:30.8591030Z",
+                      "end_at_utc":  "2025-11-02T21:40:14.3372149Z",
+                      "duration_h":  2.61,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -784,10 +784,10 @@
                                                   "Browse lists per connector",
                                                   "Play action works"
                                               ],
-                      "start_at_utc":  null,
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "todo",
+                      "start_at_utc":  "2025-11-02T21:40:59.9900151Z",
+                      "end_at_utc":  "2025-11-02T22:15:12.4529215Z",
+                      "duration_h":  0.57,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -811,10 +811,10 @@
                                                   "Validation and cleanup applied",
                                                   "Channels persisted in DB"
                                               ],
-                      "start_at_utc":  null,
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "todo",
+                      "start_at_utc":  "2025-11-02T23:48:50.3225453Z",
+                      "end_at_utc":  "2025-11-02T23:48:50.3225453Z",
+                      "duration_h":  0,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {

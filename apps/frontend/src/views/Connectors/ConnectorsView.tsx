@@ -15,8 +15,10 @@ interface ConnectorItem {
   description?: string;
   thumbnail_url?: string;
   stream_url?: string;
+  audio_url?: string;
   duration?: number;
-  [key: string]: any;
+  artist_name?: string;
+  is_live?: boolean;
 }
 
 const CONNECTORS: Connector[] = [
@@ -58,7 +60,7 @@ export function ConnectorsView(): React.JSX.Element {
 
   useEffect(() => {
     if (selectedConnector) {
-      loadConnectorContent(selectedConnector);
+      void loadConnectorContent(selectedConnector);
     }
   }, [selectedConnector]);
 
@@ -96,8 +98,13 @@ export function ConnectorsView(): React.JSX.Element {
         throw new Error(`Failed to load content: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      setItems(data[dataKey] || []);
+      const data: { items?: ConnectorItem[]; streams?: ConnectorItem[]; tracks?: ConnectorItem[] } =
+        (await response.json()) as {
+          items?: ConnectorItem[];
+          streams?: ConnectorItem[];
+          tracks?: ConnectorItem[];
+        };
+      setItems(data[dataKey as keyof typeof data] ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load content');
       setItems([]);
@@ -115,8 +122,11 @@ export function ConnectorsView(): React.JSX.Element {
         const detailsEndpoint = getDetailsEndpoint(selectedConnector, item.id);
         const response = await fetch(`http://localhost:8000${detailsEndpoint}`);
         if (response.ok) {
-          const details = await response.json();
-          streamUrl = details.stream_url || details.audio_url;
+          const details = (await response.json()) as {
+            stream_url?: string;
+            audio_url?: string;
+          };
+          streamUrl = details.stream_url ?? details.audio_url;
         }
       }
 
@@ -161,7 +171,8 @@ export function ConnectorsView(): React.JSX.Element {
     if (!seconds) return '';
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    const secsStr = secs.toString().padStart(2, '0');
+    return `${String(mins)}:${secsStr}`;
   };
 
   if (selectedConnector) {
@@ -172,7 +183,9 @@ export function ConnectorsView(): React.JSX.Element {
         <header className="connectors-header">
           <button
             className="back-button"
-            onClick={() => setSelectedConnector(null)}
+            onClick={() => {
+              setSelectedConnector(null);
+            }}
             aria-label="Back to connectors"
           >
             ← Back
@@ -190,14 +203,18 @@ export function ConnectorsView(): React.JSX.Element {
           </div>
         )}
 
-        {error && (
-          <div className="error-state">
-            <p>⚠️ {error}</p>
-            <button onClick={() => loadConnectorContent(selectedConnector)}>Retry</button>
-          </div>
-        )}
-
-        {!loading && !error && items.length === 0 && (
+          {error && (
+            <div className="error-state">
+              <p>⚠️ {error}</p>
+              <button
+                onClick={() => {
+                  void loadConnectorContent(selectedConnector);
+                }}
+              >
+                Retry
+              </button>
+            </div>
+          )}        {!loading && !error && items.length === 0 && (
           <div className="empty-state">
             <p>No content available</p>
           </div>
@@ -231,7 +248,9 @@ export function ConnectorsView(): React.JSX.Element {
                   {item.is_live && <span className="live-badge">🔴 LIVE</span>}
                   <button
                     className="play-button"
-                    onClick={() => handlePlay(item)}
+                    onClick={() => {
+                      void handlePlay(item);
+                    }}
                     aria-label={`Play ${item.title}`}
                   >
                     ▶️ Play
@@ -258,7 +277,9 @@ export function ConnectorsView(): React.JSX.Element {
             key={connector.id}
             className="connector-card"
             style={{ borderColor: connector.color }}
-            onClick={() => setSelectedConnector(connector.id)}
+            onClick={() => {
+              setSelectedConnector(connector.id);
+            }}
             aria-label={`Open ${connector.name}`}
           >
             <div className="connector-icon" style={{ color: connector.color }}>

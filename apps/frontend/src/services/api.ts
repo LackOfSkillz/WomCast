@@ -2,8 +2,9 @@
  * API client for WomCast backend services
  */
 
-const METADATA_API_URL = import.meta.env.VITE_METADATA_API_URL || 'http://localhost:8001';
-const PLAYBACK_API_URL = import.meta.env.VITE_PLAYBACK_API_URL || 'http://localhost:8002';
+const METADATA_API_URL = import.meta.env.VITE_METADATA_API_URL as string || 'http://localhost:8001';
+const PLAYBACK_API_URL = import.meta.env.VITE_PLAYBACK_API_URL as string || 'http://localhost:8002';
+const LIVETV_API_URL = import.meta.env.VITE_LIVETV_API_URL as string || 'http://localhost:3007';
 
 export interface MediaFile {
   id: number;
@@ -279,4 +280,53 @@ export function formatFileSize(bytes: number): string {
 
   const unit = units[unitIndex];
   return unit !== undefined ? `${size.toFixed(1)} ${unit}` : `${bytes.toString()} B`;
+}
+
+// Live TV API
+
+export interface LiveTVChannel {
+  id: number;
+  name: string;
+  stream_url: string;
+  logo_url: string | null;
+  group_title: string | null;
+  language: string | null;
+  tvg_id: string | null;
+  codec_info: string | null;
+}
+
+export async function getLiveTVChannels(group?: string, limit: number = 100): Promise<LiveTVChannel[]> {
+  const params = new URLSearchParams();
+  if (group) {
+    params.append('group', group);
+  }
+  params.append('limit', String(limit));
+
+  const response = await fetch(`${LIVETV_API_URL}/v1/livetv/channels?${params.toString()}`);
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to get channels: ${statusText}`);
+  }
+  return (await response.json()) as LiveTVChannel[];
+}
+
+export async function getLiveTVChannel(channelId: number): Promise<LiveTVChannel> {
+  const response = await fetch(`${LIVETV_API_URL}/v1/livetv/channels/${String(channelId)}`);
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to get channel: ${statusText}`);
+  }
+  return (await response.json()) as LiveTVChannel;
+}
+
+export async function playLiveTVChannel(streamUrl: string, title: string): Promise<void> {
+  const response = await fetch(`${PLAYBACK_API_URL}/v1/playback/play`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: streamUrl, title }),
+  });
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to play channel: ${statusText}`);
+  }
 }
