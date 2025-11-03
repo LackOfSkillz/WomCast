@@ -1,8 +1,8 @@
 # WomCast — As Built
 
 > **Living document tracking actual implementation vs specification**  
-> Updated: 2025-11-02 UTC  
-> Milestone: M2 (Storage & Library) In Progress — 7/12 tasks complete
+> Updated: 2025-01-XX UTC  
+> Milestone: M3 (External Content) In Progress — 8/16 tasks complete
 
 ---
 
@@ -15,7 +15,7 @@ WomCast is a local-first entertainment OS for Raspberry Pi 5, built as a microse
 - **AI**: Whisper (voice), Ollama (LLM), ChromaDB (embeddings)
 - **Build**: Docker multi-stage (Debian Bookworm base for Pi OS Lite compatibility)
 
-**Current Status**: M1 complete (12/12 tasks), M2 in progress (7/12 tasks). Media library indexing, Kodi playback integration, and frontend UI implemented with subtitle support and resume position persistence.
+**Current Status**: M1 complete (12/12 tasks), M2 complete (12/12 tasks), M3 in progress (8/16 tasks). External content connectors (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming (M3U/HLS/DASH), connector resilience (circuit breaker, rate limiting, retry), subtitle font pack with multi-language support, and comprehensive performance benchmarking suite implemented. Voice casting and AI features in progress.
 
 ---
 
@@ -40,11 +40,17 @@ WomCast is a local-first entertainment OS for Raspberry Pi 5, built as a microse
 
 | Service | Purpose | Port | Protocol | Auth | Status |
 |---------|---------|------|----------|------|--------|
-| `womcast-gateway` | API Gateway (request routing) | 3000 | HTTP/REST | Optional JWT | M1.5 ✅ |
+| `womcast-gateway` | API Gateway (request routing + connectors + livetv) | 3000 | HTTP/REST | Optional JWT | M1.5 ✅ |
 | `womcast-metadata` | Media indexing & metadata | 3001 | HTTP/REST | Local-only | M2.3 ✅ |
 | `womcast-playback` | Kodi/mpv control | 3002 | HTTP/REST | Local-only | M2.4 ✅ |
-| `womcast-voice` | Whisper STT + voice commands | 3003 | HTTP/REST + WebSocket | Local-only | M1.5 ✅ |
-| `womcast-search` | ChromaDB + Ollama semantic search | 3004 | HTTP/REST | Local-only | M1.5 ✅ |
+| `womcast-voice` | Whisper STT + voice commands | 3003 | HTTP/REST + WebSocket | Local-only | M1.5 ✅ (scaffolded) |
+| `womcast-search` | ChromaDB + Ollama semantic search | 3004 | HTTP/REST | Local-only | M1.5 ✅ (scaffolded) |
+| **Content Connectors** | External API integration | Via Gateway | HTTP/REST | Per-connector | M3.1-M3.2 ✅ |
+| - Internet Archive | Archive.org collections & items | 3000/v1/connectors/internet-archive | HTTP/REST | Public API | M3.1 ✅ |
+| - NASA | NASA Image/Video Library + TV | 3000/v1/connectors/nasa | HTTP/REST | Public API | M3.2 ✅ |
+| - PBS | PBS programming | 3000/v1/connectors/pbs | HTTP/REST | Public API | M3.2 ✅ |
+| - Jamendo | Free music tracks | 3000/v1/connectors/jamendo | HTTP/REST | Public API | M3.2 ✅ |
+| **Live TV Service** | M3U playlist parsing + HLS/DASH | 3000/v1/livetv | HTTP/REST | Local-only | M3.4-M3.5 ✅ |
 | Kodi JSON-RPC | Playback engine | 8080 | HTTP/JSON-RPC | None | M2.4 ✅ |
 | Ollama | LLM inference | 11434 | HTTP/REST | None | External |
 | Vite dev server | Frontend dev mode | 5173 | HTTP/WS | Dev-only | M1.3 ✅ |
@@ -52,9 +58,11 @@ WomCast is a local-first entertainment OS for Raspberry Pi 5, built as a microse
 
 **Service Communication**
 - Gateway → microservices: HTTP/REST via environment-configured URLs
+- Gateway → connectors: HTTP/REST with resilience (circuit breaker, rate limiting, retry) — M3.14 ✅
 - Frontend → Gateway: HTTP/REST (single entry point)
-- Voice: WebSocket for streaming audio (push-to-talk)
-- Cast: WebRTC for phone/tablet pairing (M3 implementation)
+- Frontend → External APIs: Via Gateway only (no direct calls, enforces rate limits)
+- Voice: WebSocket for streaming audio (push-to-talk) — M3.9 (pending)
+- Cast: WebRTC for phone/tablet pairing — M3.6 (pending)
 
 ---
 
@@ -420,11 +428,64 @@ cd apps/frontend && npm ci --only=production && npm run build
 
 ---
 
-## Next Steps (M2 Remaining Tasks)
+## M3: External Content (8/16 tasks complete)
 
-- M2.8: Docs & CHANGELOG updates (current task)
-- M2.9: Network shares (SMB/NFS mount support)
-- M2.10: Database backup strategy
+### M3.1: Internet Archive Connector ✅
+- Connector implementation: `apps/backend/connectors/internet_archive/__init__.py` (200+ lines)
+- REST API: 3 endpoints (collections, search, item details) with resilience wrapping
+- Data models: `InternetArchiveItem` Pydantic model
+- Rate limiting: 1 request/second
+
+### M3.2: PBS, NASA TV, Jamendo Connectors ✅
+- NASA: NASA Image/Video Library + 3 live TV channels
+- PBS: Programming content with show/episode structure
+- Jamendo: Free music tracks (Creative Commons)
+- Rate limiting: 2 requests/second per connector
+
+### M3.3: Frontend Connectors Hub UI ✅
+- ConnectorsView component with source selector
+- Unified search and grid display
+- Tab navigation in App.tsx
+
+### M3.4: Live TV Ingest (M3U/HLS/DASH) ✅
+- LiveTV module: M3U parser, stream validator, playlist manager
+- REST API: POST /upload, GET /channels
+- Test playlist: 5-channel sample.m3u
+
+### M3.5: Live TV UI ✅
+- LiveTVView component with channel grid
+- Playlist upload with drag-and-drop
+- Kodi playback integration
+
+### M3.14: Connector Resilience ✅
+- Resilience module: Circuit breaker (3-state), rate limiter (token bucket), retry (exponential backoff)
+- Configuration: 5 failures → OPEN, 30s timeout, 2 successes → CLOSED
+- Graceful degradation: Empty results for search, 503 for details
+- All 12 connector endpoints wrapped
+
+### M3.16: Subtitle Font Pack ✅
+- Google Fonts CDN: Noto Sans family (Latin, CJK, Arabic, Hebrew)
+- Subtitle CSS: Responsive sizing, high contrast, multi-language support
+- Font fallback: Noto Sans → Liberation Sans → Arial → sans-serif
+
+### M3.10: Performance Scripts ✅
+- Backend benchmarks: API response times, success rates, JSON output
+- Frontend benchmarks: Bundle size, TypeScript compilation, dev server startup
+- Network benchmarks: Connector latency, Kodi JSON-RPC, DNS resolution
+- Documentation: RUNBOOK.md updated with usage and thresholds
+
+---
+
+## Next Steps (M3 Remaining Tasks)
+
+- M3.6: Casting service (mDNS/WebRTC) — 1.0 days
+- M3.7: Phone-mic relay via WebRTC — 1.0 days
+- M3.8: Whisper STT integration — 1.0 days
+- M3.9: Voice UX (push-to-talk) — 0.75 days
+- M3.11: Docs updates — 0.5 days (current task)
+- M3.12: STUN/TURN config — 0.5 days
+- M3.13: QR pairing — 0.5 days
+- M3.15: Live TV EPG-lite — 0.75 days
 - M2.11: Metadata filters (genre, year, rating)
 - M2.12: Settings persistence service
 

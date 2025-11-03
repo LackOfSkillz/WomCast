@@ -4,10 +4,10 @@
 > Unifying local media, free streaming, retro gaming, AI-powered discovery, voice control, and casting—all in a plug-and-play 10-foot interface.
 
 [![License](https://img.shields.io/badge/license-TBD-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.0--alpha-orange.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.3.0--alpha-orange.svg)](CHANGELOG.md)
 [![Platform](https://img.shields.io/badge/platform-Raspberry%20Pi%205-c51a4a.svg)](https://www.raspberrypi.com/)
 [![Node](https://img.shields.io/badge/node-20%20LTS-339933.svg)](https://nodejs.org/)
-[![Python](https://img.shields.io/badge/python-3.11-3776ab.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.13-3776ab.svg)](https://www.python.org/)
 
 ---
 
@@ -89,41 +89,45 @@ One 10-foot UI for local media (USB/NFS/SMB), free streaming sources (Internet A
 - **Subtitles**: Auto-load SRT/VTT with font fallback rules
 - **Network shares**: Optional SMB/NFS mounting via settings
 
-#### 📺 **Free Streaming Connectors**
+#### 📺 **Free Streaming Connectors** ✅ (M3.1, M3.2, M3.14)
 - **Internet Archive**: Browse public-domain movies, music, and educational content
 - **PBS**: Access PBS shows and documentaries
-- **NASA TV**: Live streams and mission archives
-- **Jamendo**: Free-to-stream music library
-- **Rate limiting**: Backoff/retry logic prevents bans; user-facing error messages
+- **NASA TV**: Live streams (Public, Media, ISS channels) and mission archives
+- **Jamendo**: Free-to-stream music library (Creative Commons)
+- **Connector resilience**: Circuit breaker (3-state), rate limiting (token bucket), exponential backoff retry
+- **Graceful degradation**: Empty results on failure, no 500 errors crashing frontend
+- **Rate limiting**: 1 req/s (Internet Archive), 2 req/s (PBS/NASA/Jamendo)
 
-#### 📡 **Live TV & EPG**
-- **M3U/HLS/DASH ingest**: Paste URL or upload file; channels load instantly
-- **Validation**: Cleanup and sanity checks applied automatically
-- **EPG-lite**: Now/Next derived from M3U hints or simple EPG URL (when provided)
-- **Logo display**: Channel grid with artwork
+#### 📡 **Live TV & EPG** ✅ (M3.4, M3.5)
+- **M3U/HLS/DASH ingest**: Upload playlist file or paste URL; channels load instantly
+- **Playlist parsing**: EXTINF metadata extraction with stream validation
+- **Channel grid**: Responsive display with channel names, numbers, stream URLs
+- **Kodi playback**: Click channel → play via Kodi JSON-RPC
+- **Drag-and-drop upload**: Frontend file input with drag-and-drop support
+- **EPG-lite**: (M3.15 pending) Now/Next derived from M3U hints or EPG URL
 
-#### 🎮 **Retro Gaming**
+#### 🎮 **Retro Gaming** ⏳ (M4 pending)
 - **RetroArch cores**: NES, SNES, Genesis, Game Boy, PS1 pre-installed
 - **Save states**: Full state save/restore per game
 - **Bluetooth pairing**: On-screen wizard for controller setup
 - **Controller profiles**: Per-device mapping save/restore
 
-#### 🗣️ **AI-Powered Voice & Search**
-- **Whisper STT**: Small quantized model; ≤1.2s p50 latency
-- **Ollama intent parsing**: "Play the latest Jamendo jazz" → action + args API
-- **ChromaDB semantic search**: Embeddings for "Find documentaries about space"
-- **Unified search UX**: Text, semantic, and voice inputs converge in one interface
-- **Phone-mic relay**: Hold push-to-talk on your phone when TV lacks microphone
-- **Server-side processing**: Option to offload STT/LLM when device is underpowered
+#### 🗣️ **AI-Powered Voice & Search** ⏳ (M3.6-M3.9, M5 pending)
+- **Whisper STT**: Small quantized model; ≤1.2s p50 latency (M3.8 pending)
+- **Ollama intent parsing**: "Play the latest Jamendo jazz" → action + args API (M5 pending)
+- **ChromaDB semantic search**: Embeddings for "Find documentaries about space" (M5 pending)
+- **Unified search UX**: Text search functional, semantic and voice pending
+- **Phone-mic relay**: WebRTC audio streaming (M3.7 pending)
+- **Push-to-talk UI**: Frontend voice interface (M3.9 pending)
 
-#### 📱 **Casting & Remote Control**
-- **mDNS discovery**: Phone/tablet finds WomCast on LAN automatically
-- **QR pairing**: On-screen QR encodes `womcast.local` + session credentials
-- **WebRTC signaling**: Direct peer connection; no relay servers needed (TURN optional)
-- **PWA remote**: Install on home screen; navigate, play/pause, push-to-talk voice
-- **Service worker**: Offline cache; reconnect handling when network drops
+#### 📱 **Casting & Remote Control** ⏳ (M3.6, M3.13 pending)
+- **mDNS discovery**: Phone/tablet finds WomCast on LAN (M3.6 pending)
+- **QR pairing**: On-screen QR with session credentials (M3.13 pending)
+- **WebRTC signaling**: Direct peer connection (M3.6 pending)
+- **PWA remote**: Install on home screen for remote control (future)
+- **STUN/TURN config**: LAN-first, TURN optional (M3.12 pending)
 
-#### ☁️ **Cloud Service Passthrough**
+#### ☁️ **Cloud Service Passthrough** ⏳ (M4 pending)
 - **Legal compliance**: No DRM bypass; badges open provider login pages (Netflix, Disney+, etc.)
 - **QR codes**: Mobile signin for services that require it
 - **HDMI-CEC integration**: Auto-switch TV input when launching cloud apps (with fallback UI)

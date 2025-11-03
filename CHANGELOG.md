@@ -4,13 +4,40 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 
 ## [Unreleased]
 
-**Milestone**: M3 External Content (8/16 tasks complete)  
-**Focus**: Content connectors, live TV, voice casting, performance optimization, connector resilience, subtitle rendering
+**Milestone**: M3 External Content (9/16 tasks complete)  
+**Focus**: Content connectors, live TV, voice casting, performance optimization, connector resilience, subtitle rendering, documentation
 
 ### Summary
-M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH), connector resilience patterns (circuit breaker, rate limiting, retry), comprehensive subtitle font support, and performance benchmarking tools with voice casting and AI features in progress.
+M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH), connector resilience patterns (circuit breaker, rate limiting, retry), comprehensive subtitle font support, performance benchmarking tools, and updated documentation reflecting all M3 implementations.
 
 ### New Features
+- **M3.11: Documentation Updates** (2025-01-XX)
+  - **ASBUILT.md**: Updated milestone header (M3 8/16→9/16 tasks), current status reflects M1 complete + M2 complete + M3 in progress
+  - **ASBUILT.md**: Added Services & Ports table entries for 4 connectors and Live TV service with endpoint documentation
+  - **ASBUILT.md**: Added M3 section (100+ lines) covering all 8 completed tasks:
+    - M3.1: Internet Archive connector architecture, data models, rate limiting (1 req/s)
+    - M3.2: PBS, NASA TV, Jamendo connectors with unified REST APIs (2 req/s each)
+    - M3.3: Frontend Connectors hub UI with source selector and grid display
+    - M3.4: Live TV M3U parser, stream validator, playlist manager
+    - M3.5: LiveTVView component with channel grid and Kodi integration
+    - M3.14: Resilience module with circuit breaker (3-state), rate limiter (token bucket), exponential backoff retry, graceful degradation
+    - M3.16: Subtitle font pack (Noto Sans via Google Fonts CDN), multi-language support (Latin, CJK, Arabic, Hebrew), responsive sizing, high contrast mode
+    - M3.10: Performance benchmarking suite (backend API, frontend build, network latency) with JSON output and thresholds
+  - **RUNBOOK.md**: Expanded Performance Monitoring section with 4 subsections:
+    - Indexer performance test (M2.7) - existing, unchanged
+    - Backend API performance test (M3.10) - 18 endpoint benchmarks with thresholds (health ≤100ms, search ≤500ms, connectors ≤3000ms)
+    - Frontend build performance test (M3.10) - bundle size analysis, TypeScript compilation time, dev server startup
+    - Network performance test (M3.10) - connector latency, Kodi JSON-RPC, DNS resolution with per-test thresholds
+  - **README.md**: Updated version badge (0.1.0-alpha → 0.3.0-alpha), Python badge (3.11 → 3.13)
+  - **README.md**: Updated Features section with completion status markers:
+    - Free Streaming Connectors: Marked ✅ (M3.1, M3.2, M3.14) with resilience details
+    - Live TV & EPG: Marked ✅ (M3.4, M3.5) with M3U parsing and Kodi playback
+    - Retro Gaming: Marked ⏳ (M4 pending)
+    - AI Voice & Search: Marked ⏳ (M3.6-M3.9, M5 pending) with component status breakdown
+    - Casting & Remote Control: Marked ⏳ (M3.6, M3.13 pending)
+    - Cloud Service Passthrough: Marked ⏳ (M4 pending)
+  - **Acceptance Criteria**: ✅ AC1: ASBUILT.md reflects M3 implementations, ✅ AC2: RUNBOOK.md updated with operational procedures, ✅ AC3: README.md feature status current
+
 - **M3.10: Performance Scripts** (2025-01-XX)
   - Created comprehensive performance benchmarking suite with PowerShell scripts
   - **Backend Benchmarks** (`scripts/dev/perf-backend.ps1`):
@@ -996,3 +1023,5 @@ ChannelResponse: {id, name, stream_url, logo_url, group_title, language, tvg_id,
 - [2025-11-03T01:21:18.5958125Z] Completed tasks: M3.14
 
 - [2025-11-03T01:25:58.2549906Z] Completed tasks: M3.16
+
+- [2025-11-03T01:30:23.2014256Z] Completed tasks: M3.10
