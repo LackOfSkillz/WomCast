@@ -926,9 +926,9 @@
                                                   "Quantized model option; p50/p95 latency recorded to local metrics"
                                               ],
                       "start_at_utc":  "2025-11-03T03:50:08.2507061Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-03T03:58:35.9300135Z",
+                      "duration_h":  0.14,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -953,10 +953,10 @@
                                                   "Result routes to search or action",
                                                   "Visual feedback during capture"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-03T03:59:16.6423723Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {
@@ -1051,10 +1051,10 @@
                                                   "TURN fields validated",
                                                   "Phase-2 note documented"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-03T17:56:26.6813138Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {

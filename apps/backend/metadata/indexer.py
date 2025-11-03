@@ -5,7 +5,6 @@ Implements efficient scanning with change detection and progress reporting.
 """
 
 import asyncio
-import json
 import logging
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
@@ -184,12 +183,8 @@ async def index_file(
         file_hash = await get_file_hash(file_path)
         now = datetime.now(UTC).isoformat()
 
-        # Detect subtitle files for video content
-        subtitle_tracks = []
-        if media_type == "video":
-            subtitle_tracks = detect_subtitle_files(file_path)
-
-        subtitle_tracks_json = json.dumps(subtitle_tracks) if subtitle_tracks else None
+        # TODO: Store subtitle tracks in videos table when we add metadata enrichment
+        # subtitle_tracks = detect_subtitle_files(file_path) if media_type == "video" else []
 
         # Check if file already exists
         async with db.execute(
@@ -201,15 +196,14 @@ async def index_file(
         if existing:
             existing_id, existing_hash = existing
             if existing_hash == file_hash:
-                # File unchanged, update indexed_at timestamp and subtitle tracks
+                # File unchanged, update indexed_at timestamp only
                 await db.execute(
                     """
                     UPDATE media_files
-                    SET indexed_at = ?,
-                        subtitle_tracks = ?
+                    SET indexed_at = ?
                     WHERE id = ?
                     """,
-                    (now, subtitle_tracks_json, existing_id),
+                    (now, existing_id),
                 )
                 return existing_id
             else:
@@ -220,8 +214,7 @@ async def index_file(
                     SET file_size = ?,
                         file_hash = ?,
                         modified_at = ?,
-                        indexed_at = ?,
-                        subtitle_tracks = ?
+                        indexed_at = ?
                     WHERE id = ?
                     """,
                     (
@@ -229,7 +222,6 @@ async def index_file(
                         file_hash,
                         datetime.fromtimestamp(stat.st_mtime, UTC).isoformat(),
                         now,
-                        subtitle_tracks_json,
                         existing_id,
                     ),
                 )
@@ -240,8 +232,8 @@ async def index_file(
                 """
                 INSERT INTO media_files
                 (file_path, file_name, file_size, media_type, file_hash,
-                 mount_point_id, created_at, modified_at, indexed_at, subtitle_tracks)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 mount_point_id, created_at, modified_at, indexed_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     str(file_path),
@@ -253,7 +245,6 @@ async def index_file(
                     datetime.fromtimestamp(stat.st_ctime, UTC).isoformat(),
                     datetime.fromtimestamp(stat.st_mtime, UTC).isoformat(),
                     now,
-                    subtitle_tracks_json,
                 ),
             )
             return cursor.lastrowid

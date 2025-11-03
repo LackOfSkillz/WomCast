@@ -11,6 +11,7 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
 from cast.audio_relay import AudioRelay
+from cast.ice_config import get_ice_configuration
 from cast.mdns import MDNSAdvertiser
 from cast.sessions import SessionManager
 
@@ -265,6 +266,24 @@ async def list_sessions():
 
     sessions = session_manager.get_all_sessions()
     return {"sessions": [s.to_dict() for s in sessions]}
+
+
+@app.get("/v1/cast/ice-config")
+async def get_ice_config():
+    """
+    Get WebRTC ICE server configuration.
+
+    Returns STUN/TURN server configuration for establishing WebRTC connections.
+    By default, returns public STUN servers for LAN-first connectivity.
+    Can be extended to support custom TURN servers via environment variables.
+
+    Returns:
+        ICE configuration with STUN/TURN servers
+    """
+    # TODO: Load custom STUN/TURN from environment or settings service
+    # For now, return default public STUN servers
+    config = get_ice_configuration()
+    return {"ice_configuration": config}
 
 
 @app.post("/v1/cast/audio/start/{session_id}")
