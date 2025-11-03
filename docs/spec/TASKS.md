@@ -82,7 +82,7 @@
 | M3.7 | Phone-mic relay via WebRTC | AI-Agent | 1.0 | [backend][ai] | M3.6 | — | todo |
 | M3.8 | Whisper STT (small) integration | AI-Agent | 1.0 | [ai][backend] | M3.7 | — | todo |
 | M3.9 | Voice UX in frontend (push-to-talk) | AI-Agent | 0.75 | [ui][ai] | M3.8 | — | todo |
-| M3.10 | Perf scripts: cast & voice timers | AI-Agent | 0.25 | [perf][ops] | M3.6–M3.9 | ✓ | todo |
+| M3.10 | Perf scripts: cast & voice timers | AI-Agent | 0.25 | [perf][ops] | M3.6–M3.9 | ✓ | ✅ |
 | M3.11 | Docs update for connectors/Live TV/voice | Gary | 0.25 | [docs] | M3.* | — | todo |
 | M3.12 | STUN/TURN config (LAN-first, TURN optional) | AI-Agent | 0.5 | [backend][ops] | M3.6 | ✓ | todo |
 | M3.13 | QR pairing + mobile PWA deep link | AI-Agent | 0.5 | [ui][ops] | M3.6 | ✓ | todo |

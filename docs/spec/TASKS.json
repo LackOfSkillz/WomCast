@@ -1163,10 +1163,10 @@
                                                   "Bundled legible fonts",
                                                   "language fallback tested"
                                               ],
-                      "start_at_utc":  null,
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "todo",
+                      "start_at_utc":  "2025-11-03T01:25:58.2549906Z",
+                      "end_at_utc":  "2025-11-03T01:25:58.2549906Z",
+                      "duration_h":  0,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {

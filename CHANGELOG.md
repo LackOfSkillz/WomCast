@@ -4,13 +4,36 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 
 ## [Unreleased]
 
-**Milestone**: M3 External Content (7/16 tasks complete)  
+**Milestone**: M3 External Content (8/16 tasks complete)  
 **Focus**: Content connectors, live TV, voice casting, performance optimization, connector resilience, subtitle rendering
 
 ### Summary
-M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH), connector resilience patterns (circuit breaker, rate limiting, retry), and comprehensive subtitle font support with voice casting and AI features in progress.
+M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH), connector resilience patterns (circuit breaker, rate limiting, retry), comprehensive subtitle font support, and performance benchmarking tools with voice casting and AI features in progress.
 
 ### New Features
+- **M3.10: Performance Scripts** (2025-01-XX)
+  - Created comprehensive performance benchmarking suite with PowerShell scripts
+  - **Backend Benchmarks** (`scripts/dev/perf-backend.ps1`):
+    - API endpoint response time measurement (health, search, connectors, settings, live TV)
+    - Success rate tracking with iterations (10-20 per endpoint)
+    - Performance thresholds: Health ≤100ms, Search ≤500ms, Connectors ≤3000ms
+    - JSON output for CI/CD integration (`perf-backend-results.json`)
+    - Slowest/fastest endpoint identification
+  - **Frontend Benchmarks** (`scripts/dev/perf-frontend.ps1`):
+    - Bundle size analysis (total, JS, CSS with thresholds: 5MB, 1MB, N/A)
+    - TypeScript compilation time measurement (threshold: ≤30s)
+    - ESLint execution time tracking
+    - Dev server startup time measurement (threshold: ≤30s)
+    - JSON output for build optimization (`perf-frontend-results.json`)
+  - **Network Benchmarks** (`scripts/dev/perf-network.ps1`):
+    - Connector API latency measurement (Internet Archive, NASA, Jamendo with 5 iterations each)
+    - Kodi JSON-RPC response time tracking (Ping, GetActivePlayers)
+    - DNS resolution performance per domain (archive.org, nasa.gov, jamendo.com, google fonts)
+    - Configurable Kodi host/port for remote testing
+    - Network health diagnostics with threshold validation
+  - **Documentation**: Updated RUNBOOK.md with detailed usage instructions, performance targets, and result interpretation
+  - **Acceptance Criteria**: ✅ AC1: Backend API benchmarks functional, ✅ AC2: Frontend build metrics captured, ✅ AC3: Network latency measured with thresholds
+
 - **M3.16: Subtitle Font Pack & Fallback Rules** (2025-01-XX)
   - Added Noto Sans font family via Google Fonts CDN (Latin, CJK, Arabic scripts)
   - Configured comprehensive font fallback stack: Noto Sans → Liberation Sans → Arial/Helvetica → system sans-serif
@@ -971,3 +994,5 @@ ChannelResponse: {id, name, stream_url, logo_url, group_title, language, tvg_id,
 - [2025-11-03T01:09:23.8414704Z] Completed tasks: M3.5
 
 - [2025-11-03T01:21:18.5958125Z] Completed tasks: M3.14
+
+- [2025-11-03T01:25:58.2549906Z] Completed tasks: M3.16

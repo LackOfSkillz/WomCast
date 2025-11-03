@@ -141,9 +141,11 @@
      python -m metadata.indexer /media/<drive-label>
      ```
 
-### Performance Monitoring (M2.7)
+### Performance Monitoring (M2.7, M3.10)
 
-1. **Run Performance Test**
+#### Indexer Performance Test (M2.7)
+
+1. **Run Indexer Performance Test**
    - **VS Code**: Run Task → perf:index
    - **PowerShell**:
      ```powershell
@@ -169,6 +171,117 @@
    Cold throughput:    293.8 files/s
    Warm throughput:    685.6 files/s
    ✓ Performance OK: Cold cache within expected range
+   ```
+
+#### Backend API Performance Test (M3.10)
+
+1. **Run Backend Benchmarks**
+   - **Prerequisites**: Backend server must be running (`cd apps/backend && python -m gateway.main`)
+   - **PowerShell**:
+     ```powershell
+     .\scripts\dev\perf-backend.ps1
+     ```
+   - **Output**: `perf-backend-results.json`
+
+2. **Performance Thresholds**
+   - **Health Check**: ≤100ms average
+   - **Search Endpoints**: ≤500ms average
+   - **Connector APIs**: ≤3000ms average (external API latency)
+   - **Success Rate**: 100% for core endpoints, 80%+ for connectors
+
+3. **Interpret Results**
+   ```
+   === Performance Summary ===
+   Total tests:          18
+   Successful (100%):    16
+   Partial failures:     2
+   
+   === Slowest Endpoints ===
+     Internet Archive Search: 2134.5ms avg
+     NASA Live Streams: 1892.3ms avg
+     PBS Featured: 1654.7ms avg
+   
+   === Fastest Endpoints ===
+     Health Check: 12.3ms avg
+     Database Stats: 45.6ms avg
+     Get Playlists: 78.9ms avg
+   
+   ✓ Health Check within 100ms threshold
+   ✓ Search within 500ms threshold
+   ✓ Connector within 3000ms threshold
+   ```
+
+#### Frontend Build Performance Test (M3.10)
+
+1. **Run Frontend Benchmarks**
+   - **PowerShell**:
+     ```powershell
+     .\scripts\dev\perf-frontend.ps1
+     ```
+   - **Output**: `perf-frontend-results.json`
+
+2. **Performance Thresholds**
+   - **Total Bundle Size**: ≤5 MB
+   - **JavaScript Bundle**: ≤1 MB
+   - **TypeScript Compilation**: ≤30s
+   - **Dev Server Startup**: ≤30s
+
+3. **Interpret Results**
+   ```
+   === Bundle Size Analysis ===
+   Total bundle size:    3.42 MB
+   JavaScript bundle:    789.4 KB
+   CSS bundle:           123.5 KB
+   
+   === TypeScript Compilation Performance ===
+   TypeScript compilation: 8.34s
+   
+   === Performance Thresholds ===
+   ✓ Bundle size within 5 MB threshold
+   ✓ JavaScript bundle within 1 MB threshold
+   ✓ TypeScript compilation within 30s threshold
+   ```
+
+#### Network Performance Test (M3.10)
+
+1. **Run Network Benchmarks**
+   - **PowerShell**:
+     ```powershell
+     .\scripts\dev\perf-network.ps1
+     # Or with custom Kodi host:
+     .\scripts\dev\perf-network.ps1 -KodiHost 192.168.1.100 -KodiPort 9090
+     ```
+   - **Output**: `perf-network-results.json`
+
+2. **Performance Thresholds**
+   - **Kodi JSON-RPC**: ≤100ms average
+   - **DNS Resolution**: ≤100ms average per domain
+   - **Connector APIs**: ≤3000ms average
+   - **Success Rate**: 100% for local services, 80%+ for external APIs
+
+3. **Interpret Results**
+   ```
+   === Network Performance Benchmark ===
+   
+   === Internet Archive Connector ===
+   IA: Collections API: Avg: 1834.2ms | Min: 1623.4ms | Max: 2134.5ms
+   
+   === NASA API ===
+   NASA: Image/Video Library Search: Avg: 892.3ms | Min: 745.6ms | Max: 1123.7ms
+   
+   === Kodi JSON-RPC ===
+   Kodi is reachable (Ping: 23.4ms)
+   Kodi: GetActivePlayers (15.6ms)
+   
+   === DNS Resolution Performance ===
+     archive.org : 34.5ms
+     images-api.nasa.gov : 28.7ms
+     api.jamendo.com : 41.2ms
+   
+   === Performance Thresholds ===
+   ✓ Kodi latency within 100ms threshold
+   ✓ Average DNS resolution within 100ms threshold: 34.8ms
+   ✓ All connectors within 3000ms threshold
    ```
 
 ---
