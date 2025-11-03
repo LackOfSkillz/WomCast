@@ -4,13 +4,75 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 
 ## [Unreleased]
 
-**Milestone**: M4 Cloud Mapper + CEC Fallback + Server Voice (3/8 tasks complete) 🔄  
+**Milestone**: M4 Cloud Mapper + CEC Fallback + Server Voice (4/8 tasks complete) 🔄  
 **Focus**: Cloud service integration, HDMI-CEC control, server-side voice relay, settings panel, hardening, PWA icon, update manager, privacy controls
 
 ### Summary
-M4 milestone adds legal cloud streaming service integration (Netflix, Disney+, HBO Max, etc.) with QR code handoff to native apps, HDMI-CEC automatic TV input switching, server-side voice relay for devices without microphones, comprehensive settings management panel, production hardening (HTTPS, auth, deployment configs), custom PWA icons and manifest, automatic update checker for backend services, and privacy controls for voice/casting. **M4.1-M4.3 complete: Cloud QR codes, HDMI-CEC input switching, and server-side voice relay fully operational.**
+M4 milestone adds legal cloud streaming service integration (Netflix, Disney+, HBO Max, etc.) with QR code handoff to native apps, HDMI-CEC automatic TV input switching, server-side voice relay for devices without microphones, comprehensive settings management panel, production hardening (HTTPS, auth, deployment configs), custom PWA icons and manifest, automatic update checker for backend services, and privacy controls for voice/casting. **M4.1-M4.4 complete: Cloud QR codes, HDMI-CEC input switching, server-side voice relay, and comprehensive settings panel all operational.**
 
 ### New Features
+- **M4.4: Settings Panel** (2025-01-03) ✅
+  - Implemented tabbed settings interface with 5 sections: Models, Privacy, Pairing, CEC, Network
+  - **Settings Main Component** (`apps/frontend/src/views/Settings/Settings.tsx`, 291 lines):
+    - Tab state management: activeTab = 'models' | 'privacy' | 'pairing' | 'cec' | 'network'
+    - Settings interface: 20+ fields covering voice/AI, privacy, pairing, CEC, network, UI, playback, performance
+    - Loading/error states: Conditional rendering with retry button for API failures
+    - API integration: loadSettings() fetches from /api/settings/v1/settings
+    - Update methods: updateSetting(key, value) for single settings, updateSettings(updates) for batch updates
+    - Reset functionality: resetSettings() with user confirmation, POSTs to /api/settings/v1/settings/reset
+    - Saving indicator: Fixed position overlay shows "Saving..." during async updates
+    - CSS import: './Settings.css' for styling
+  - **Models Tab** (`apps/frontend/src/views/Settings/tabs/ModelsTab.tsx`, 148 lines):
+    - Voice Recognition section: Whisper model dropdown (tiny/base/small/medium/large), STT toggle, voice language selector (9 languages)
+    - Language Model section: Ollama model dropdown (llama2, mistral, mixtral, codellama, phi, gemma with parameter counts)
+    - Text-to-Speech section: Enable/disable TTS toggle
+    - Fields: voice_model, stt_enabled, voice_language, llm_model, tts_enabled
+  - **Privacy Tab** (`apps/frontend/src/views/Settings/tabs/PrivacyTab.tsx`, 194 lines):
+    - Data Collection section: Analytics toggle, crash reporting toggle
+    - Metadata & Enrichment section: TMDB/TVDB metadata fetching toggle
+    - History & Retention section: Voice history retention dropdown (0/1/7/30/90/365 days), cast history retention dropdown
+    - Data Export & Deletion section: Export all data button (TODO implementation), delete all data button with confirmation
+    - Fields: analytics_enabled, crash_reporting_enabled, metadata_fetching_enabled, voice_history_days, cast_history_days
+  - **Pairing Tab** (`apps/frontend/src/views/Settings/tabs/PairingTab.tsx`, 169 lines):
+    - Pairing Configuration section: Enable/disable pairing toggle, PIN length dropdown (4/6/8 digits), session timeout dropdown (1/5/10/30/60 minutes)
+    - Paired Devices section: Live list from /api/cast/v1/sessions with device name, session ID, expiry timestamp
+    - Device management: Remove pairing button with confirmation, auto-reload after removal
+    - Loading states: "Loading paired devices..." and "No devices paired yet" messages
+    - Fields: pairing_enabled, pairing_pin_length, pairing_session_timeout
+  - **CEC Tab** (`apps/frontend/src/views/Settings/tabs/CECTab.tsx`, 192 lines):
+    - CEC Configuration section: Enable CEC toggle, auto-switch input toggle (disabled when CEC off)
+    - HDMI Devices section: Live device list from /api/cast/v1/cec/devices with address, name, vendor, active status
+    - Device scanning: "Scan for Devices" button triggers POST /api/cast/v1/cec/scan
+    - Input switching: "Switch To" button per device, POSTs to /api/cast/v1/cec/switch with address
+    - Loading states: "Loading devices...", "Enable CEC to see devices", "No CEC devices found. Try scanning."
+    - Fields: cec_enabled, cec_auto_switch
+  - **Network Tab** (`apps/frontend/src/views/Settings/tabs/NetworkTab.tsx`, 193 lines):
+    - WebRTC Configuration section: STUN server input (default: stun:stun.l.google.com:19302), TURN server/username/password inputs
+    - Service Discovery section: Enable mDNS toggle for local network broadcasting
+    - Network Diagnostics section: "Run Test" button triggers POST /api/gateway/v1/diagnostics, displays JSON result in monospace code block (300px max height, scrollable)
+    - Input fields: Text inputs for STUN/TURN servers (width: 200-300px), password type for TURN password
+    - Fields: stun_server, turn_server, turn_username, turn_password, mdns_enabled
+  - **Settings Styles** (`apps/frontend/src/views/Settings/Settings.css`, 364 lines):
+    - Layout: Max-width 1200px, 2rem padding, centered with auto margins
+    - Header: Flexbox with title and actions, 2rem bottom margin, border-bottom separator
+    - Tabs: Horizontal flexbox with overflow-x scroll, 3px bottom border for active tab, hover effects, smooth transitions
+    - Content: FadeIn animation (0.3s opacity + translateY), relative positioning for saving overlay
+    - Settings rows: Flexbox justify-between, card background with hover effect, rounded 8px, 1rem padding
+    - Toggle switch: Custom CSS toggle (50x28px) with slider animation, disabled state opacity 0.5
+    - Select dropdown: Custom styled select with border-color transitions, focus ring (3px rgba primary)
+    - Button: Primary/secondary variants, hover effects, disabled states, transition 0.2s
+    - List: Flexbox list items with card styling, info/actions split, remove button
+    - Saving overlay: Fixed top-right (2rem), blue background, white text, box-shadow, slideIn animation
+    - Responsive: Mobile breakpoint @768px, column layout for rows, full-width controls, tab overflow scroll
+  - **Integration**: Settings Panel connects to existing M2.12 settings backend (/v1/settings endpoints), exposes all 20+ default settings from common/settings.py
+  - **Use Cases**:
+    - Model management: Select and switch between Whisper/Ollama models, enable/disable STT/TTS
+    - Privacy controls: Configure data retention, analytics, metadata fetching
+    - Pairing management: View paired devices, adjust PIN length and session timeouts, remove pairings
+    - CEC configuration: Enable HDMI-CEC, scan devices, switch inputs, configure auto-switch behavior
+    - Network diagnostics: Test connectivity, configure STUN/TURN servers for WebRTC
+  - **Future Enhancements** (M4.8): Data export/deletion implementation, voice/cast history purge endpoints
+
 - **M4.3: Server-Side Voice Relay** (2025-01-03) ✅
   - Implemented local microphone audio capture for devices with built-in mics
   - **AudioBuffer Class** (`apps/backend/voice/server_audio.py`, 120 lines):
@@ -1479,3 +1541,5 @@ ChannelResponse: {id, name, stream_url, logo_url, group_title, language, tvg_id,
 - [2025-11-03T20:06:46.4315955Z] Completed tasks: M4.1
 
 - [2025-11-03T20:16:22.0601466Z] Completed tasks: M4.2
+
+- [2025-11-03T22:52:58.9509121Z] Completed tasks: M4.3
