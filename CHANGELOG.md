@@ -5,12 +5,30 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 ## [Unreleased]
 
 **Milestone**: M3 External Content (16/16 tasks complete) ✅  
-**Focus**: Content connectors, live TV, voice casting, Whisper STT, voice UX, performance optimization, connector resilience, subtitle rendering, EPG support, casting service, phone-mic relay, STUN/TURN config, QR pairing, documentation
+**Focus**: Content connectors, live TV, voice casting, Whisper STT, voice UX, performance optimization, connector resilience, subtitle rendering, EPG support, casting service, phone-mic relay, STUN/TURN config, QR pairing, documentation, **integration tests**
 
 ### Summary
-M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH) with Electronic Program Guide (EPG), casting service with mDNS discovery and WebRTC signaling, phone microphone audio relay for voice input, Whisper STT integration for speech-to-text transcription, push-to-talk voice UX with WebRTC audio capture, STUN/TURN ICE server configuration for WebRTC connections, QR code pairing with PWA deep link support for mobile devices, connector resilience patterns (circuit breaker, rate limiting, retry), comprehensive subtitle font support, performance benchmarking tools, and updated documentation reflecting all M3 implementations.
+M3 milestone adds external content sources (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming support (M3U/HLS/DASH) with Electronic Program Guide (EPG), casting service with mDNS discovery and WebRTC signaling, phone microphone audio relay for voice input, Whisper STT integration for speech-to-text transcription, push-to-talk voice UX with WebRTC audio capture, STUN/TURN ICE server configuration for WebRTC connections, QR code pairing with PWA deep link support for mobile devices, connector resilience patterns (circuit breaker, rate limiting, retry), comprehensive subtitle font support, performance benchmarking tools, integration tests for connector validation, and updated documentation reflecting all M3 implementations. **Test coverage improved from 41% to 51% (+10%)**.
 
 ### New Features
+- **Connector Integration Tests** (2025-01-03)
+  - Created `apps/backend/connectors/test_connectors.py` with 22 integration tests
+  - **Test Coverage Improvement**: Overall backend coverage increased from 41% to 51% (+10 percentage points)
+  - **Coverage by Connector**:
+    - Internet Archive: 56% coverage (session lifecycle, search, item details, rate limiting, collections, error handling)
+    - PBS: 75% coverage (session lifecycle, featured content, search, item details, rate limiting)
+    - NASA TV: 43% coverage (session lifecycle, live streams, archive search, item details, rate limiting)
+    - Jamendo: 43% coverage (session lifecycle, popular tracks, search with genre filters, track details, rate limiting, error handling)
+  - **Test Validation Focus**:
+    - Session management: Async context managers (__aenter__/__aexit__) for aiohttp
+    - Rate limiting: Compliance with connector-specific limits (1-2 req/sec)
+    - Error handling: HTTP error codes (500, 403) return empty lists, not exceptions
+    - Legal attribution: License URLs preserved in item metadata (IAItem.license, JamendoTrack.license_ccurl)
+    - Cross-connector tests: All connectors respect rate limits and session lifecycle
+  - **Mock Strategy**: `mock_aiohttp_response()` helper function for context manager mocking
+  - **Test Results**: 130 tests passing (27 core + 81 M3 feature + 22 connector tests)
+  - **M3 Validation**: Tests validate M3.1 (Internet Archive), M3.2 (PBS/NASA/Jamendo), M3.14 (connector resilience)
+
 - **M3.9: Voice UX (push-to-talk frontend interface)** (2025-01-XX)
   - Implemented push-to-talk voice search interface with WebRTC audio capture
   - **VoiceButton Component** (`apps/frontend/src/components/VoiceButton.tsx`):
@@ -1329,3 +1347,5 @@ ChannelResponse: {id, name, stream_url, logo_url, group_title, language, tvg_id,
 - [2025-11-03T03:58:35.9300135Z] Completed tasks: M3.8
 
 - [2025-11-03T18:10:47.0768151Z] Completed tasks: M3.12
+
+- [2025-11-03T18:18:20.1283645Z] Completed tasks: M3.13
