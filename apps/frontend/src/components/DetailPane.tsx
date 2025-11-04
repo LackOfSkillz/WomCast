@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   MediaItem,
   getMediaItem,
@@ -6,6 +6,7 @@ import {
   formatDuration,
   formatFileSize,
 } from '../services/api';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import './DetailPane.css';
 
 export interface DetailPaneProps {
@@ -16,42 +17,73 @@ export function DetailPane({ mediaId }: DetailPaneProps) {
   const [media, setMedia] = useState<MediaItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const { online } = useNetworkStatus();
+  const cachedMedia = useRef<Map<number, MediaItem>>(new Map());
 
   useEffect(() => {
-    let mounted = true;
+    let active = true;
 
-    async function loadMedia() {
+    const loadMedia = async () => {
+      if (!online) {
+        setLoading(false);
+
+        if (cachedMedia.current.has(mediaId)) {
+          setMedia(cachedMedia.current.get(mediaId) ?? null);
+          setError(null);
+          setStatusMessage('Offline mode: showing cached media details.');
+        } else {
+          setMedia(null);
+          setError('Connect to the network to load this media.');
+          setStatusMessage(null);
+        }
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
+        setStatusMessage(null);
         const data = await getMediaItem(mediaId);
-        if (mounted) {
+        if (active) {
           setMedia(data);
+          cachedMedia.current.set(mediaId, data);
         }
       } catch (err) {
-        if (mounted) {
+        if (active) {
           setError(err instanceof Error ? err.message : 'Failed to load media');
         }
       } finally {
-        if (mounted) {
+        if (active) {
           setLoading(false);
         }
       }
-    }
+    };
 
     void loadMedia();
 
     return () => {
-      mounted = false;
+      active = false;
     };
-  }, [mediaId]);
+  }, [mediaId, online]);
 
   const handlePlay = () => {
-    if (!media) return;
+    if (!media) {
+      return;
+    }
 
-    void playMedia(media.file_path).catch((err: unknown) => {
-      setError(err instanceof Error ? err.message : 'Failed to start playback');
-    });
+    if (!online) {
+      setStatusMessage('Playback requires a network connection. Reconnect to continue.');
+      return;
+    }
+
+    void playMedia(media.file_path)
+      .then(() => {
+        setStatusMessage(null);
+      })
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : 'Failed to start playback');
+      });
   };
 
   if (loading) {
@@ -90,11 +122,17 @@ export function DetailPane({ mediaId }: DetailPaneProps) {
 
   return (
     <div className="detail-pane">
+      {statusMessage && (
+        <div className="detail-pane__notice" role="status">
+          {statusMessage}
+        </div>
+      )}
       <div className="detail-pane__header">
         <h2 className="detail-pane__title">{media.file_name}</h2>
         <button
           className="detail-pane__play-button"
           onClick={handlePlay}
+          disabled={!online}
           aria-label="Play media"
         >
           ▶ Play

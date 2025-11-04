@@ -59,6 +59,14 @@ export function MediaCard({ media, onClick }: MediaCardProps): React.JSX.Element
         )}
       </div>
       <div className="media-card__info">
+        {(media.search_origin === 'semantic' || media.search_origin === 'both') && (
+          <span className={`media-card__badge media-card__badge--${media.search_origin}`}>
+            {media.search_origin === 'both' ? 'Semantic + text match' : 'Semantic suggestion'}
+            {typeof media.search_score === 'number' && media.search_score > 0 ? (
+              <span className="media-card__score">{Math.round(media.search_score * 100)}%</span>
+            ) : null}
+          </span>
+        )}
         <h3 className="media-card__title" title={media.file_name}>
           {media.file_name}
         </h3>

@@ -2,9 +2,39 @@
  * API client for WomCast backend services
  */
 
-const METADATA_API_URL = import.meta.env.VITE_METADATA_API_URL as string || 'http://localhost:8001';
-const PLAYBACK_API_URL = import.meta.env.VITE_PLAYBACK_API_URL as string || 'http://localhost:8002';
-const LIVETV_API_URL = import.meta.env.VITE_LIVETV_API_URL as string || 'http://localhost:3007';
+import { fetchWithRetry } from '../utils/fetchWithRetry';
+import type { Settings } from '../types/settings';
+export type SettingsResponse = Partial<Settings> & Record<string, unknown>;
+
+
+const METADATA_API_URL = (import.meta.env.VITE_METADATA_API_URL as string) || 'http://localhost:8001';
+const PLAYBACK_API_URL = (import.meta.env.VITE_PLAYBACK_API_URL as string) || 'http://localhost:8002';
+const LIVETV_API_URL = (import.meta.env.VITE_LIVETV_API_URL as string) || 'http://localhost:3007';
+const CAST_API_URL = (import.meta.env.VITE_CAST_API_URL as string) || 'http://localhost:3005';
+const SETTINGS_API_URL = (import.meta.env.VITE_SETTINGS_API_URL as string) || 'http://localhost:3006';
+const VOICE_API_URL = (import.meta.env.VITE_VOICE_API_URL as string) || 'http://localhost:3003';
+const SEARCH_API_URL = (import.meta.env.VITE_SEARCH_API_URL as string) || 'http://localhost:3004';
+
+const metadataFetch = (input: string, init?: RequestInit) =>
+  fetchWithRetry(input, init, { serviceName: 'Metadata API' });
+
+const playbackFetch = (input: string, init?: RequestInit) =>
+  fetchWithRetry(input, init, { serviceName: 'Playback API' });
+
+const liveTvFetch = (input: string, init?: RequestInit) =>
+  fetchWithRetry(input, init, { serviceName: 'Live TV API' });
+
+const castFetch = (input: string, init?: RequestInit) =>
+  fetchWithRetry(input, init, { serviceName: 'Cast API' });
+
+const settingsFetch = (input: string, init?: RequestInit) =>
+  fetchWithRetry(input, init, { serviceName: 'Settings API' });
+
+const voiceFetch = (input: string, init?: RequestInit) =>
+  fetchWithRetry(input, init, { serviceName: 'Voice API' });
+
+const searchFetch = (input: string, init?: RequestInit) =>
+  fetchWithRetry(input, init, { serviceName: 'Search API' });
 
 export interface MediaFile {
   id: number;
@@ -21,6 +51,23 @@ export interface MediaFile {
   play_count: number;
   resume_position_seconds: number;
   subtitle_tracks?: string; // JSON string of subtitle track array
+  search_origin?: 'text' | 'semantic' | 'both';
+  search_score?: number;
+}
+
+export interface SemanticSearchHit {
+  media_id: number | null;
+  title: string | null;
+  media_type: string | null;
+  score: number | null;
+  document: string | null;
+  metadata: Record<string, unknown>;
+}
+
+export interface SemanticSearchResponse {
+  count: number;
+  latency_ms: number;
+  results: SemanticSearchHit[];
 }
 
 export interface VideoMetadata {
@@ -75,7 +122,7 @@ export async function getMediaFiles(
     url.searchParams.set('type', mediaType);
   }
 
-  const response = await fetch(url.toString());
+  const response = await metadataFetch(url.toString());
   if (!response.ok) {
     throw new Error(`Failed to fetch media files: ${response.statusText}`);
   }
@@ -90,7 +137,7 @@ export async function searchMediaFiles(query: string): Promise<MediaFile[]> {
   const url = new URL(`${METADATA_API_URL}/v1/media/search`);
   url.searchParams.set('q', query);
 
-  const response = await fetch(url.toString());
+  const response = await metadataFetch(url.toString());
   if (!response.ok) {
     throw new Error(`Failed to search media files: ${response.statusText}`);
   }
@@ -99,10 +146,29 @@ export async function searchMediaFiles(query: string): Promise<MediaFile[]> {
 }
 
 /**
+ * Perform semantic search via the dedicated search service
+ */
+export async function semanticSearchMedia(
+  query: string,
+  limit: number = 10
+): Promise<SemanticSearchResponse> {
+  const url = new URL(`${SEARCH_API_URL}/v1/search/semantic`);
+  url.searchParams.set('q', query);
+  url.searchParams.set('limit', limit.toString());
+
+  const response = await searchFetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Failed to run semantic search: ${response.statusText}`);
+  }
+
+  return response.json() as Promise<SemanticSearchResponse>;
+}
+
+/**
  * Get detailed media information with metadata
  */
 export async function getMediaItem(id: number): Promise<MediaItem> {
-  const response = await fetch(`${METADATA_API_URL}/v1/media/${id.toString()}`);
+  const response = await metadataFetch(`${METADATA_API_URL}/v1/media/${id.toString()}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch media item: ${response.statusText}`);
   }
@@ -114,7 +180,7 @@ export async function getMediaItem(id: number): Promise<MediaItem> {
  * Start playback of a media file
  */
 export async function playMedia(filePath: string): Promise<void> {
-  const response = await fetch(`${PLAYBACK_API_URL}/v1/play`, {
+  const response = await playbackFetch(`${PLAYBACK_API_URL}/v1/play`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -131,7 +197,7 @@ export async function playMedia(filePath: string): Promise<void> {
  * Stop playback
  */
 export async function stopPlayback(): Promise<void> {
-  const response = await fetch(`${PLAYBACK_API_URL}/v1/stop`, {
+  const response = await playbackFetch(`${PLAYBACK_API_URL}/v1/stop`, {
     method: 'POST',
   });
 
@@ -144,7 +210,7 @@ export async function stopPlayback(): Promise<void> {
  * Pause/unpause playback
  */
 export async function pausePlayback(): Promise<void> {
-  const response = await fetch(`${PLAYBACK_API_URL}/v1/pause`, {
+  const response = await playbackFetch(`${PLAYBACK_API_URL}/v1/pause`, {
     method: 'POST',
   });
 
@@ -157,7 +223,7 @@ export async function pausePlayback(): Promise<void> {
  * Get current player state
  */
 export async function getPlayerState(): Promise<PlayerState> {
-  const response = await fetch(`${PLAYBACK_API_URL}/v1/player/state`);
+  const response = await playbackFetch(`${PLAYBACK_API_URL}/v1/player/state`);
   if (!response.ok) {
     throw new Error(`Failed to get player state: ${response.statusText}`);
   }
@@ -169,7 +235,7 @@ export async function getPlayerState(): Promise<PlayerState> {
  * Seek to a specific position
  */
 export async function seekPlayback(positionSeconds: number): Promise<void> {
-  const response = await fetch(`${PLAYBACK_API_URL}/v1/seek`, {
+  const response = await playbackFetch(`${PLAYBACK_API_URL}/v1/seek`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -189,7 +255,7 @@ export async function updateResumePosition(
   mediaId: number,
   positionSeconds: number
 ): Promise<void> {
-  const response = await fetch(`${METADATA_API_URL}/v1/media/${mediaId.toString()}/resume`, {
+  const response = await metadataFetch(`${METADATA_API_URL}/v1/media/${mediaId.toString()}/resume`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -213,7 +279,7 @@ export interface SubtitleTrack {
  * Get available subtitle tracks
  */
 export async function getSubtitles(): Promise<SubtitleTrack[]> {
-  const response = await fetch(`${PLAYBACK_API_URL}/v1/subtitles`);
+  const response = await playbackFetch(`${PLAYBACK_API_URL}/v1/subtitles`);
   if (!response.ok) {
     throw new Error(`Failed to get subtitles: ${response.statusText}`);
   }
@@ -225,7 +291,7 @@ export async function getSubtitles(): Promise<SubtitleTrack[]> {
  * Set active subtitle track
  */
 export async function setSubtitle(subtitleIndex: number): Promise<void> {
-  const response = await fetch(`${PLAYBACK_API_URL}/v1/subtitles`, {
+  const response = await playbackFetch(`${PLAYBACK_API_URL}/v1/subtitles`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -242,7 +308,7 @@ export async function setSubtitle(subtitleIndex: number): Promise<void> {
  * Toggle subtitles on/off
  */
 export async function toggleSubtitles(): Promise<void> {
-  const response = await fetch(`${PLAYBACK_API_URL}/v1/subtitles/toggle`, {
+  const response = await playbackFetch(`${PLAYBACK_API_URL}/v1/subtitles/toggle`, {
     method: 'POST',
   });
 
@@ -302,7 +368,7 @@ export async function getLiveTVChannels(group?: string, limit: number = 100): Pr
   }
   params.append('limit', String(limit));
 
-  const response = await fetch(`${LIVETV_API_URL}/v1/livetv/channels?${params.toString()}`);
+  const response = await liveTvFetch(`${LIVETV_API_URL}/v1/livetv/channels?${params.toString()}`);
   if (!response.ok) {
     const statusText = response.statusText || 'Unknown error';
     throw new Error(`Failed to get channels: ${statusText}`);
@@ -311,7 +377,7 @@ export async function getLiveTVChannels(group?: string, limit: number = 100): Pr
 }
 
 export async function getLiveTVChannel(channelId: number): Promise<LiveTVChannel> {
-  const response = await fetch(`${LIVETV_API_URL}/v1/livetv/channels/${String(channelId)}`);
+  const response = await liveTvFetch(`${LIVETV_API_URL}/v1/livetv/channels/${String(channelId)}`);
   if (!response.ok) {
     const statusText = response.statusText || 'Unknown error';
     throw new Error(`Failed to get channel: ${statusText}`);
@@ -320,7 +386,7 @@ export async function getLiveTVChannel(channelId: number): Promise<LiveTVChannel
 }
 
 export async function playLiveTVChannel(streamUrl: string, title: string): Promise<void> {
-  const response = await fetch(`${PLAYBACK_API_URL}/v1/playback/play`, {
+  const response = await playbackFetch(`${PLAYBACK_API_URL}/v1/playback/play`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url: streamUrl, title }),
@@ -351,7 +417,7 @@ export interface EPGData {
 }
 
 export async function getAllEPG(): Promise<EPGData[]> {
-  const response = await fetch(`${LIVETV_API_URL}/v1/livetv/epg`);
+  const response = await liveTvFetch(`${LIVETV_API_URL}/v1/livetv/epg`);
   if (!response.ok) {
     const statusText = response.statusText || 'Unknown error';
     throw new Error(`Failed to get EPG: ${statusText}`);
@@ -360,7 +426,7 @@ export async function getAllEPG(): Promise<EPGData[]> {
 }
 
 export async function getChannelEPG(channelId: string): Promise<EPGData> {
-  const response = await fetch(`${LIVETV_API_URL}/v1/livetv/epg/${channelId}`);
+  const response = await liveTvFetch(`${LIVETV_API_URL}/v1/livetv/epg/${channelId}`);
   if (!response.ok) {
     const statusText = response.statusText || 'Unknown error';
     throw new Error(`Failed to get channel EPG: ${statusText}`);
@@ -369,7 +435,7 @@ export async function getChannelEPG(channelId: string): Promise<EPGData> {
 }
 
 export async function setEPGUrl(url: string): Promise<void> {
-  const response = await fetch(`${LIVETV_API_URL}/v1/livetv/epg/url`, {
+  const response = await liveTvFetch(`${LIVETV_API_URL}/v1/livetv/epg/url`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url }),
@@ -378,4 +444,205 @@ export async function setEPGUrl(url: string): Promise<void> {
     const statusText = response.statusText || 'Unknown error';
     throw new Error(`Failed to set EPG URL: ${statusText}`);
   }
+}
+
+// Cast API
+
+export interface CastSession {
+  session_id: string;
+  pin: string;
+  qr_data: string;
+  expires_in_seconds: number;
+}
+
+export async function createCastSession(deviceType: string = 'phone'): Promise<CastSession> {
+  const response = await castFetch(`${CAST_API_URL}/v1/cast/session`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ device_type: deviceType }),
+  });
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to create cast session: ${statusText}`);
+  }
+
+  return (await response.json()) as CastSession;
+}
+
+export async function fetchCastSessionQr(sessionId: string, signal?: AbortSignal): Promise<Blob> {
+  const response = await castFetch(`${CAST_API_URL}/v1/cast/session/${sessionId}/qr`, {
+    method: 'GET',
+    signal,
+  });
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to fetch cast session QR: ${statusText}`);
+  }
+
+  return response.blob();
+}
+
+export interface CastSessionInfo {
+  session_id?: string;
+  id?: string | number;
+  device_name?: string | null;
+  device_info?: {
+    name?: string;
+    device_name?: string;
+  } | null;
+  expires_at?: string | null;
+  [key: string]: unknown;
+}
+
+export interface CastSessionsResponse {
+  sessions?: CastSessionInfo[];
+  [key: string]: unknown;
+}
+
+export async function getCastSessions(signal?: AbortSignal): Promise<CastSessionsResponse> {
+  const response = await castFetch(`${CAST_API_URL}/v1/cast/sessions`, {
+    method: 'GET',
+    signal,
+  });
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to load cast sessions: ${statusText}`);
+  }
+
+  return (await response.json()) as CastSessionsResponse;
+}
+
+export async function deleteCastSession(sessionId: string): Promise<Record<string, unknown>> {
+  const response = await castFetch(`${CAST_API_URL}/v1/cast/session/${sessionId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to delete cast session: ${statusText}`);
+  }
+
+  return (await response.json()) as Record<string, unknown>;
+}
+
+export async function resetCastSessions(): Promise<Record<string, unknown>> {
+  const response = await castFetch(`${CAST_API_URL}/v1/cast/sessions`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to reset cast sessions: ${statusText}`);
+  }
+
+  return (await response.json()) as Record<string, unknown>;
+}
+
+// Settings API
+
+export async function getSettings(): Promise<SettingsResponse> {
+  const response = await settingsFetch(`${SETTINGS_API_URL}/v1/settings`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch settings: ${response.statusText || 'Unknown error'}`);
+  }
+
+  return (await response.json()) as SettingsResponse;
+}
+
+export async function updateSingleSetting(key: string, value: unknown): Promise<void> {
+  const response = await settingsFetch(`${SETTINGS_API_URL}/v1/settings/${key}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, value }),
+  });
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to update setting: ${statusText}`);
+  }
+}
+
+export async function updateMultipleSettings(updates: Partial<Settings>): Promise<SettingsResponse> {
+  const response = await settingsFetch(`${SETTINGS_API_URL}/v1/settings`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ settings: updates }),
+  });
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to update settings: ${statusText}`);
+  }
+
+  return (await response.json()) as SettingsResponse;
+}
+
+export async function resetAllSettings(): Promise<SettingsResponse> {
+  const response = await settingsFetch(`${SETTINGS_API_URL}/v1/settings/reset`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to reset settings: ${statusText}`);
+  }
+
+  return (await response.json()) as SettingsResponse;
+}
+
+export async function deleteSetting(key: string): Promise<Record<string, string>> {
+  const response = await settingsFetch(`${SETTINGS_API_URL}/v1/settings/${key}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to delete setting: ${statusText}`);
+  }
+
+  return (await response.json()) as Record<string, string>;
+}
+
+export async function exportPrivacyData(signal?: AbortSignal): Promise<Response> {
+  const response = await settingsFetch(`${SETTINGS_API_URL}/v1/privacy/export`, {
+    method: 'GET',
+    signal,
+  });
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to export privacy data: ${statusText}`);
+  }
+
+  return response;
+}
+
+export async function deletePrivacyData(): Promise<Record<string, unknown>> {
+  const response = await settingsFetch(`${SETTINGS_API_URL}/v1/privacy/delete`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to delete privacy data: ${statusText}`);
+  }
+
+  return (await response.json()) as Record<string, unknown>;
+}
+
+export async function deleteVoiceHistory(): Promise<Record<string, unknown>> {
+  const response = await voiceFetch(`${VOICE_API_URL}/v1/voice/history`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to delete voice history: ${statusText}`);
+  }
+
+  return (await response.json()) as Record<string, unknown>;
 }

@@ -1221,11 +1221,11 @@
                                                   "User prompt UI for input selection",
                                                   "Fallback when CEC unavailable"
                                               ],
-                      "start_at_utc":  "2025-11-03T20:07:56.7123605Z",
-                      "end_at_utc":  "2025-11-03T20:16:22.0601466Z",
-                      "duration_h":  0.14,
+                      "start_at_utc":  "2025-11-04T17:45:00Z",
+                      "end_at_utc":  "2025-11-04T21:15:00Z",
+                      "duration_h":  3.5,
                       "status":  "done",
-                      "notes":  ""
+                      "notes":  "Semantic search persistence, endpoints, and tests completed"
                   },
                   {
                       "id":  "M4.3",
@@ -1278,9 +1278,9 @@
                                                   "Privacy toggles present"
                                               ],
                       "start_at_utc":  "2025-11-03T22:53:19.8749182Z",
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "in_progress",
+                      "end_at_utc":  "2025-11-04T17:30:00Z",
+                      "duration_h":  16.62,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -1311,10 +1311,10 @@
                                                   "Automatic retries with backoff",
                                                   "No PII in logs"
                                               ],
-                      "start_at_utc":  null,
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "todo",
+                      "start_at_utc":  "2025-11-04T17:35:00Z",
+                      "end_at_utc":  "2025-11-04T19:15:00Z",
+                      "duration_h":  1.67,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -1344,10 +1344,10 @@
                                                   "CEC troubleshooting section added",
                                                   "Settings panel usage explained"
                                               ],
-                      "start_at_utc":  null,
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "todo",
+                      "start_at_utc":  "2025-11-04T19:20:00Z",
+                      "end_at_utc":  "2025-11-04T19:50:00Z",
+                      "duration_h":  0.5,
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -1373,10 +1373,10 @@
                                                   "First-use terms summary shown",
                                                   "acknowledgment stored in settings"
                                               ],
-                      "start_at_utc":  null,
+                      "start_at_utc":  "2025-11-04T21:20:00Z",
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "in_progress",
                       "notes":  ""
                   },
                   {
@@ -1403,11 +1403,11 @@
                                                   "Buttons to purge voice history, embeddings, recents",
                                                   "local export to file"
                                               ],
-                      "start_at_utc":  null,
-                      "end_at_utc":  null,
-                      "duration_h":  null,
-                      "status":  "todo",
-                      "notes":  ""
+                      "start_at_utc":  "2025-11-05T15:00:00Z",
+                      "end_at_utc":  "2025-11-05T16:15:00Z",
+                      "duration_h":  1.25,
+                      "status":  "done",
+                      "notes":  "IntentEngine + voice endpoints wired to Ollama with model selection"
                   },
                   {
                       "id":  "M5.1",
@@ -1424,7 +1424,8 @@
                                            "M3.8"
                                        ],
                       "files":  [
-                                    "apps/backend/ai/intent/"
+                                    "apps/backend/ai/intent/",
+                                    "apps/backend/voice/main.py"
                                 ],
                       "acceptance_criteria":  [
                                                   "POST /v1/voice/intent returns {action, args}",

@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { fetchWithRetry } from '../../utils/fetchWithRetry';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import './ConnectorsView.css';
 
 interface Connector {
@@ -52,21 +54,32 @@ const CONNECTORS: Connector[] = [
   },
 ];
 
+const GATEWAY_API_URL = (import.meta.env.VITE_API_GATEWAY_URL as string) || 'http://localhost:8000';
+
 export function ConnectorsView(): React.JSX.Element {
   const [selectedConnector, setSelectedConnector] = useState<string | null>(null);
   const [items, setItems] = useState<ConnectorItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const hasLoadedOnce = useRef(false);
+  const { online } = useNetworkStatus();
 
-  useEffect(() => {
-    if (selectedConnector) {
-      void loadConnectorContent(selectedConnector);
-    }
-  }, [selectedConnector]);
-
-  const loadConnectorContent = async (connectorId: string) => {
+  const loadConnectorContent = useCallback(async (connectorId: string) => {
     setLoading(true);
     setError(null);
+
+    if (!online) {
+      setLoading(false);
+      if (!hasLoadedOnce.current) {
+        setError('Connect to load content for this connector.');
+      } else {
+        setStatusMessage('Offline mode: content may be incomplete.');
+      }
+      return;
+    }
+
+    setStatusMessage(null);
 
     try {
       let endpoint = '';
@@ -93,7 +106,9 @@ export function ConnectorsView(): React.JSX.Element {
           throw new Error('Unknown connector');
       }
 
-      const response = await fetch(`http://localhost:8000${endpoint}`);
+      const response = await fetchWithRetry(`${GATEWAY_API_URL}${endpoint}`, undefined, {
+        serviceName: 'Connectors API',
+      });
       if (!response.ok) {
         throw new Error(`Failed to load content: ${response.statusText}`);
       }
@@ -104,23 +119,42 @@ export function ConnectorsView(): React.JSX.Element {
           streams?: ConnectorItem[];
           tracks?: ConnectorItem[];
         };
-      setItems(data[dataKey as keyof typeof data] ?? []);
+  const newItems = data[dataKey as keyof typeof data] ?? [];
+  setItems(newItems);
+  hasLoadedOnce.current = true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load content');
       setItems([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [online]);
 
-  const handlePlay = async (item: ConnectorItem) => {
+  useEffect(() => {
+    if (selectedConnector) {
+      void loadConnectorContent(selectedConnector);
+    }
+  }, [selectedConnector, loadConnectorContent]);
+
+  useEffect(() => {
+    hasLoadedOnce.current = false;
+  }, [selectedConnector]);
+
+  const handlePlay = useCallback(async (item: ConnectorItem) => {
+    if (!online) {
+      setStatusMessage('Offline mode: start playback after reconnecting.');
+      return;
+    }
+
     try {
       // Get item details if stream_url not present
       let streamUrl = item.stream_url;
 
       if (!streamUrl && selectedConnector) {
         const detailsEndpoint = getDetailsEndpoint(selectedConnector, item.id);
-        const response = await fetch(`http://localhost:8000${detailsEndpoint}`);
+        const response = await fetchWithRetry(`${GATEWAY_API_URL}${detailsEndpoint}`, undefined, {
+          serviceName: 'Connector details API',
+        });
         if (response.ok) {
           const details = (await response.json()) as {
             stream_url?: string;
@@ -136,10 +170,12 @@ export function ConnectorsView(): React.JSX.Element {
       }
 
       // Send to Kodi for playback
-      const playResponse = await fetch('http://localhost:8000/v1/playback/play', {
+      const playResponse = await fetchWithRetry(`${GATEWAY_API_URL}/v1/playback/play`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ file_path: streamUrl }),
+      }, {
+        serviceName: 'Playback API',
       });
 
       if (!playResponse.ok) {
@@ -150,7 +186,7 @@ export function ConnectorsView(): React.JSX.Element {
     } catch (err) {
       alert(`Playback error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
-  };
+  }, [online, selectedConnector]);
 
   const getDetailsEndpoint = (connectorId: string, itemId: string): string => {
     switch (connectorId) {
@@ -185,6 +221,9 @@ export function ConnectorsView(): React.JSX.Element {
             className="back-button"
             onClick={() => {
               setSelectedConnector(null);
+              setItems([]);
+              setStatusMessage(null);
+              setError(null);
             }}
             aria-label="Back to connectors"
           >
@@ -196,6 +235,12 @@ export function ConnectorsView(): React.JSX.Element {
           </h1>
         </header>
 
+        {statusMessage && (
+          <div className="connectors-status" role="status">
+            {statusMessage}
+          </div>
+        )}
+
         {loading && (
           <div className="loading-state">
             <div className="spinner"></div>
@@ -203,18 +248,19 @@ export function ConnectorsView(): React.JSX.Element {
           </div>
         )}
 
-          {error && (
-            <div className="error-state">
-              <p>⚠️ {error}</p>
-              <button
-                onClick={() => {
-                  void loadConnectorContent(selectedConnector);
-                }}
-              >
-                Retry
-              </button>
-            </div>
-          )}        {!loading && !error && items.length === 0 && (
+        {error && (
+          <div className="error-state">
+            <p>⚠️ {error}</p>
+            <button
+              onClick={() => {
+                void loadConnectorContent(selectedConnector);
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+        {!loading && !error && items.length === 0 && (
           <div className="empty-state">
             <p>No content available</p>
           </div>
@@ -271,6 +317,12 @@ export function ConnectorsView(): React.JSX.Element {
         <p className="subtitle">Browse public domain and Creative Commons content</p>
       </header>
 
+      {statusMessage && (
+        <div className="connectors-status" role="status">
+          {statusMessage}
+        </div>
+      )}
+
       <div className="connectors-grid">
         {CONNECTORS.map((connector) => (
           <button
@@ -278,6 +330,8 @@ export function ConnectorsView(): React.JSX.Element {
             className="connector-card"
             style={{ borderColor: connector.color }}
             onClick={() => {
+              setStatusMessage(null);
+              setError(null);
               setSelectedConnector(connector.id);
             }}
             aria-label={`Open ${connector.name}`}

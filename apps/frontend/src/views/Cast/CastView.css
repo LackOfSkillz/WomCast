@@ -16,6 +16,16 @@
   margin-bottom: 2rem;
 }
 
+.cast-status {
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 209, 102, 0.12);
+  border-left: 4px solid #ffd166;
+  color: #ffd166;
+  font-weight: 600;
+  border-radius: 0.5rem;
+}
+
 .create-session-btn,
 .refresh-btn {
   background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
@@ -37,6 +47,18 @@
 .create-session-btn:active,
 .refresh-btn:active {
   transform: translateY(0);
+}
+
+.create-session-btn:disabled,
+.refresh-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.create-session-btn:disabled:hover,
+.refresh-btn:disabled:hover {
+  transform: none;
 }
 
 .loading-spinner {

@@ -9,7 +9,16 @@
  * - Network: STUN/TURN servers, mDNS, network diagnostics
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import {
+  getSettings,
+  resetAllSettings,
+  updateMultipleSettings,
+  updateSingleSetting,
+  type SettingsResponse,
+} from '../../services/api';
+import type { Settings } from '../../types/settings';
 import './Settings.css';
 import ModelsTab from './tabs/ModelsTab';
 import PrivacyTab from './tabs/PrivacyTab';
@@ -19,63 +28,67 @@ import NetworkTab from './tabs/NetworkTab';
 
 export type Tab = 'models' | 'privacy' | 'pairing' | 'cec' | 'network';
 
-export interface Settings {
-  // Voice/AI models
-  voice_model: string;
-  llm_model: string | null;
-  stt_enabled: boolean;
-  tts_enabled: boolean;
-  voice_language?: string;
-  
-  // Network shares
-  auto_mount_shares: boolean;
-  auto_index_shares: boolean;
-  
-  // Privacy flags
-  analytics_enabled: boolean;
-  crash_reporting: boolean;
-  crash_reporting_enabled?: boolean;
-  metadata_fetching_enabled: boolean;
-  voice_history_days?: number;
-  cast_history_days?: number;
-  
-  // Pairing
-  pairing_enabled?: boolean;
-  pairing_pin_length?: number;
-  pairing_session_timeout?: number;
-  
-  // CEC
-  cec_enabled?: boolean;
-  cec_auto_switch?: boolean;
-  
-  // Network
-  stun_server?: string;
-  turn_server?: string;
-  turn_username?: string;
-  turn_password?: string;
-  mdns_enabled?: boolean;
-  network_diagnostics_enabled?: boolean;
-  
-  // UI preferences
-  theme: 'dark' | 'light' | 'auto';
-  language: string;
-  grid_size: 'small' | 'medium' | 'large';
-  autoplay_next: boolean;
-  show_subtitles: boolean;
-  
-  // Playback settings
-  default_volume: number;
-  resume_threshold_seconds: number;
-  skip_intro_seconds: number;
-  
-  // Performance
-  cache_size_mb: number;
-  thumbnail_quality: 'low' | 'medium' | 'high';
-  
-  // Notifications
-  show_notifications: boolean;
-  notification_duration_ms: number;
-}
+const OFFLINE_STATUS = 'Offline mode: settings are read-only until you reconnect.';
+
+const normalizeSettings = (raw: SettingsResponse): Settings => {
+  const normalized: SettingsResponse & { crash_reporting?: boolean } = { ...raw };
+
+  if (
+    normalized.crash_reporting_enabled === undefined &&
+    normalized.crash_reporting !== undefined
+  ) {
+    normalized.crash_reporting_enabled = normalized.crash_reporting ?? false;
+  }
+
+  normalized.voice_model = normalized.voice_model ?? 'small';
+  normalized.llm_model = normalized.llm_model ?? 'llama2';
+  normalized.stt_enabled = normalized.stt_enabled ?? true;
+  normalized.tts_enabled = normalized.tts_enabled ?? false;
+  normalized.voice_language = normalized.voice_language ?? 'en';
+
+  normalized.auto_mount_shares = normalized.auto_mount_shares ?? false;
+  normalized.auto_index_shares = normalized.auto_index_shares ?? false;
+
+  normalized.analytics_enabled = normalized.analytics_enabled ?? false;
+  normalized.crash_reporting_enabled = normalized.crash_reporting_enabled ?? false;
+  normalized.metadata_fetching_enabled = normalized.metadata_fetching_enabled ?? true;
+  normalized.voice_history_days = normalized.voice_history_days ?? 30;
+  normalized.cast_history_days = normalized.cast_history_days ?? 90;
+
+  normalized.pairing_enabled = normalized.pairing_enabled ?? true;
+  normalized.pairing_pin_length = normalized.pairing_pin_length ?? 6;
+  normalized.pairing_session_timeout = normalized.pairing_session_timeout ?? 300;
+
+  normalized.cec_enabled = normalized.cec_enabled ?? true;
+  normalized.cec_auto_switch = normalized.cec_auto_switch ?? true;
+
+  normalized.stun_server = normalized.stun_server ?? 'stun:stun.l.google.com:19302';
+  normalized.turn_server = normalized.turn_server ?? '';
+  normalized.turn_username = normalized.turn_username ?? '';
+  normalized.turn_password = normalized.turn_password ?? '';
+  normalized.mdns_enabled = normalized.mdns_enabled ?? true;
+  normalized.network_diagnostics_enabled = normalized.network_diagnostics_enabled ?? false;
+
+  normalized.theme = normalized.theme ?? 'dark';
+  normalized.language = normalized.language ?? 'en';
+  normalized.grid_size = normalized.grid_size ?? 'medium';
+  normalized.autoplay_next = normalized.autoplay_next ?? true;
+  normalized.show_subtitles = normalized.show_subtitles ?? true;
+
+  normalized.default_volume = normalized.default_volume ?? 80;
+  normalized.resume_threshold_seconds = normalized.resume_threshold_seconds ?? 60;
+  normalized.skip_intro_seconds = normalized.skip_intro_seconds ?? 0;
+
+  normalized.cache_size_mb = normalized.cache_size_mb ?? 500;
+  normalized.thumbnail_quality = normalized.thumbnail_quality ?? 'medium';
+
+  normalized.show_notifications = normalized.show_notifications ?? true;
+  normalized.notification_duration_ms = normalized.notification_duration_ms ?? 3000;
+
+  delete (normalized as Record<string, unknown>).crash_reporting;
+
+  return normalized as Settings;
+};
 
 const SettingsView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('models');
@@ -83,110 +96,116 @@ const SettingsView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const hasLoadedOnce = useRef(false);
+  const { online } = useNetworkStatus();
 
   // Load settings on mount
-  useEffect(() => {
-    loadSettings();
-  }, []);
+  const loadSettings = useCallback(async () => {
+    if (!online) {
+      setStatusMessage(OFFLINE_STATUS);
+      setLoading(false);
+      if (!hasLoadedOnce.current) {
+        setError('Connect to the network to load settings.');
+      }
+      return;
+    }
 
-  const loadSettings = async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await fetch('/api/settings/v1/settings');
-      if (!response.ok) {
-        throw new Error(`Failed to load settings: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      setSettings(data);
+      setStatusMessage(null);
+
+  const data = await getSettings();
+  setSettings(normalizeSettings(data));
+      hasLoadedOnce.current = true;
     } catch (err) {
       console.error('Failed to load settings:', err);
       setError(err instanceof Error ? err.message : 'Failed to load settings');
     } finally {
       setLoading(false);
     }
-  };
+  }, [online]);
 
-  const updateSetting = async (key: string, value: any) => {
+  useEffect(() => {
+    void loadSettings();
+  }, [loadSettings]);
+
+  useEffect(() => {
+    if (!online) {
+      setStatusMessage(OFFLINE_STATUS);
+    } else if (statusMessage === OFFLINE_STATUS) {
+      setStatusMessage(null);
+    }
+  }, [online, statusMessage]);
+
+  const updateSetting = useCallback(async (key: string, value: unknown) => {
+    if (!online) {
+      setStatusMessage(OFFLINE_STATUS);
+      return;
+    }
+
     try {
       setSaving(true);
-      
-      const response = await fetch(`/api/settings/v1/settings/${key}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ key, value }),
+      await updateSingleSetting(key, value);
+
+      setSettings((prev) => {
+        if (!prev) {
+          return prev;
+        }
+
+        const updated = { ...prev, [key]: value } as SettingsResponse;
+        return normalizeSettings(updated);
       });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to update setting: ${response.statusText}`);
-      }
-      
-      // Update local state
-      setSettings((prev) => prev ? { ...prev, [key]: value } : null);
+      setError(null);
     } catch (err) {
       console.error('Failed to update setting:', err);
       setError(err instanceof Error ? err.message : 'Failed to update setting');
     } finally {
       setSaving(false);
     }
-  };
+  }, [online]);
 
-  const updateSettings = async (updates: Partial<Settings>) => {
+  const updateSettings = useCallback(async (updates: Partial<Settings>) => {
+    if (!online) {
+      setStatusMessage(OFFLINE_STATUS);
+      return;
+    }
+
     try {
       setSaving(true);
-      
-      const response = await fetch('/api/settings/v1/settings', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ settings: updates }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to update settings: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      setSettings(data);
+  const data = await updateMultipleSettings(updates);
+  setSettings(normalizeSettings(data));
+      setError(null);
+      hasLoadedOnce.current = true;
     } catch (err) {
       console.error('Failed to update settings:', err);
       setError(err instanceof Error ? err.message : 'Failed to update settings');
     } finally {
       setSaving(false);
     }
-  };
+  }, [online]);
 
-  const resetSettings = async () => {
+  const resetSettings = useCallback(async () => {
     if (!window.confirm('Reset all settings to defaults? This cannot be undone.')) {
       return;
     }
     
     try {
       setSaving(true);
-      
-      const response = await fetch('/api/settings/v1/settings/reset', {
-        method: 'POST',
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to reset settings: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      setSettings(data);
+  const data = await resetAllSettings();
+  setSettings(normalizeSettings(data));
       setError(null);
+      setStatusMessage('Settings restored to defaults.');
     } catch (err) {
       console.error('Failed to reset settings:', err);
       setError(err instanceof Error ? err.message : 'Failed to reset settings');
     } finally {
       setSaving(false);
     }
-  };
+  }, []);
+
+  const controlsDisabled = saving || !online;
 
   if (loading) {
     return (
@@ -202,7 +221,13 @@ const SettingsView: React.FC = () => {
         <div className="settings-error">
           <h2>Error Loading Settings</h2>
           <p>{error}</p>
-          <button onClick={loadSettings}>Retry</button>
+          <button
+            onClick={() => {
+              void loadSettings();
+            }}
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -220,12 +245,18 @@ const SettingsView: React.FC = () => {
           <button 
             className="btn-reset" 
             onClick={resetSettings}
-            disabled={saving}
+            disabled={controlsDisabled}
           >
             Reset to Defaults
           </button>
         </div>
       </header>
+
+      {statusMessage && (
+        <div className="settings-status" role="status" aria-live="polite">
+          {statusMessage}
+        </div>
+      )}
 
       <div className="settings-tabs">
         <button
@@ -268,6 +299,7 @@ const SettingsView: React.FC = () => {
             settings={settings}
             updateSetting={updateSetting}
             updateSettings={updateSettings}
+            disabled={controlsDisabled}
           />
         )}
         
@@ -276,6 +308,8 @@ const SettingsView: React.FC = () => {
             settings={settings}
             updateSetting={updateSetting}
             updateSettings={updateSettings}
+            disabled={controlsDisabled}
+            reloadSettings={loadSettings}
           />
         )}
         
@@ -284,6 +318,7 @@ const SettingsView: React.FC = () => {
             settings={settings}
             updateSetting={updateSetting}
             updateSettings={updateSettings}
+            disabled={controlsDisabled}
           />
         )}
         
@@ -292,6 +327,7 @@ const SettingsView: React.FC = () => {
             settings={settings}
             updateSetting={updateSetting}
             updateSettings={updateSettings}
+            disabled={controlsDisabled}
           />
         )}
         
@@ -300,6 +336,7 @@ const SettingsView: React.FC = () => {
             settings={settings}
             updateSetting={updateSetting}
             updateSettings={updateSettings}
+            disabled={controlsDisabled}
           />
         )}
       </div>

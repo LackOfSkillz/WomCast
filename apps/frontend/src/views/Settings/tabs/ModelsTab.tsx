@@ -1,18 +1,14 @@
 import React from 'react';
+import type { Settings } from '../../../types/settings';
 
 interface ModelsTabProps {
-  settings: {
-    voice_model?: string;
-    llm_model?: string | null;
-    stt_enabled?: boolean;
-    tts_enabled?: boolean;
-    voice_language?: string;
-  };
-  updateSetting: (key: string, value: any) => Promise<void>;
-  updateSettings: (updates: any) => Promise<void>;
+  settings: Settings;
+  updateSetting: (key: string, value: Settings[keyof Settings]) => Promise<void>;
+  updateSettings: (updates: Partial<Settings>) => Promise<void>;
+  disabled: boolean;
 }
 
-const ModelsTab: React.FC<ModelsTabProps> = ({ settings, updateSetting }) => {
+const ModelsTab: React.FC<ModelsTabProps> = ({ settings, updateSetting, disabled }) => {
   return (
     <div className="settings-tab">
       {/* Whisper Model */}
@@ -30,8 +26,9 @@ const ModelsTab: React.FC<ModelsTabProps> = ({ settings, updateSetting }) => {
           <div className="settings-control">
             <select
               className="settings-select"
-              value={settings.voice_model || 'base'}
+              value={settings.voice_model || 'small'}
               onChange={(e) => updateSetting('voice_model', e.target.value)}
+              disabled={disabled}
             >
               <option value="tiny">Tiny (fastest, 39M params)</option>
               <option value="base">Base (balanced, 74M params)</option>
@@ -53,6 +50,7 @@ const ModelsTab: React.FC<ModelsTabProps> = ({ settings, updateSetting }) => {
                 type="checkbox"
                 checked={settings.stt_enabled !== false}
                 onChange={(e) => updateSetting('stt_enabled', e.target.checked)}
+                disabled={disabled}
               />
               <span className="toggle-slider"></span>
             </label>
@@ -69,6 +67,7 @@ const ModelsTab: React.FC<ModelsTabProps> = ({ settings, updateSetting }) => {
               className="settings-select"
               value={settings.voice_language || 'en'}
               onChange={(e) => updateSetting('voice_language', e.target.value)}
+              disabled={disabled}
             >
               <option value="en">English</option>
               <option value="es">Spanish</option>
@@ -101,6 +100,7 @@ const ModelsTab: React.FC<ModelsTabProps> = ({ settings, updateSetting }) => {
               className="settings-select"
               value={settings.llm_model || 'llama2'}
               onChange={(e) => updateSetting('llm_model', e.target.value)}
+              disabled={disabled}
             >
               <option value="llama2">Llama 2 (7B)</option>
               <option value="llama2:13b">Llama 2 (13B)</option>
@@ -132,6 +132,7 @@ const ModelsTab: React.FC<ModelsTabProps> = ({ settings, updateSetting }) => {
                 type="checkbox"
                 checked={settings.tts_enabled === true}
                 onChange={(e) => updateSetting('tts_enabled', e.target.checked)}
+                disabled={disabled}
               />
               <span className="toggle-slider"></span>
             </label>

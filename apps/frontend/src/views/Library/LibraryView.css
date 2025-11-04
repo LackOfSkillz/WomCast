@@ -16,6 +16,15 @@
   gap: 24px;
 }
 
+.library-view__notice {
+  flex-shrink: 0;
+  padding: 12px 24px;
+  background: rgba(255, 209, 102, 0.1);
+  border-bottom: 1px solid rgba(255, 209, 102, 0.3);
+  color: #ffd166;
+  font-weight: 500;
+}
+
 .library-view__title {
   margin: 0;
   font-size: 32px;

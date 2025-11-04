@@ -209,6 +209,18 @@ def test_get_paired_sessions(session_manager):
     assert paired_sessions[0].id == session1.id
 
 
+def test_reset_sessions(session_manager):
+    """Test clearing all sessions."""
+
+    session_manager.create_session()
+    session_manager.create_session()
+
+    removed = session_manager.reset_sessions()
+
+    assert removed == 2
+    assert session_manager.get_all_sessions() == []
+
+
 @pytest.mark.asyncio
 async def test_session_manager_start_stop(session_manager):
     """Test session manager lifecycle."""

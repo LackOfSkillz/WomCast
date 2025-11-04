@@ -12,6 +12,19 @@
   margin-bottom: 3rem;
 }
 
+.voice-notice {
+  margin: 0 auto 2rem;
+  max-width: 600px;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 209, 102, 0.2);
+  border-left: 4px solid #ffd166;
+  color: #ffe8a3;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 0.5rem;
+}
+
 .voice-header h1 {
   font-size: 3rem;
   font-weight: bold;

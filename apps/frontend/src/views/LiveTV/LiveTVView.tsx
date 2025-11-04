@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getLiveTVChannels, playLiveTVChannel, getAllEPG, type LiveTVChannel, type EPGData } from '../../services/api';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import './LiveTVView.css';
 
 export function LiveTVView() {
@@ -9,28 +10,45 @@ export function LiveTVView() {
   const [error, setError] = useState<string | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [groups, setGroups] = useState<string[]>([]);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [guideWarning, setGuideWarning] = useState<string | null>(null);
+  const { online } = useNetworkStatus();
+  const hasLoadedOnce = useRef(false);
 
-  const loadChannels = async () => {
+  const loadChannels = useCallback(async () => {
     setLoading(true);
     setError(null);
+
+    if (!online) {
+      setLoading(false);
+      if (!hasLoadedOnce.current) {
+        setError('Connect to the network to load live TV channels.');
+      } else {
+        setStatusMessage('Offline mode: channel list may be out of date.');
+      }
+      return;
+    }
+
+    setStatusMessage(null);
+
     try {
       const channelList = await getLiveTVChannels(selectedGroup ?? undefined, 100);
       setChannels(channelList);
+      hasLoadedOnce.current = true;
 
-      // Extract unique groups
       const uniqueGroups = Array.from(
         new Set(channelList.map((ch) => ch.group_title).filter((g): g is string => g !== null))
       );
       setGroups(uniqueGroups.sort());
 
-      // Load EPG data
       try {
         const epgList = await getAllEPG();
         const epgMap = new Map(epgList.map((epg) => [epg.channel_id, epg]));
         setEpgData(epgMap);
+        setGuideWarning(null);
       } catch (epgErr) {
-        // EPG is optional, log but don't fail
         console.warn('Failed to load EPG:', epgErr);
+        setGuideWarning('Channel guide data is unavailable right now. Playback still works.');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load channels';
@@ -38,21 +56,25 @@ export function LiveTVView() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [online, selectedGroup]);
 
   useEffect(() => {
     void loadChannels();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedGroup]);
+  }, [loadChannels]);
 
-  const handlePlay = async (channel: LiveTVChannel) => {
+  const handlePlay = useCallback(async (channel: LiveTVChannel) => {
+    if (!online) {
+      setStatusMessage('You are offline. Connect to start playback.');
+      return;
+    }
     try {
       await playLiveTVChannel(channel.stream_url, channel.name);
+      setStatusMessage(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to play channel';
       setError(message);
     }
-  };
+  }, [online]);
 
   const handleGroupFilter = (group: string | null) => {
     setSelectedGroup(group);
@@ -93,6 +115,17 @@ export function LiveTVView() {
 
   return (
     <div className="livetv-view">
+      {statusMessage && (
+        <div className="livetv-status" role="status">
+          {statusMessage}
+        </div>
+      )}
+      {guideWarning && (
+        <div className="livetv-status guide" role="status">
+          {guideWarning}
+        </div>
+      )}
+
       <div className="livetv-header">
         <h1>📺 Live TV</h1>
         <div className="group-filter">
@@ -168,6 +201,7 @@ export function LiveTVView() {
               <button
                 className="play-button"
                 onClick={() => { void handlePlay(channel); }}
+                disabled={!online}
                 aria-label={`Play ${channel.name}`}
               >
                 ▶ Play

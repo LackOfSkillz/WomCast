@@ -5,11 +5,17 @@ interface VoiceButtonProps {
   onTranscript?: (text: string) => void;
   onError?: (error: string) => void;
   sessionId?: string;
+  disabled?: boolean;
+  disabledReason?: string;
 }
+
+const VOICE_API_URL = (import.meta.env.VITE_VOICE_API_URL as string | undefined) ?? 'http://localhost:3003';
 
 export const VoiceButton: React.FC<VoiceButtonProps> = ({
   onTranscript,
   onError,
+  disabled = false,
+  disabledReason,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -36,6 +42,10 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
   }, []);
 
   const startRecording = async () => {
+    if (disabled) {
+      return;
+    }
+
     try {
       setError(null);
       setTranscript('');
@@ -131,9 +141,11 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
 
     try {
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-      
-      // Convert to WAV format using AudioContext
-      const audioBuffer = await audioBlob.arrayBuffer();
+
+      const audioBuffer = typeof audioBlob.arrayBuffer === 'function'
+        ? await audioBlob.arrayBuffer()
+        : await new Response(audioBlob).arrayBuffer();
+
       const audioContext = new AudioContext({ sampleRate: 16000 });
       const decodedAudio = await audioContext.decodeAudioData(audioBuffer);
 
@@ -149,7 +161,7 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
         const base64Data = base64Audio.split(',')[1];
 
         // Send to STT endpoint
-        const response = await fetch('http://localhost:8000/v1/voice/stt', {
+        const response = await fetch(`${VOICE_API_URL}/v1/voice/stt`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -163,15 +175,12 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
           throw new Error(`Transcription failed: ${response.statusText}`);
         }
 
-        interface STTResponse {
-          text: string;
-        }
+        const result = await response.json() as { text: string };
+        const normalizedText = result.text.trim();
+        setTranscript(normalizedText);
 
-        const result = await response.json() as STTResponse;
-        setTranscript(result.text);
-        
-        if (onTranscript) {
-          onTranscript(result.text);
+        if (normalizedText && onTranscript) {
+          onTranscript(normalizedText);
         }
       };
 
@@ -234,7 +243,7 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
   };
 
   const handleMouseDown = () => {
-    if (!isRecording && !isProcessing) {
+    if (!isRecording && !isProcessing && !disabled) {
       void startRecording();
     }
   };
@@ -254,7 +263,7 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
         onMouseLeave={handleMouseUp}
         onTouchStart={handleMouseDown}
         onTouchEnd={handleMouseUp}
-        disabled={isProcessing}
+        disabled={isProcessing || disabled}
         aria-label="Push to talk"
       >
         <div className="voice-button-icon">
@@ -279,6 +288,9 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
       </button>
 
       <div className="voice-status">
+        {disabled && disabledReason && (
+          <span className="status-text disabled">{disabledReason}</span>
+        )}
         {isRecording && <span className="status-text">Recording...</span>}
         {isProcessing && <span className="status-text">Processing...</span>}
         {transcript && !isProcessing && (

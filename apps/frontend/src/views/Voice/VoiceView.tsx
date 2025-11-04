@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { VoiceButton } from '../../components/VoiceButton';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import './VoiceView.css';
 
 export interface VoiceViewProps {
@@ -8,15 +9,19 @@ export interface VoiceViewProps {
 
 export const VoiceView: React.FC<VoiceViewProps> = ({ onSearch }) => {
   const [recentTranscripts, setRecentTranscripts] = useState<string[]>([]);
+  const { online } = useNetworkStatus();
 
   const handleTranscript = (text: string) => {
     // Add to recent transcripts
-    setRecentTranscripts(prev => [text, ...prev.slice(0, 4)]);
+    const normalized = text.trim();
+    if (!normalized) {
+      return;
+    }
+
+    setRecentTranscripts((prev) => [normalized, ...prev.slice(0, 4)]);
 
     // Route to search with the transcript
-    if (text.trim()) {
-      onSearch(text);
-    }
+    onSearch(normalized);
   };
 
   const handleError = (error: string) => {
@@ -38,10 +43,18 @@ export const VoiceView: React.FC<VoiceViewProps> = ({ onSearch }) => {
         <p className="voice-subtitle">Press and hold the button to speak</p>
       </div>
 
+      {!online && (
+        <div className="voice-notice" role="status">
+          Offline mode: reconnect to use voice search.
+        </div>
+      )}
+
       <div className="voice-content">
         <VoiceButton 
           onTranscript={handleTranscript}
           onError={handleError}
+          disabled={!online}
+          disabledReason="Voice search requires an internet connection."
         />
 
         <div className="voice-tips">

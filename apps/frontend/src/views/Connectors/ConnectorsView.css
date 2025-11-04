@@ -10,6 +10,15 @@
   text-align: center;
 }
 
+.connectors-status {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 209, 102, 0.12);
+  border-left: 4px solid #ffd166;
+  color: #ffd166;
+  font-weight: 600;
+}
+
 .connectors-header h1 {
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
@@ -237,6 +246,13 @@
 
 .play-button:active {
   transform: scale(0.98);
+}
+
+.play-button:disabled {
+  background: #555555;
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
 }
 
 /* Loading State */

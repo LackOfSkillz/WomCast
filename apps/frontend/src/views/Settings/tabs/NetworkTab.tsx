@@ -1,23 +1,22 @@
 import React from 'react';
+import type { Settings } from '../../../types/settings';
 
 interface NetworkTabProps {
-  settings: {
-    stun_server?: string;
-    turn_server?: string;
-    turn_username?: string;
-    turn_password?: string;
-    mdns_enabled?: boolean;
-    network_diagnostics_enabled?: boolean;
-  };
-  updateSetting: (key: string, value: any) => Promise<void>;
-  updateSettings: (updates: any) => Promise<void>;
+  settings: Settings;
+  updateSetting: (key: string, value: Settings[keyof Settings]) => Promise<void>;
+  updateSettings: (updates: Partial<Settings>) => Promise<void>;
+  disabled: boolean;
 }
 
-const NetworkTab: React.FC<NetworkTabProps> = ({ settings, updateSetting }) => {
+const NetworkTab: React.FC<NetworkTabProps> = ({ settings, updateSetting, disabled }) => {
   const [diagnosing, setDiagnosing] = React.useState(false);
   const [diagnosticsResult, setDiagnosticsResult] = React.useState<string | null>(null);
 
   const runDiagnostics = async () => {
+    if (disabled) {
+      return;
+    }
+
     try {
       setDiagnosing(true);
       setDiagnosticsResult(null);
@@ -58,6 +57,7 @@ const NetworkTab: React.FC<NetworkTabProps> = ({ settings, updateSetting }) => {
               value={settings.stun_server || 'stun:stun.l.google.com:19302'}
               onChange={(e) => updateSetting('stun_server', e.target.value)}
               placeholder="stun:stun.l.google.com:19302"
+              disabled={disabled}
             />
           </div>
         </div>
@@ -75,6 +75,7 @@ const NetworkTab: React.FC<NetworkTabProps> = ({ settings, updateSetting }) => {
               value={settings.turn_server || ''}
               onChange={(e) => updateSetting('turn_server', e.target.value)}
               placeholder="turn:turnserver.example.com:3478"
+              disabled={disabled}
             />
           </div>
         </div>
@@ -92,6 +93,7 @@ const NetworkTab: React.FC<NetworkTabProps> = ({ settings, updateSetting }) => {
               value={settings.turn_username || ''}
               onChange={(e) => updateSetting('turn_username', e.target.value)}
               placeholder="username"
+              disabled={disabled}
             />
           </div>
         </div>
@@ -109,6 +111,7 @@ const NetworkTab: React.FC<NetworkTabProps> = ({ settings, updateSetting }) => {
               value={settings.turn_password || ''}
               onChange={(e) => updateSetting('turn_password', e.target.value)}
               placeholder="password"
+              disabled={disabled}
             />
           </div>
         </div>
@@ -132,6 +135,7 @@ const NetworkTab: React.FC<NetworkTabProps> = ({ settings, updateSetting }) => {
                 type="checkbox"
                 checked={settings.mdns_enabled !== false}
                 onChange={(e) => updateSetting('mdns_enabled', e.target.checked)}
+                disabled={disabled}
               />
               <span className="toggle-slider"></span>
             </label>
@@ -155,7 +159,7 @@ const NetworkTab: React.FC<NetworkTabProps> = ({ settings, updateSetting }) => {
             <button 
               className="settings-button"
               onClick={runDiagnostics}
-              disabled={diagnosing}
+              disabled={diagnosing || disabled}
             >
               {diagnosing ? 'Running...' : '🔍 Run Test'}
             </button>

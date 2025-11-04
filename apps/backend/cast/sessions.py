@@ -217,3 +217,12 @@ class SessionManager:
             for session in self._sessions.values()
             if session.is_active
         ]
+
+    def reset_sessions(self) -> int:
+        """Remove all sessions and return removed count."""
+
+        count = len(self._sessions)
+        if count:
+            self._sessions.clear()
+            logger.info("Reset %d casting sessions", count)
+        return count

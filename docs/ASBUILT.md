@@ -1,8 +1,8 @@
 # WomCast — As Built
 
 > **Living document tracking actual implementation vs specification**  
-> Updated: 2025-01-XX UTC  
-> Milestone: M3 (External Content) In Progress — 8/16 tasks complete
+> Updated: 2025-11-05 UTC  
+> Milestone: M5 (AI Bridge + PWA + Docs) In Progress — 1/8 tasks complete (M4 follow-ups: HDMI-CEC helper, legal notices)
 
 ---
 
@@ -15,7 +15,33 @@ WomCast is a local-first entertainment OS for Raspberry Pi 5, built as a microse
 - **AI**: Whisper (voice), Ollama (LLM), ChromaDB (embeddings)
 - **Build**: Docker multi-stage (Debian Bookworm base for Pi OS Lite compatibility)
 
-**Current Status**: M1 complete (12/12 tasks), M2 complete (12/12 tasks), M3 in progress (8/16 tasks). External content connectors (Internet Archive, PBS, NASA TV, Jamendo), live TV streaming (M3U/HLS/DASH), connector resilience (circuit breaker, rate limiting, retry), subtitle font pack with multi-language support, and comprehensive performance benchmarking suite implemented. Voice casting and AI features in progress.
+**Current Status**: M1 complete (12/12 tasks), M2 complete (12/12 tasks), M3 complete (16/16 tasks), M4 in progress (5/8 tasks). Cloud passthrough QR flows, server-side voice relay, hardened settings experience, and privacy export/purge tooling are implemented. HDMI-CEC backend helper and legal terms acknowledgement remain pending.
+
+---
+
+## M4–M5 Highlights — Cloud, Voice, AI Bridge
+
+- **Cloud Service Passthrough** (`apps/backend/connectors/cloud/`, `apps/frontend/src/components/CloudBadge/`)
+  - REST endpoints: `GET /v1/cloud/services`, `POST /v1/cloud/links`, `GET /v1/cloud/qr`, `GET /v1/cloud/availability/{provider}`.
+  - Generates native deep links + QR codes for Netflix, Disney+, HBO Max, YouTube, and other legal providers; no DRM bypass.
+  - Frontend `CloudBadge` component surfaces QR and browser hand-offs with subscription disclosure and offline-safe error handling.
+- **Settings Panel Hardening** (`apps/frontend/src/views/Settings/`, `apps/frontend/src/services/api.ts`)
+  - Shared fetch helpers with retry/offline awareness and typed normalization of `SettingsResponse` for consistent tab inputs.
+  - Tab layout for Models, Privacy, Pairing, CEC, and Network now disables controls when offline and surfaces network status banners.
+  - Pairing tab normalizes cast sessions, Privacy tab wires export/delete flows, and CEC tab exposes scanning/switch UI pending backend helper.
+- **Server-Side Voice Relay + Intent Routing** (`apps/backend/voice/server_audio.py`, `apps/backend/voice/main.py`, `apps/backend/ai/intent/engine.py`)
+  - REST endpoints: `GET /v1/voice/server-audio/available`, `POST /v1/voice/server-audio/start`, `POST /v1/voice/server-audio/stop`, `POST /v1/voice/intent`, `GET /v1/voice/intent/models`, `POST /v1/voice/intent/models/select`.
+  - New `IntentEngine` wraps Ollama for JSON-only intent extraction; model selection persisted via shared settings.
+  - Reusable `AudioBuffer` handles PCM accumulation, WAV export, and retention limits; integrates with Whisper STT pipeline and history logging.
+- **Semantic Search + Voice Memory Bridge** (`apps/backend/ai/chroma/`, `apps/backend/search/main.py`, `apps/backend/voice/main.py`)
+  - Introduced ChromaDB persistent store under `.data/chroma` with `media_index` and `voice_queries` collections backed by Ollama embeddings.
+  - New REST endpoints: `GET /v1/search/semantic?q=`, `POST /v1/search/semantic/rebuild` provide ranked results with response latency metadata.
+  - Voice intent handler now records transcripts + resolved actions into the semantic store for cross-session recall; failures degrade gracefully with logging only.
+- **Privacy Export & Purge** (`apps/backend/settings/main.py`, `apps/frontend/src/views/Settings/tabs/PrivacyTab.tsx`)
+  - Export bundles settings, voice history, cast sessions, and SQLite tables into a signed JSON download with filename stamps.
+  - Purge resets settings, clears voice transcripts, trims cast sessions, and wipes user tables with summarized results.
+- **HDMI-CEC Status** (`apps/frontend/src/views/Settings/tabs/CECTab.tsx`)
+  - Frontend toggle + device scan/switch actions implemented; backend helper to query the CEC bus remains a TODO under M4.2.
 
 ---
 
@@ -43,8 +69,9 @@ WomCast is a local-first entertainment OS for Raspberry Pi 5, built as a microse
 | `womcast-gateway` | API Gateway (request routing + connectors + livetv) | 3000 | HTTP/REST | Optional JWT | M1.5 ✅ |
 | `womcast-metadata` | Media indexing & metadata | 3001 | HTTP/REST | Local-only | M2.3 ✅ |
 | `womcast-playback` | Kodi/mpv control | 3002 | HTTP/REST | Local-only | M2.4 ✅ |
-| `womcast-voice` | Whisper STT + voice commands | 3003 | HTTP/REST + WebSocket | Local-only | M1.5 ✅ (scaffolded) |
-| `womcast-search` | ChromaDB + Ollama semantic search | 3004 | HTTP/REST | Local-only | M1.5 ✅ (scaffolded) |
+| `womcast-voice` | Whisper STT + voice commands | 3003 | HTTP/REST + WebSocket | Local-only | M4.3 ✅ |
+| `womcast-search` | ChromaDB + Ollama semantic search | 3004 | HTTP/REST | Local-only | M5.2 ✅ |
+| `womcast-cloud` | Legal cloud service passthrough | 8003 | HTTP/REST | Local-only | M4.1 ✅ |
 | **Content Connectors** | External API integration | Via Gateway | HTTP/REST | Per-connector | M3.1-M3.2 ✅ |
 | - Internet Archive | Archive.org collections & items | 3000/v1/connectors/internet-archive | HTTP/REST | Public API | M3.1 ✅ |
 | - NASA | NASA Image/Video Library + TV | 3000/v1/connectors/nasa | HTTP/REST | Public API | M3.2 ✅ |
@@ -61,7 +88,7 @@ WomCast is a local-first entertainment OS for Raspberry Pi 5, built as a microse
 - Gateway → connectors: HTTP/REST with resilience (circuit breaker, rate limiting, retry) — M3.14 ✅
 - Frontend → Gateway: HTTP/REST (single entry point)
 - Frontend → External APIs: Via Gateway only (no direct calls, enforces rate limits)
-- Voice: WebSocket for streaming audio (push-to-talk) — M3.9 (pending)
+- Voice: WebSocket for streaming audio + server mic relay — M4.3 ✅
 - Cast: WebRTC for phone/tablet pairing — M3.6 (pending)
 
 ---

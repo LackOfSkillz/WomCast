@@ -3,6 +3,7 @@ WomCast Media Database Schema
 SQLite database for local media library indexing and metadata.
 """
 
+import os
 from pathlib import Path
 
 import aiosqlite
@@ -229,9 +230,20 @@ INSERT OR IGNORE INTO schema_metadata (key, value) VALUES ('created_at', datetim
 """
 
 
-async def init_database(db_path: Path) -> None:
+def get_db_path() -> Path:
+    """Resolve path to the metadata database."""
+
+    env_path = os.environ.get("MEDIA_DB_PATH") or os.environ.get("METADATA_DB_PATH")
+    if env_path:
+        return Path(env_path).expanduser().resolve()
+    return Path(__file__).parent.parent / "womcast.db"
+
+
+async def init_database(db_path: Path | None = None) -> None:
     """Initialize database with schema and enable WAL mode."""
-    async with aiosqlite.connect(db_path) as db:
+    resolved_path = db_path or get_db_path()
+    resolved_path.parent.mkdir(parents=True, exist_ok=True)
+    async with aiosqlite.connect(resolved_path) as db:
         # Enable WAL mode for better concurrency and crash recovery
         await db.execute("PRAGMA journal_mode=WAL")
         await db.execute("PRAGMA wal_autocheckpoint=1000")

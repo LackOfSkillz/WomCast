@@ -1,15 +1,25 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { VoiceView } from './VoiceView';
 
-// Mock VoiceButton component
-vi.mock('../../components/VoiceButton', () => ({
-  VoiceButton: ({ onTranscript }: { onTranscript: (text: string) => void }) => (
+const mockVoiceButton = vi.fn(
+  ({ onTranscript }: { onTranscript: (text: string) => void }) => (
     <button onClick={() => onTranscript('test search query')}>Mock Voice Button</button>
-  ),
+  )
+);
+
+vi.mock('../../components/VoiceButton', () => ({
+  VoiceButton: (props: { onTranscript: (text: string) => void }) => mockVoiceButton(props),
 }));
 
 describe('VoiceView', () => {
+  beforeEach(() => {
+    mockVoiceButton.mockClear();
+    mockVoiceButton.mockImplementation(({ onTranscript }: { onTranscript: (text: string) => void }) => (
+      <button onClick={() => onTranscript('test search query')}>Mock Voice Button</button>
+    ));
+  });
+
   it('renders the voice search view', () => {
     const mockOnSearch = vi.fn();
     render(<VoiceView onSearch={mockOnSearch} />);
@@ -104,21 +114,16 @@ describe('VoiceView', () => {
 
   it('ignores empty transcripts', () => {
     const mockOnSearch = vi.fn();
-
-    // Mock with empty transcript
-    vi.mock('../../components/VoiceButton', () => ({
-      VoiceButton: ({ onTranscript }: { onTranscript: (text: string) => void }) => (
-        <button onClick={() => onTranscript('  ')}>Mock Voice Button Empty</button>
-      ),
-    }));
+    mockVoiceButton.mockImplementationOnce(({ onTranscript }: { onTranscript: (text: string) => void }) => (
+      <button onClick={() => onTranscript('  ')}>Mock Voice Button</button>
+    ));
 
     render(<VoiceView onSearch={mockOnSearch} />);
 
     const voiceButton = screen.getByText('Mock Voice Button');
     fireEvent.click(voiceButton);
 
-    // onSearch should still be called (component adds to recents first)
-    // but in real usage, empty strings would be filtered
-    expect(mockOnSearch).toHaveBeenCalled();
+    expect(mockOnSearch).not.toHaveBeenCalled();
+    expect(screen.queryByText('Recent Searches')).toBeNull();
   });
 });

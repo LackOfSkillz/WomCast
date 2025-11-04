@@ -14,17 +14,34 @@ logger = logging.getLogger(__name__)
 # Default settings
 DEFAULT_SETTINGS = {
     # Voice/AI models
-    "voice_model": "vosk-model-small-en-us-0.15",
-    "llm_model": None,  # Local LLM for search assistance
-    "stt_enabled": True,  # Speech-to-text
-    "tts_enabled": True,  # Text-to-speech
+    "voice_model": "small",  # Whisper model size
+    "llm_model": "llama2",  # Local LLM for search assistance
+    "stt_enabled": True,
+    "tts_enabled": True,
+    "voice_language": "en",
     # Network shares
     "auto_mount_shares": True,
     "auto_index_shares": True,
     # Privacy flags
     "analytics_enabled": False,
-    "crash_reporting": False,
+    "crash_reporting_enabled": False,
     "metadata_fetching_enabled": True,
+    "voice_history_days": 30,
+    "cast_history_days": 90,
+    # Pairing preferences
+    "pairing_enabled": True,
+    "pairing_pin_length": 6,
+    "pairing_session_timeout": 300,
+    # HDMI-CEC
+    "cec_enabled": True,
+    "cec_auto_switch": True,
+    # Network configuration
+    "stun_server": "stun:stun.l.google.com:19302",
+    "turn_server": "",
+    "turn_username": "",
+    "turn_password": "",
+    "mdns_enabled": True,
+    "network_diagnostics_enabled": False,
     # UI preferences
     "theme": "dark",  # dark, light, auto
     "language": "en",
@@ -33,11 +50,11 @@ DEFAULT_SETTINGS = {
     "show_subtitles": True,
     # Playback settings
     "default_volume": 80,
-    "resume_threshold_seconds": 60,  # Don't resume if <60s remaining
-    "skip_intro_seconds": 0,  # Auto-skip intro (0 = disabled)
+    "resume_threshold_seconds": 60,
+    "skip_intro_seconds": 0,
     # Performance
     "cache_size_mb": 500,
-    "thumbnail_quality": "medium",  # low, medium, high
+    "thumbnail_quality": "medium",
     # Notifications
     "show_notifications": True,
     "notification_duration_ms": 3000,
@@ -54,25 +71,29 @@ class SettingsManager:
 
     async def load(self) -> None:
         """Load settings from JSON file."""
+        await self.refresh()
+
+    async def refresh(self) -> None:
+        """Reload settings from disk, merging with defaults."""
         if not self.settings_path.exists():
-            # Initialize with defaults
             self._settings = DEFAULT_SETTINGS.copy()
-            self._loaded = True  # Mark as loaded before save
+            self._loaded = True
             await self.save()
             logger.info(f"Created default settings at {self.settings_path}")
-        else:
-            try:
-                with open(self.settings_path) as f:
-                    loaded = json.load(f)
-                    # Merge with defaults (in case new settings were added)
-                    self._settings = DEFAULT_SETTINGS.copy()
-                    self._settings.update(loaded)
-                logger.info(f"Loaded settings from {self.settings_path}")
-            except Exception as e:
-                logger.error(f"Failed to load settings: {e}")
-                self._settings = DEFAULT_SETTINGS.copy()
+            return
 
-            self._loaded = True
+        try:
+            with open(self.settings_path) as f:
+                loaded = json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load settings: {e}")
+            self._settings = DEFAULT_SETTINGS.copy()
+        else:
+            self._settings = DEFAULT_SETTINGS.copy()
+            self._settings.update(loaded)
+
+        self._loaded = True
+        logger.debug("Settings refreshed from %s", self.settings_path)
 
     async def save(self) -> None:
         """Save settings to JSON file."""

@@ -112,11 +112,11 @@ One 10-foot UI for local media (USB/NFS/SMB), free streaming sources (Internet A
 - **Bluetooth pairing**: On-screen wizard for controller setup
 - **Controller profiles**: Per-device mapping save/restore
 
-#### 🗣️ **AI-Powered Voice & Search** ⏳ (M3.6-M3.9, M5 pending)
-- **Whisper STT**: Small quantized model; ≤1.2s p50 latency (M3.8 pending)
-- **Ollama intent parsing**: "Play the latest Jamendo jazz" → action + args API (M5 pending)
+#### 🗣️ **AI-Powered Voice & Search** ⏳ (M4 follow-ups, M5 in progress)
+- **Whisper STT service**: Server-side capture + PCM buffering feeds on-device transcription (M4.3 ✅)
+- **Settings privacy tools**: Export/purge flows surface voice history controls (M4.4 ✅)
+- **Ollama intent parsing**: `POST /v1/voice/intent` returns `{action,args}` with model swap via settings (M5.1 ✅)
 - **ChromaDB semantic search**: Embeddings for "Find documentaries about space" (M5 pending)
-- **Unified search UX**: Text search functional, semantic and voice pending
 - **Phone-mic relay**: WebRTC audio streaming (M3.7 pending)
 - **Push-to-talk UI**: Frontend voice interface (M3.9 pending)
 
@@ -127,11 +127,11 @@ One 10-foot UI for local media (USB/NFS/SMB), free streaming sources (Internet A
 - **PWA remote**: Install on home screen for remote control (future)
 - **STUN/TURN config**: LAN-first, TURN optional (M3.12 pending)
 
-#### ☁️ **Cloud Service Passthrough** ⏳ (M4 pending)
-- **Legal compliance**: No DRM bypass; badges open provider login pages (Netflix, Disney+, etc.)
-- **QR codes**: Mobile signin for services that require it
-- **HDMI-CEC integration**: Auto-switch TV input when launching cloud apps (with fallback UI)
-- **Acknowledgment tracking**: First-use terms shown; stored in settings
+#### ☁️ **Cloud Service Passthrough** ⏳ (M4 in progress)
+- **Legal compliance**: No DRM bypass; badges open provider login pages (Netflix, Disney+, etc.) (M4.1 ✅)
+- **QR pairing**: Deep links + QR codes for mobile sign-in (M4.1 ✅)
+- **HDMI-CEC integration**: Auto-switch TV input when launching cloud apps (backend helper pending M4.2)
+- **Acknowledgment tracking**: First-use terms shown; stored in settings (M4.7 pending)
 
 #### 🔒 **Privacy & Security**
 - **No PII in logs**: Structured logging with privacy filters
@@ -283,7 +283,7 @@ WomCast/
 └── README.md              # This file
 ```
 
-**Current Status**: Monorepo skeleton established. Active development on M1 (System Setup).
+**Current Status**: M1-M3 delivered; M4 follow-ups (CEC helper, legal notices) pending; M5 (AI Bridge + PWA + Docs) underway with 1/8 tasks complete.
 
 
 ### Key Design Decisions (ADRs)
@@ -629,10 +629,10 @@ See `.env.template` for all available configuration options. Key settings:
 
 See [docs/spec/TASKS.md](docs/spec/TASKS.md) for complete task breakdown.
 
-- **M1: System Setup** (5.5 days) — Monorepo, tooling, CI, "Hello TV" shell
-- **M2: Storage & Library** (7.5 days) — USB auto-mount, indexer, playback
-- **M3: Free Streaming + Live TV + Casting + Voice** (12.5 days) — Connectors, M3U, WebRTC, Whisper
-- **M4: Cloud Mapper + CEC + Server Voice** (5 days) — QR flows, HDMI-CEC, privacy controls
+- ✅ **M1: System Setup** (5.5 days) — Monorepo, tooling, CI, "Hello TV" shell
+- ✅ **M2: Storage & Library** (7.5 days) — USB auto-mount, indexer, playback
+- ✅ **M3: Free Streaming + Live TV + Casting + Voice** (12.5 days) — Connectors, M3U, WebRTC scaffolding, Whisper pipeline
+- ⏳ **M4: Cloud Mapper + CEC + Server Voice** (5 days) — QR flows, HDMI-CEC, privacy controls (5/8 tasks complete)
 - **M5: AI Bridge + PWA + Docs** (7 days) — Ollama, ChromaDB, mobile remote
 - **M6: Retro + UI Polish + Final Image** (5.75 days) — RetroArch, accessibility, release
 
@@ -657,10 +657,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines (coming soon).
 
 - ✅ Core architecture scaffolded
 - ✅ Task breakdown complete (73 tasks)
-- ⏳ M1: System Setup (in progress)
-- ⏳ M2: Storage & Library
-- ⏳ M3: Free Streaming + Live TV + Casting + Voice
-- ⏳ M4: Cloud Mapper + CEC + Server Voice
+- ✅ M1: System Setup
+- ✅ M2: Storage & Library
+- ✅ M3: Free Streaming + Live TV + Casting + Voice
+- ⏳ M4: Cloud Mapper + CEC + Server Voice (5/8 complete)
 - ⏳ M5: AI Bridge + PWA + Docs
 - ⏳ M6: Retro + UI Polish + Final Image
 

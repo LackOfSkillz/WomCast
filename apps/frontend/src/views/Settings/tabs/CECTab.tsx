@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Settings } from '../../../types/settings';
 
 interface CECDevice {
   address: string;
@@ -8,15 +9,13 @@ interface CECDevice {
 }
 
 interface CECTabProps {
-  settings: {
-    cec_enabled?: boolean;
-    cec_auto_switch?: boolean;
-  };
-  updateSetting: (key: string, value: any) => Promise<void>;
-  updateSettings: (updates: any) => Promise<void>;
+  settings: Settings;
+  updateSetting: (key: string, value: Settings[keyof Settings]) => Promise<void>;
+  updateSettings: (updates: Partial<Settings>) => Promise<void>;
+  disabled: boolean;
 }
 
-const CECTab: React.FC<CECTabProps> = ({ settings, updateSetting }) => {
+const CECTab: React.FC<CECTabProps> = ({ settings, updateSetting, disabled }) => {
   const [devices, setDevices] = React.useState<CECDevice[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [scanning, setScanning] = React.useState(false);
@@ -39,6 +38,10 @@ const CECTab: React.FC<CECTabProps> = ({ settings, updateSetting }) => {
   };
 
   const scanDevices = async () => {
+    if (disabled || !settings.cec_enabled) {
+      return;
+    }
+
     try {
       setScanning(true);
       await fetch('/api/cast/v1/cec/scan', { method: 'POST' });
@@ -52,6 +55,10 @@ const CECTab: React.FC<CECTabProps> = ({ settings, updateSetting }) => {
   };
 
   const switchToInput = async (address: string) => {
+    if (disabled) {
+      return;
+    }
+
     try {
       await fetch('/api/cast/v1/cec/switch', {
         method: 'POST',
@@ -84,6 +91,7 @@ const CECTab: React.FC<CECTabProps> = ({ settings, updateSetting }) => {
                 type="checkbox"
                 checked={settings.cec_enabled === true}
                 onChange={(e) => updateSetting('cec_enabled', e.target.checked)}
+                disabled={disabled}
               />
               <span className="toggle-slider"></span>
             </label>
@@ -101,7 +109,7 @@ const CECTab: React.FC<CECTabProps> = ({ settings, updateSetting }) => {
                 type="checkbox"
                 checked={settings.cec_auto_switch === true}
                 onChange={(e) => updateSetting('cec_auto_switch', e.target.checked)}
-                disabled={!settings.cec_enabled}
+                disabled={!settings.cec_enabled || disabled}
               />
               <span className="toggle-slider"></span>
             </label>
@@ -120,7 +128,7 @@ const CECTab: React.FC<CECTabProps> = ({ settings, updateSetting }) => {
           <button 
             className="settings-button"
             onClick={scanDevices}
-            disabled={scanning || !settings.cec_enabled}
+            disabled={scanning || !settings.cec_enabled || disabled}
           >
             {scanning ? 'Scanning...' : '🔍 Scan for Devices'}
           </button>
@@ -156,7 +164,7 @@ const CECTab: React.FC<CECTabProps> = ({ settings, updateSetting }) => {
                   <button 
                     className="settings-button"
                     onClick={() => switchToInput(device.address)}
-                    disabled={device.active}
+                    disabled={device.active || disabled}
                   >
                     {device.active ? 'Current' : 'Switch To'}
                   </button>

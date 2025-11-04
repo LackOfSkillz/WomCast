@@ -271,6 +271,19 @@ async def list_sessions():
     return {"sessions": [s.to_dict() for s in sessions]}
 
 
+@app.delete("/v1/cast/sessions")
+async def reset_sessions():
+    """Remove all active and pending casting sessions."""
+
+    if session_manager is None:
+        raise HTTPException(status_code=500, detail="Session manager not initialized")
+
+    removed = session_manager.reset_sessions()
+
+    message = "No sessions to reset" if removed == 0 else f"Removed {removed} sessions"
+    return {"status": "ok", "removed_sessions": removed, "message": message}
+
+
 @app.get("/v1/cast/ice-config")
 async def get_ice_config():
     """

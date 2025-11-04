@@ -60,6 +60,33 @@
   gap: 8px;
 }
 
+.media-card__badge {
+  align-self: flex-start;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.media-card__badge--semantic {
+  background: rgba(124, 58, 237, 0.18);
+  color: #c4b5fd;
+}
+
+.media-card__badge--both {
+  background: rgba(56, 189, 248, 0.18);
+  color: #bae6fd;
+}
+
+.media-card__score {
+  font-family: monospace;
+  font-weight: 700;
+}
+
 .media-card__title {
   margin: 0;
   font-size: 16px;

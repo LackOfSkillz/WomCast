@@ -5,34 +5,51 @@ export interface SearchBoxProps {
   onSearch: (query: string) => void;
   placeholder?: string;
   debounceMs?: number;
+  value?: string;
+  onValueChange?: (value: string) => void;
 }
 
 export function SearchBox({
   onSearch,
   placeholder = 'Search media...',
   debounceMs = 300,
+  value,
+  onValueChange,
 }: SearchBoxProps) {
-  const [value, setValue] = useState('');
+  const [internalValue, setInternalValue] = useState(value ?? '');
 
-  const handleSearch = useCallback(
-    (query: string) => {
-      onSearch(query);
+  useEffect(() => {
+    if (value !== undefined) {
+      setInternalValue(value);
+    }
+  }, [value]);
+
+  const effectiveValue = value !== undefined ? value : internalValue;
+
+  const updateValue = useCallback(
+    (nextValue: string) => {
+      if (value === undefined) {
+        setInternalValue(nextValue);
+      }
+      if (onValueChange) {
+        onValueChange(nextValue);
+      }
     },
-    [onSearch]
+    [value, onValueChange]
   );
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      handleSearch(value);
+      onSearch(effectiveValue);
     }, debounceMs);
 
     return () => {
       clearTimeout(timer);
     };
-  }, [value, debounceMs, handleSearch]);
+  }, [effectiveValue, debounceMs, onSearch]);
 
   const handleClear = () => {
-    setValue('');
+    updateValue('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -46,15 +63,15 @@ export function SearchBox({
       <input
         type="text"
         className="search-box__input"
-        value={value}
+        value={effectiveValue}
         onChange={(e) => {
-          setValue(e.target.value);
+          updateValue(e.target.value);
         }}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         aria-label="Search media files"
       />
-      {value && (
+      {effectiveValue && (
         <button
           className="search-box__clear"
           onClick={handleClear}

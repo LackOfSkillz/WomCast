@@ -51,7 +51,7 @@ app.include_router(nasa_connector.router)
 app.include_router(jamendo_connector.router)
 
 # Include live TV router
-app.include_router(livetv.app)
+app.include_router(livetv.app.router)
 
 
 @app.get("/")

@@ -8,6 +8,13 @@
   flex-direction: column;
 }
 
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 .app-nav {
   background: rgba(20, 20, 30, 0.95);
   border-bottom: 2px solid rgba(255, 255, 255, 0.1);
