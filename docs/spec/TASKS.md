@@ -110,12 +110,12 @@
 | ID | Task | Owner | Est (d) | Tags | Dependencies | Parallel | Status |
 |----|------|-------|---------|------|--------------|----------|--------|
 | M4.1 | Cloud badge & QR passthrough (legal services) | AI-Agent | 1.0 | [ui][backend] | M3.3 | — | ✅ |
-| M4.2 | HDMI-CEC input switch helper | AI-Agent | 0.75 | [backend][ops] | M2.4 | ✓ | todo |
+| M4.2 | HDMI-CEC input switch helper | AI-Agent | 0.75 | [backend][ops] | M2.4 | ✓ | ✅ |
 | M4.3 | Server-side voice relay (when device lacks mic) | AI-Agent | 0.75 | [ai][backend] | M3.8 | ✓ | ✅ |
 | M4.4 | Settings panel (models, privacy, pairing) | AI-Agent | 1.0 | [ui] | M3.9 | — | ✅ |
 | M4.5 | Hardening & error UX (network/offline states) | AI-Agent | 0.75 | [ui][backend][security] | M4.1–M4.4 | — | ✅ |
 | M4.6 | Docs updates (Cloud/CEC/Settings) | Gary | 0.25 | [docs] | M4.* | — | ✅ |
-| M4.7 | Legal notices & provider terms acknowledgment | AI-Agent | 0.25 | [ui][docs][security] | M4.1 | ✓ | todo |
+| M4.7 | Legal notices & provider terms acknowledgment | AI-Agent | 0.25 | [ui][docs][security] | M4.1 | ✓ | ✅ |
 | M4.8 | Privacy controls (data purge/export) | AI-Agent | 0.75 | [ui][backend][security] | M4.4, M2.12 | — | ✅ |
 
 **M4 Acceptance Criteria**:
@@ -137,10 +137,10 @@
 |----|------|-------|---------|------|--------------|----------|--------|
 | M5.1 | Ollama model mgmt + intent API | AI-Agent | 1.25 | [ai][backend] | M3.8 | — | ✅ |
 | M5.2 | ChromaDB collections + semantic search endpoint | AI-Agent | 1.0 | [ai][backend] | M2.3 | ✓ | ✅ |
-| M5.3 | Frontend search unification (text + semantic + voice) | AI-Agent | 0.75 | [ui][ai] | M5.2, M3.9 | — | in_progress |
-| M5.4 | LAN PWA remote (basic control + voice button) | AI-Agent | 1.25 | [ui][ops] | M3.6, M3.9 | — | todo |
-| M5.5 | Docs hardening + samples & demo mode | Gary | 0.5 | [docs] | M5.* | — | todo |
-| M5.6 | Model download/space management | AI-Agent | 0.75 | [ai][ops] | M5.1 | ✓ | todo |
+| M5.3 | Frontend search unification (text + semantic + voice) | AI-Agent | 0.75 | [ui][ai] | M5.2, M3.9 | — | ✅ |
+| M5.4 | LAN PWA remote (basic control + voice button) | AI-Agent | 1.25 | [ui][ops] | M3.6, M3.9 | — | ✅ |
+| M5.5 | Docs hardening + samples & demo mode | Gary | 0.5 | [docs] | M5.* | — | ✅ |
+| M5.6 | Model download/space management | AI-Agent | 0.75 | [ai][ops] | M5.1 | ✓ | ✅ |
 | M5.7 | PWA service worker + offline cache | AI-Agent | 0.5 | [ui][ops] | M5.4 | ✓ | todo |
 | M5.8 | Demo content pack + fake M3U generator | AI-Agent | 0.25 | [ops][perf] | M3.4, M2.3 | ✓ | todo |
 

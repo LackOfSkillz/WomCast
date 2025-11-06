@@ -28,6 +28,8 @@ DEFAULT_SETTINGS = {
     "metadata_fetching_enabled": True,
     "voice_history_days": 30,
     "cast_history_days": 90,
+    "legal_terms_version": "",
+    "legal_terms_accepted_at": None,
     # Pairing preferences
     "pairing_enabled": True,
     "pairing_pin_length": 6,

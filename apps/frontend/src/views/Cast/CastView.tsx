@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
-import { createCastSession, fetchCastSessionQr, type CastSession } from '../../services/api';
+import { createCastSession, fetchCastSessionQr, fetchPwaQr, type CastSession } from '../../services/api';
 import './CastView.css';
 
 const OFFLINE_STATUS = 'Offline mode: reconnect to generate new pairing codes.';
@@ -16,6 +16,8 @@ const CastView = (): React.JSX.Element => {
   const [qrImageUrl, setQrImageUrl] = useState<string | null>(null);
   const [expiresIn, setExpiresIn] = useState<number>(0);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [remoteQrUrl, setRemoteQrUrl] = useState<string | null>(null);
+  const [remoteQrStatus, setRemoteQrStatus] = useState<string | null>('');
   const { online } = useNetworkStatus();
 
   const createSession = useCallback(async () => {
@@ -57,6 +59,36 @@ const CastView = (): React.JSX.Element => {
     void createSession();
   };
 
+  // Load PWA remote QR on mount
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadRemoteQr = async () => {
+      try {
+        setRemoteQrStatus('');
+        const origin = typeof window !== 'undefined' ? window.location.origin : undefined;
+        const blob = await fetchPwaQr(origin, controller.signal);
+        const url = URL.createObjectURL(blob);
+        setRemoteQrUrl((prev) => {
+          if (prev) {
+            URL.revokeObjectURL(prev);
+          }
+          return url;
+        });
+      } catch (error) {
+        console.warn('Failed to load PWA remote QR:', error);
+        setRemoteQrUrl(null);
+        setRemoteQrStatus('Remote QR unavailable. Visit http://womcast.local:5173/pwa/ manually.');
+      }
+    };
+
+    void loadRemoteQr();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
   // Countdown timer for session expiration
   useEffect(() => {
     if (expiresIn <= 0) return;
@@ -82,8 +114,11 @@ const CastView = (): React.JSX.Element => {
       if (qrImageUrl) {
         URL.revokeObjectURL(qrImageUrl);
       }
+      if (remoteQrUrl) {
+        URL.revokeObjectURL(remoteQrUrl);
+      }
     };
-  }, [qrImageUrl]);
+  }, [qrImageUrl, remoteQrUrl]);
 
   useEffect(() => {
     if (!online) {
@@ -169,6 +204,23 @@ const CastView = (): React.JSX.Element => {
           </button>
         </div>
       )}
+
+      <section className="pwa-section">
+        <h2>Mobile Remote PWA</h2>
+        <p className="pwa-description">
+          Scan to open the LAN remote on your phone or tablet. Add to home screen for quick access.
+        </p>
+        {remoteQrUrl ? (
+          <div className="pwa-qr-wrapper">
+            <img src={remoteQrUrl} alt="WomCast Remote QR" className="qr-code" />
+            <p className="qr-helper">Open http://womcast.local:5173/pwa/</p>
+          </div>
+        ) : (
+          <div className="pwa-status" role="status">
+            {remoteQrStatus || 'Preparing remote QR...'}
+          </div>
+        )}
+      </section>
     </div>
   );
 };

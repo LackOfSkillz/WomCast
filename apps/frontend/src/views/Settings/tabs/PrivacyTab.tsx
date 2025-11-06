@@ -24,6 +24,23 @@ const PrivacyTab: React.FC<PrivacyTabProps> = ({
   const [exportingData, setExportingData] = React.useState(false);
   const [deletingAllData, setDeletingAllData] = React.useState(false);
   const abortController = React.useRef<AbortController | null>(null);
+  const legalAcceptedAt = settings.legal_terms_accepted_at
+    ? new Date(settings.legal_terms_accepted_at)
+    : null;
+  const legalAcceptedLabel = React.useMemo(() => {
+    if (!legalAcceptedAt || Number.isNaN(legalAcceptedAt.getTime())) {
+      return null;
+    }
+    try {
+      return new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(legalAcceptedAt);
+    } catch (error) {
+      console.warn('Failed to format legal acceptance date', error);
+      return legalAcceptedAt.toISOString();
+    }
+  }, [legalAcceptedAt]);
 
   React.useEffect(
     () => () => {
@@ -31,6 +48,17 @@ const PrivacyTab: React.FC<PrivacyTabProps> = ({
     },
     [],
   );
+
+  React.useEffect(() => {
+    const handleLegalAcknowledged = () => {
+      void reloadSettings();
+    };
+
+    window.addEventListener('womcast:legal-acknowledged', handleLegalAcknowledged);
+    return () => {
+      window.removeEventListener('womcast:legal-acknowledged', handleLegalAcknowledged);
+    };
+  }, [reloadSettings]);
 
   const handleDeleteVoiceHistory = async () => {
     if (disabled) {
@@ -117,6 +145,10 @@ const PrivacyTab: React.FC<PrivacyTabProps> = ({
     } finally {
       setDeletingAllData(false);
     }
+  };
+
+  const handleShowLegal = () => {
+    window.dispatchEvent(new CustomEvent('womcast:show-legal'));
   };
 
   return (
@@ -255,6 +287,32 @@ const PrivacyTab: React.FC<PrivacyTabProps> = ({
               <option value="90">90 days</option>
               <option value="365">1 year</option>
             </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Legal Notices */}
+      <div className="settings-section">
+        <h2>📜 Legal Notices</h2>
+        <p className="description">
+          Streaming connectors require agreement with provider terms. Review or re-open the notice
+          at any time.
+        </p>
+
+        <div className="settings-row">
+          <div className="settings-label">
+            <h3>Provider Terms Acknowledgment</h3>
+            <p>
+              {settings.legal_terms_version
+                ? `Accepted version ${settings.legal_terms_version}.`
+                : 'Not yet accepted on this device.'}
+            </p>
+            {legalAcceptedLabel ? <p className="meta">Accepted {legalAcceptedLabel}</p> : null}
+          </div>
+          <div className="settings-control">
+            <button type="button" className="btn-secondary" onClick={handleShowLegal}>
+              View Terms
+            </button>
           </div>
         </div>
       </div>

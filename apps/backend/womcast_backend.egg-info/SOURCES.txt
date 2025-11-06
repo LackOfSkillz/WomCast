@@ -1,4 +1,5 @@
 pyproject.toml
+ai/__init__.py
 cast/__init__.py
 cast/audio_relay.py
 cast/ice_config.py
@@ -39,14 +40,18 @@ settings/main.py
 storage/__init__.py
 storage/main.py
 storage/network.py
+tests/test_chroma_manager.py
 tests/test_database.py
 tests/test_health.py
 tests/test_indexer.py
 tests/test_kodi_client.py
+tests/test_search_service.py
+tests/test_settings_privacy.py
 voice/__init__.py
 voice/main.py
 voice/server_audio.py
 voice/stt.py
+voice/test_history.py
 voice/test_server_audio.py
 voice/test_stt.py
 womcast_backend.egg-info/PKG-INFO

@@ -187,7 +187,13 @@ class ChromaManager:
 
     def _replace_media_documents(self, documents: Sequence[MediaDocument]) -> None:
         try:
-            self._media_collection.delete(where={})
+            try:
+                self._client.delete_collection(name=MEDIA_COLLECTION_NAME)
+            except Exception:  # pragma: no cover - collection absent or races
+                pass
+
+            self._media_collection = self._get_or_create_collection(MEDIA_COLLECTION_NAME)
+
             if documents:
                 self._media_collection.add(
                     ids=[doc.doc_id for doc in documents],

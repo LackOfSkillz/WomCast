@@ -7,6 +7,89 @@ import type { Settings } from '../types/settings';
 export type SettingsResponse = Partial<Settings> & Record<string, unknown>;
 
 
+export type ModelVariantStatus = 'ready' | 'missing' | 'downloading' | 'failed' | 'cancelled';
+export type DownloadJobStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+
+export interface DiskInfo {
+  path: string;
+  total_bytes: number;
+  free_bytes: number;
+}
+
+export interface ModelVariant {
+  name: string;
+  display_name: string;
+  estimated_size_bytes?: number | null;
+  installed_size_bytes?: number | null;
+  installed: boolean;
+  active: boolean;
+  status: ModelVariantStatus;
+  download_job_id?: string | null;
+  error?: string | null;
+}
+
+export interface ModelGroupStatus {
+  kind: 'voice' | 'llm';
+  active_model?: string | null;
+  disk: DiskInfo;
+  models: ModelVariant[];
+}
+
+export interface DownloadJobInfo {
+  id: string;
+  model: string;
+  model_type: 'voice' | 'llm';
+  display_name: string;
+  status: DownloadJobStatus;
+  progress?: number | null;
+  downloaded_bytes?: number | null;
+  total_bytes?: number | null;
+  error?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+}
+
+export interface ModelStatusResponse {
+  voice: ModelGroupStatus;
+  llm: ModelGroupStatus;
+  jobs: DownloadJobInfo[];
+  active_job?: DownloadJobInfo | null;
+}
+
+export interface LegalProviderInfo {
+  name: string;
+  terms_url: string;
+  privacy_url?: string | null;
+  notes?: string | null;
+}
+
+export interface LegalSectionInfo {
+  title: string;
+  items: string[];
+}
+
+export interface LegalAcknowledgementInfo {
+  version?: string | null;
+  accepted_at?: string | null;
+}
+
+export interface LegalTermsResponse {
+  version: string;
+  last_updated: string;
+  title: string;
+  intro: string;
+  sections: LegalSectionInfo[];
+  providers: LegalProviderInfo[];
+  accepted: LegalAcknowledgementInfo;
+}
+
+export interface LegalAckResponse {
+  status: string;
+  version: string;
+  accepted_at: string;
+}
+
+
 const METADATA_API_URL = (import.meta.env.VITE_METADATA_API_URL as string) || 'http://localhost:8001';
 const PLAYBACK_API_URL = (import.meta.env.VITE_PLAYBACK_API_URL as string) || 'http://localhost:8002';
 const LIVETV_API_URL = (import.meta.env.VITE_LIVETV_API_URL as string) || 'http://localhost:3007';
@@ -231,6 +314,54 @@ export async function getPlayerState(): Promise<PlayerState> {
   return response.json() as Promise<PlayerState>;
 }
 
+export async function sendInputAction(action: string): Promise<void> {
+  const normalized = action.trim().toLowerCase();
+  const response = await playbackFetch(`${PLAYBACK_API_URL}/v1/input/${encodeURIComponent(normalized)}`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to send input action: ${response.statusText}`);
+  }
+}
+
+export async function quitPlaybackApplication(): Promise<void> {
+  const response = await playbackFetch(`${PLAYBACK_API_URL}/v1/application/quit`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to quit playback application: ${response.statusText}`);
+  }
+}
+
+export async function getVolume(): Promise<number> {
+  const response = await playbackFetch(`${PLAYBACK_API_URL}/v1/volume`);
+  if (!response.ok) {
+    throw new Error(`Failed to get volume: ${response.statusText}`);
+  }
+
+  const payload = (await response.json()) as { volume: number };
+  return payload.volume;
+}
+
+export async function adjustVolume(delta: number): Promise<number> {
+  const response = await playbackFetch(`${PLAYBACK_API_URL}/v1/volume/adjust`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ delta }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to adjust volume: ${response.statusText}`);
+  }
+
+  const payload = (await response.json()) as { volume: number };
+  return payload.volume;
+}
+
 /**
  * Seek to a specific position
  */
@@ -348,6 +479,49 @@ export function formatFileSize(bytes: number): string {
   return unit !== undefined ? `${size.toFixed(1)} ${unit}` : `${bytes.toString()} B`;
 }
 
+export async function getModelStatus(): Promise<ModelStatusResponse> {
+  const response = await voiceFetch(`${VOICE_API_URL}/v1/voice/models/status`);
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to load model status: ${statusText}`);
+  }
+
+  return (await response.json()) as ModelStatusResponse;
+}
+
+export async function startModelDownload(kind: 'voice' | 'llm', model: string): Promise<DownloadJobInfo> {
+  const response = await voiceFetch(`${VOICE_API_URL}/v1/voice/models/download`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ kind, model }),
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({} as Record<string, unknown>));
+    const detail = typeof payload.detail === 'string' ? payload.detail : response.statusText || 'Unknown error';
+    throw new Error(`Failed to start download: ${detail}`);
+  }
+
+  return (await response.json()) as DownloadJobInfo;
+}
+
+export async function cancelModelDownload(jobId: string): Promise<DownloadJobInfo> {
+  const response = await voiceFetch(`${VOICE_API_URL}/v1/voice/models/cancel`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ job_id: jobId }),
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({} as Record<string, unknown>));
+    const detail = typeof payload.detail === 'string' ? payload.detail : response.statusText || 'Unknown error';
+    throw new Error(`Failed to cancel download: ${detail}`);
+  }
+
+  return (await response.json()) as DownloadJobInfo;
+}
+
 // Live TV API
 
 export interface LiveTVChannel {
@@ -386,14 +560,11 @@ export async function getLiveTVChannel(channelId: number): Promise<LiveTVChannel
 }
 
 export async function playLiveTVChannel(streamUrl: string, title: string): Promise<void> {
-  const response = await playbackFetch(`${PLAYBACK_API_URL}/v1/playback/play`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: streamUrl, title }),
-  });
-  if (!response.ok) {
-    const statusText = response.statusText || 'Unknown error';
-    throw new Error(`Failed to play channel: ${statusText}`);
+  try {
+    await playMedia(streamUrl);
+  } catch (error) {
+    const details = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Failed to play channel "${title}": ${details}`);
   }
 }
 
@@ -541,6 +712,25 @@ export async function resetCastSessions(): Promise<Record<string, unknown>> {
   return (await response.json()) as Record<string, unknown>;
 }
 
+export async function fetchPwaQr(origin?: string, signal?: AbortSignal): Promise<Blob> {
+  const url = new URL(`${CAST_API_URL}/v1/cast/pwa/qr`);
+  if (origin && origin !== 'null' && origin !== 'file://') {
+    url.searchParams.set('origin', origin);
+  }
+
+  const response = await castFetch(url.toString(), {
+    method: 'GET',
+    signal,
+  });
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to fetch PWA QR: ${statusText}`);
+  }
+
+  return response.blob();
+}
+
 // Settings API
 
 export async function getSettings(): Promise<SettingsResponse> {
@@ -605,6 +795,32 @@ export async function deleteSetting(key: string): Promise<Record<string, string>
   }
 
   return (await response.json()) as Record<string, string>;
+}
+
+export async function getLegalTermsNotice(): Promise<LegalTermsResponse> {
+  const response = await settingsFetch(`${SETTINGS_API_URL}/v1/legal/terms`);
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to load legal terms: ${statusText}`);
+  }
+
+  return (await response.json()) as LegalTermsResponse;
+}
+
+export async function acknowledgeLegalTerms(version: string): Promise<LegalAckResponse> {
+  const response = await settingsFetch(`${SETTINGS_API_URL}/v1/legal/ack`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ version }),
+  });
+
+  if (!response.ok) {
+    const statusText = response.statusText || 'Unknown error';
+    throw new Error(`Failed to acknowledge legal terms: ${statusText}`);
+  }
+
+  return (await response.json()) as LegalAckResponse;
 }
 
 export async function exportPrivacyData(signal?: AbortSignal): Promise<Response> {

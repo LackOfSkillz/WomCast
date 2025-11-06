@@ -4,11 +4,11 @@ All notable changes to this project will be documented here. Timestamps are UTC 
 
 ## [Unreleased]
 
-**Milestone**: M4 Cloud Mapper + CEC Fallback + Server Voice (4/8 tasks complete) 🔄  
+**Milestone**: M4 Cloud Mapper + CEC Fallback + Server Voice (7/8 tasks complete) 🔄  
 **Focus**: Cloud service integration, HDMI-CEC control, server-side voice relay, settings panel, hardening, PWA icon, update manager, privacy controls
 
 ### Summary
-M4 milestone adds legal cloud streaming service integration (Netflix, Disney+, HBO Max, etc.) with QR code handoff to native apps, HDMI-CEC automatic TV input switching, server-side voice relay for devices without microphones, comprehensive settings management panel, production hardening (HTTPS, auth, deployment configs), custom PWA icons and manifest, automatic update checker for backend services, and privacy controls for voice/casting. **M4.1-M4.4 complete: Cloud QR codes, HDMI-CEC input switching, server-side voice relay, and comprehensive settings panel all operational.**
+M4 milestone adds legal cloud streaming service integration (Netflix, Disney+, HBO Max, etc.) with QR code handoff to native apps, HDMI-CEC automatic TV input switching, server-side voice relay for devices without microphones, comprehensive settings management panel, production hardening (HTTPS, auth, deployment configs), custom PWA icons and manifest, automatic update checker for backend services, and privacy controls for voice/casting. **M4.1-M4.6 & M4.8 complete: Cloud QR codes, HDMI-CEC input switching, server-side voice relay, comprehensive settings panel, hardened UX, docs, and privacy tooling all operational.**
 
 ### New Features
 - **M4.4: Settings Panel** (2025-01-03) ✅
@@ -72,6 +72,12 @@ M4 milestone adds legal cloud streaming service integration (Netflix, Disney+, H
     - CEC configuration: Enable HDMI-CEC, scan devices, switch inputs, configure auto-switch behavior
     - Network diagnostics: Test connectivity, configure STUN/TURN servers for WebRTC
   - **Future Enhancements** (M4.8): Data export/deletion implementation, voice/cast history purge endpoints
+
+- **M5.6: Model Download Management** (2025-01-06) ✅
+  - Added `ModelDownloadManager` (`apps/backend/voice/model_manager.py`) for Whisper/Ollama inventory, disk checks, and cancellable downloads
+  - Voice service now exposes `/v1/voice/models/status|download|cancel` backed by streaming Ollama pulls and faster-whisper snapshots (`apps/backend/voice/main.py`)
+  - Settings Models tab upgraded with live status, disk free space, and actions (`apps/frontend/src/views/Settings/tabs/ModelsTab.tsx`), including polling and cancellation UI
+  - Styling refresh for model subsections (`apps/frontend/src/views/Settings/Settings.css`) and new regression tests covering API wiring (`apps/backend/voice/test_models.py`)
 
 - **M4.3: Server-Side Voice Relay** (2025-01-03) ✅
   - Implemented local microphone audio capture for devices with built-in mics

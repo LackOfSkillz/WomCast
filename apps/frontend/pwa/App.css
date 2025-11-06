@@ -1,0 +1,288 @@
+:root {
+  color-scheme: dark;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: #0b1020;
+  color: #f8fafc;
+}
+
+body {
+  margin: 0;
+  background: #0b1020;
+}
+
+.remote-app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.remote-header {
+  text-align: center;
+}
+
+.remote-header h1 {
+  margin-bottom: 0.25rem;
+  font-size: 2.25rem;
+}
+
+.remote-header p {
+  color: #94a3b8;
+  margin: 0;
+}
+
+.remote-banner,
+.remote-warning {
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border-left: 4px solid #f97316;
+  background: rgba(249, 115, 22, 0.12);
+  color: #fdba74;
+}
+
+.remote-warning {
+  border-left-color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  color: #fecaca;
+}
+
+.panel {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.now-playing-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.panel-header h2 {
+  margin: 0;
+}
+
+.primary,
+.secondary {
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.6rem 1.25rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.primary {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #f8fafc;
+}
+
+.secondary {
+  background: rgba(148, 163, 184, 0.14);
+  color: #e2e8f0;
+}
+
+.primary:disabled,
+.secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.control-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.volume-indicator {
+  min-width: 110px;
+  text-align: center;
+  font-weight: 600;
+  color: #c4b5fd;
+}
+
+.pad-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.75rem;
+}
+
+.pad-button {
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.8rem 1rem;
+  background: rgba(79, 70, 229, 0.16);
+  color: #c7d2fe;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.pad-button:hover {
+  background: rgba(79, 70, 229, 0.28);
+}
+
+.pad-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.now-playing-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.now-playing-meta {
+  display: flex;
+  gap: 1rem;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.2);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  border-radius: 999px;
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.segmented {
+  display: inline-flex;
+  border-radius: 0.75rem;
+  background: rgba(148, 163, 184, 0.12);
+  padding: 0.2rem;
+}
+
+.segmented button {
+  border: none;
+  background: transparent;
+  color: #cbd5f5;
+  padding: 0.4rem 1rem;
+  border-radius: 0.6rem;
+  cursor: pointer;
+}
+
+.segmented button.active {
+  background: rgba(79, 70, 229, 0.35);
+  color: #f8fafc;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.media-card {
+  background: rgba(30, 41, 59, 0.7);
+  border-radius: 0.85rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.media-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.media-card p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.media-card button {
+  align-self: flex-start;
+  border: none;
+  border-radius: 0.6rem;
+  padding: 0.45rem 1rem;
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  cursor: pointer;
+}
+
+.media-card button:hover {
+  background: rgba(56, 189, 248, 0.32);
+}
+
+.search-form {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.search-form input[type='search'] {
+  flex: 1;
+  min-width: 220px;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+  padding: 0.65rem 1rem;
+}
+
+.voice-echo {
+  text-align: center;
+  font-style: italic;
+  color: #c4b5fd;
+}
+
+.remote-hint {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .remote-app {
+    padding: 1rem;
+  }
+
+  .panel {
+    padding: 1.25rem;
+  }
+
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

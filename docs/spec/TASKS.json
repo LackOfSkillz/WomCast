@@ -1214,7 +1214,11 @@
                                            "M2.4"
                                        ],
                       "files":  [
-                                    "apps/backend/media/cec.py"
+                                    "apps/backend/playback/cec_helper.py",
+                                    "apps/backend/playback/cec_routes.py",
+                                    "apps/backend/playback/main.py",
+                                    "apps/backend/gateway/main.py",
+                                    "apps/backend/tests/test_cec_router.py"
                                 ],
                       "acceptance_criteria":  [
                                                   "Calls CEC to switch HDMI inputs",
@@ -1225,7 +1229,7 @@
                       "end_at_utc":  "2025-11-04T21:15:00Z",
                       "duration_h":  3.5,
                       "status":  "done",
-                      "notes":  "Semantic search persistence, endpoints, and tests completed"
+                      "notes":  "CEC helper exposed via playback service and gateway router; automated tests cover FastAPI endpoints"
                   },
                   {
                       "id":  "M4.3",
@@ -1576,8 +1580,9 @@
                                            "M5.1"
                                        ],
                       "files":  [
-                                    "apps/frontend/src/views/Settings/Models.tsx",
-                                    "apps/backend/ai/models.py"
+                                    "apps/frontend/src/views/Settings/tabs/ModelsTab.tsx",
+                                    "apps/backend/voice/model_manager.py",
+                                    "apps/backend/voice/main.py"
                                 ],
                       "acceptance_criteria":  [
                                                   "UI shows model sizes",
@@ -1588,7 +1593,7 @@
                       "start_at_utc":  null,
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "done",
                       "notes":  ""
                   },
                   {

@@ -47,6 +47,23 @@
   cursor: not-allowed;
 }
 
+.btn-secondary {
+  padding: 0.65rem 1.4rem;
+  background: transparent;
+  color: var(--text-primary, #fff);
+  border: 1px solid var(--border-color, #545b6b);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary, #fff);
+}
+
 .settings-status {
   margin-bottom: 1.5rem;
   padding: 0.75rem 1rem;
@@ -380,6 +397,38 @@ select.settings-select:focus {
 .settings-list-item-actions {
   display: flex;
   gap: 0.5rem;
+}
+
+.model-subsection {
+  margin-top: 1.5rem;
+}
+
+.model-subsection h3 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--text-primary, #fff);
+  margin: 0 0 0.75rem 0;
+}
+
+.model-status-error {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  background: var(--danger-bg, rgba(220, 53, 69, 0.15));
+  border: 1px solid var(--danger-border, rgba(220, 53, 69, 0.4));
+  color: var(--danger-color, #dc3545);
+}
+
+.model-status-loading {
+  margin-bottom: 0.75rem;
+  color: var(--text-secondary, #aaa);
+  font-size: 0.9rem;
+}
+
+.model-storage-note {
+  margin-top: 0.75rem;
+  color: var(--text-secondary, #aaa);
+  font-size: 0.85rem;
 }
 
 /* Responsive */

@@ -13,7 +13,14 @@
   border-bottom: 1px solid #444;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 24px;
+}
+
+.library-view__header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .library-view__notice {
@@ -31,6 +38,13 @@
   font-weight: 700;
   color: #fff;
   flex-shrink: 0;
+}
+
+.library-view__subtitle {
+  margin: 0;
+  font-size: 16px;
+  color: #bbb;
+  max-width: 640px;
 }
 
 .library-view__content {
@@ -101,6 +115,8 @@
   .library-view__header {
     flex-direction: column;
     align-items: stretch;
+    justify-content: center;
+    gap: 16px;
   }
 
   .library-view__detail {

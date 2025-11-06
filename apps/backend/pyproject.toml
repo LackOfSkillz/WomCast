@@ -45,6 +45,7 @@ packages = [
     "cast",
     "storage",
     "settings",
+    "ai",
 ]
 
 [tool.ruff]

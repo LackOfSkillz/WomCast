@@ -20,9 +20,16 @@ export interface VoiceSearchCommand {
 interface LibraryViewProps {
   voiceQuery?: VoiceSearchCommand | null;
   onVoiceQueryHandled?: () => void;
+  title?: string;
+  subtitle?: string;
 }
 
-export function LibraryView({ voiceQuery, onVoiceQueryHandled }: LibraryViewProps) {
+export function LibraryView({
+  voiceQuery,
+  onVoiceQueryHandled,
+  title,
+  subtitle,
+}: LibraryViewProps) {
   const [allMedia, setAllMedia] = useState<MediaFile[]>([]);
   const [filteredMedia, setFilteredMedia] = useState<MediaFile[]>([]);
   const [selectedMediaId, setSelectedMediaId] = useState<number | null>(null);
@@ -204,6 +211,8 @@ export function LibraryView({ voiceQuery, onVoiceQueryHandled }: LibraryViewProp
     setSelectedMediaId(media.id);
   };
 
+  const headerTitle = title ?? 'Media Library';
+
   if (loading) {
     return (
       <div className="library-view">
@@ -226,7 +235,10 @@ export function LibraryView({ voiceQuery, onVoiceQueryHandled }: LibraryViewProp
   return (
     <div className="library-view">
       <header className="library-view__header">
-        <h1 className="library-view__title">Media Library</h1>
+        <div className="library-view__header-text">
+          <h1 className="library-view__title">{headerTitle}</h1>
+          {subtitle ? <p className="library-view__subtitle">{subtitle}</p> : null}
+        </div>
         <SearchBox
           onSearch={handleSearch}
           value={searchQuery}

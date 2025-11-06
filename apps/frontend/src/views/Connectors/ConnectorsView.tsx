@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchWithRetry } from '../../utils/fetchWithRetry';
+import { playMedia } from '../../services/api';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import './ConnectorsView.css';
 
@@ -170,17 +171,7 @@ export function ConnectorsView(): React.JSX.Element {
       }
 
       // Send to Kodi for playback
-      const playResponse = await fetchWithRetry(`${GATEWAY_API_URL}/v1/playback/play`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file_path: streamUrl }),
-      }, {
-        serviceName: 'Playback API',
-      });
-
-      if (!playResponse.ok) {
-        throw new Error('Failed to start playback');
-      }
+      await playMedia(streamUrl);
 
       alert(`Playing: ${item.title}`);
     } catch (err) {

@@ -13,12 +13,24 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from common.health import create_health_router
 from common.settings import SettingsManager, get_settings_manager
 from ai.chroma import ChromaManager
 from ai.intent.engine import IntentEngine, IntentPrediction
+from voice.model_manager import (
+    DownloadInProgressError,
+    DownloadJobInfo,
+    InsufficientSpaceError,
+    ModelAlreadyInstalledError,
+    ModelDownloadManager,
+    ModelManagerError,
+    ModelNotFoundError,
+    ModelStatusEnvelope,
+    ModelType,
+)
 from voice.server_audio import ServerAudioCapture, get_server_audio
 from voice.stt import ModelSize, WhisperSTT
 
@@ -40,6 +52,7 @@ stt_engine: WhisperSTT | None = None
 server_audio: ServerAudioCapture | None = None
 intent_engine: IntentEngine | None = None
 semantic_store: ChromaManager | None = None
+model_downloads: ModelDownloadManager | None = None
 
 
 class TranscribeRequest(BaseModel):
@@ -62,6 +75,12 @@ def _get_settings_manager() -> SettingsManager:
     if settings_manager is None:
         raise RuntimeError("Settings manager not initialized")
     return settings_manager
+
+
+def _get_model_manager() -> ModelDownloadManager:
+    if model_downloads is None:
+        raise RuntimeError("Model download manager not initialized")
+    return model_downloads
 
 
 def _resolve_voice_model(model_name: Any) -> ModelSize:
@@ -161,7 +180,8 @@ async def _record_semantic_voice(text: str, metadata: dict[str, Any]) -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler."""
-    global stt_engine, server_audio, settings_manager, history_lock, current_voice_model, intent_engine, semantic_store
+    global stt_engine, server_audio, settings_manager, history_lock
+    global current_voice_model, intent_engine, semantic_store, model_downloads
 
     logger.info("Initializing Voice service...")
 
@@ -187,6 +207,11 @@ async def lifespan(app: FastAPI):
         semantic_store = None
         logger.debug("Semantic voice history unavailable: %s", exc)
 
+    model_downloads = ModelDownloadManager(
+        settings_manager=_get_settings_manager(),
+        intent_engine_provider=get_intent_engine,
+    )
+
     logger.info("Voice service initialized")
 
     yield
@@ -196,6 +221,8 @@ async def lifespan(app: FastAPI):
         server_audio.cleanup()
     if intent_engine:
         await intent_engine.aclose()
+    if model_downloads:
+        await model_downloads.aclose()
     logger.info("Voice service shutdown")
 
 
@@ -206,6 +233,24 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_default_origins = (
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173"
+)
+allowed_origins = (
+    os.getenv("VOICE_CORS_ORIGINS")
+    or os.getenv("WOMCAST_CORS_ORIGINS")
+    or _default_origins
+)
+cors_origins = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
+
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 create_health_router(app, "voice-service", __version__)
 
 
@@ -398,6 +443,19 @@ class IntentModelsResponse(BaseModel):
 
     active_model: str
     models: list[dict[str, Any]]
+
+
+class ModelDownloadRequest(BaseModel):
+    """Payload to initiate a model download."""
+
+    kind: ModelType
+    model: str
+
+
+class CancelDownloadRequest(BaseModel):
+    """Payload to cancel an in-flight download."""
+
+    job_id: str
 
 
 class UpdateIntentModelRequest(BaseModel):
@@ -698,3 +756,51 @@ async def select_intent_model(payload: UpdateIntentModelRequest) -> IntentModels
     ]
 
     return IntentModelsResponse(active_model=target_model, models=model_dicts)
+
+
+@app.get("/v1/voice/models/status", response_model=ModelStatusEnvelope)
+async def get_model_status() -> ModelStatusEnvelope:
+    """Return current installation state and downloads for voice/LLM models."""
+
+    manager = _get_model_manager()
+    return await manager.get_status()
+
+
+@app.post("/v1/voice/models/download", response_model=DownloadJobInfo)
+async def start_model_download(request: ModelDownloadRequest) -> DownloadJobInfo:
+    """Trigger a model download, checking storage and preventing duplicates."""
+
+    manager = _get_model_manager()
+    model_name = request.model.strip()
+    if not model_name:
+        raise HTTPException(status_code=400, detail="Model name is required")
+
+    try:
+        return await manager.start_download(request.kind, model_name)
+    except ModelNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ModelAlreadyInstalledError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except DownloadInProgressError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except InsufficientSpaceError as exc:
+        raise HTTPException(status_code=507, detail=str(exc)) from exc
+    except ModelManagerError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.post("/v1/voice/models/cancel", response_model=DownloadJobInfo)
+async def cancel_model_download(request: CancelDownloadRequest) -> DownloadJobInfo:
+    """Cancel a pending or running model download."""
+
+    manager = _get_model_manager()
+    job_id = request.job_id.strip()
+    if not job_id:
+        raise HTTPException(status_code=400, detail="Job identifier is required")
+
+    try:
+        return await manager.cancel_download(job_id)
+    except ModelNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ModelManagerError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc

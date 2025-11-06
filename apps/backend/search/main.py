@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import logging
+import os
 import time
 from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from ai.chroma import ChromaManager, SemanticSearchHit
@@ -65,6 +67,25 @@ app = FastAPI(
     version=__version__,
     lifespan=lifespan,
 )
+
+_default_origins = (
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173"
+)
+allowed_origins = (
+    os.getenv("SEARCH_CORS_ORIGINS")
+    or os.getenv("WOMCAST_CORS_ORIGINS")
+    or _default_origins
+)
+cors_origins = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
+
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 create_health_router(app, "search-service", __version__)
 

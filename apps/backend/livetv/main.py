@@ -3,10 +3,12 @@ WomCast Live TV REST API
 Endpoints for M3U playlist management and channel browsing.
 """
 
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from livetv import LiveTVManager
@@ -87,6 +89,25 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="WomCast LiveTV API", version="0.2.0", lifespan=lifespan)
+
+_default_origins = (
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173"
+)
+allowed_origins = (
+    os.getenv("LIVETV_CORS_ORIGINS")
+    or os.getenv("WOMCAST_CORS_ORIGINS")
+    or _default_origins
+)
+cors_origins = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
+
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 @app.get("/healthz")

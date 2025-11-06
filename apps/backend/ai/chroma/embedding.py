@@ -24,8 +24,16 @@ class OllamaEmbeddingFunction:
         self._model = model or os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
         self._base_url = base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
         self._timeout = timeout
+        # Chroma inspects embedding functions for a human-readable name.
+        self._name = f"ollama:{self._model}"
 
-    def __call__(self, texts: Sequence[str]) -> list[list[float]]:
+    def name(self) -> str:
+        """Return a human-readable identifier for this embedding function."""
+
+        return self._name
+
+    def __call__(self, input: Sequence[str]) -> list[list[float]]:
+        texts = list(input)
         if not texts:
             return []
 

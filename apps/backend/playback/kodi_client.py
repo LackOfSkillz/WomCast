@@ -109,6 +109,17 @@ class KodiClient:
 
         return result.get("result")
 
+    async def application_quit(self) -> bool:
+        """Request Kodi to terminate the application."""
+
+        try:
+            await self._call("Application.Quit")
+            logger.info("Kodi quit command delivered")
+            return True
+        except Exception as exc:  # pragma: no cover - just surface RPC failures
+            logger.error("Failed to quit Kodi: %s", exc)
+            return False
+
     async def ping(self) -> bool:
         """Test connection to Kodi.
 
@@ -322,6 +333,44 @@ class KodiClient:
         except Exception as e:
             logger.error(f"Failed to get volume: {e}")
             return 0
+
+    async def input_action(self, action: str) -> bool:
+        """Send a remote input action to Kodi.
+
+        Args:
+            action: Remote action keyword (up, down, select, etc.)
+
+        Returns:
+            True if the action was delivered, False otherwise
+        """
+        normalized = action.strip().lower()
+        input_methods: dict[str, str] = {
+            "up": "Input.Up",
+            "down": "Input.Down",
+            "left": "Input.Left",
+            "right": "Input.Right",
+            "select": "Input.Select",
+            "back": "Input.Back",
+            "context": "Input.ContextMenu",
+            "info": "Input.Info",
+            "home": "Input.Home",
+            "menu": "Input.ShowOSD",
+        }
+
+        if normalized == "play_pause":
+            return await self.pause()
+
+        method = input_methods.get(normalized)
+        if method is None:
+            raise ValueError(f"Unsupported input action '{action}'")
+
+        try:
+            await self._call(method)
+            logger.debug("Sent Kodi input action '%s'", normalized)
+            return True
+        except Exception as exc:
+            logger.error("Failed to send input action '%s': %s", normalized, exc)
+            return False
 
     async def get_subtitles(self) -> list[dict]:
         """Get available subtitle tracks.

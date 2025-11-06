@@ -279,3 +279,58 @@ async def test_context_manager_without_context():
     client = KodiClient()
     with pytest.raises(RuntimeError, match="Client not initialized"):
         await client._call("JSONRPC.Ping")
+
+
+@pytest.mark.asyncio
+async def test_input_action_success(kodi_config, mock_httpx_client):
+    """Input action should call Kodi JSON-RPC method."""
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"jsonrpc": "2.0", "result": "OK", "id": 1}
+    mock_httpx_client.post.return_value = mock_response
+
+    with patch("httpx.AsyncClient", return_value=mock_httpx_client):
+        async with KodiClient(kodi_config) as client:
+            with patch.object(client, "_call", new=AsyncMock(return_value="OK")) as rpc_mock:
+                result = await client.input_action("up")
+                assert result is True
+                rpc_mock.assert_awaited_once_with("Input.Up")
+
+
+@pytest.mark.asyncio
+async def test_input_action_play_pause_uses_pause_method(kodi_config, mock_httpx_client):
+    """Play/pause action should delegate to KodiClient.pause()."""
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"jsonrpc": "2.0", "result": "OK", "id": 1}
+    mock_httpx_client.post.return_value = mock_response
+
+    with patch("httpx.AsyncClient", return_value=mock_httpx_client):
+        async with KodiClient(kodi_config) as client:
+            with patch.object(client, "pause", new=AsyncMock(return_value=True)) as pause_mock:
+                result = await client.input_action("play_pause")
+                assert result is True
+                pause_mock.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_input_action_invalid(kodi_config, mock_httpx_client):
+    """Unsupported actions raise ValueError."""
+    with patch("httpx.AsyncClient", return_value=mock_httpx_client):
+        async with KodiClient(kodi_config) as client:
+            with pytest.raises(ValueError):
+                await client.input_action("spin")
+
+
+@pytest.mark.asyncio
+async def test_input_action_failure_logged(kodi_config, mock_httpx_client):
+    """If Kodi RPC call fails, input_action returns False."""
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"jsonrpc": "2.0", "result": "OK", "id": 1}
+    mock_httpx_client.post.return_value = mock_response
+
+    failing_call = AsyncMock(side_effect=ValueError("boom"))
+
+    with patch("httpx.AsyncClient", return_value=mock_httpx_client):
+        async with KodiClient(kodi_config) as client:
+            with patch.object(client, "_call", new=failing_call):
+                result = await client.input_action("left")
+                assert result is False

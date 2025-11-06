@@ -1,0 +1,185 @@
+.retro-view {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  padding: 2.5rem 3rem;
+  background: radial-gradient(circle at top left, rgba(79, 70, 229, 0.1), transparent 55%),
+    #0f172a;
+  color: #e2e8f0;
+  min-height: 100%;
+}
+
+.retro-view__header h1 {
+  margin: 0 0 0.75rem;
+  font-size: 2.2rem;
+}
+
+.retro-view__header p {
+  margin: 0;
+  max-width: 40rem;
+  color: #cbd5f5;
+}
+
+.retro-view__collections,
+.retro-view__actions,
+.retro-view__status {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.retro-view__collections h2,
+.retro-view__actions h2,
+.retro-view__status h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.retro-view__collection-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.retro-view__collection-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 18px;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.6);
+}
+
+.retro-view__collection-card h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #f1f5f9;
+}
+
+.retro-view__collection-card p {
+  margin: 0;
+  color: #cbd5f5;
+  font-size: 0.98rem;
+}
+
+.retro-view__systems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.retro-view__systems span {
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  background: rgba(30, 41, 59, 0.8);
+  color: #e0e7ff;
+}
+
+.retro-view__collection-card button {
+  align-self: flex-start;
+  background: #38bdf8;
+  color: #0f172a;
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.retro-view__collection-card button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 18px rgba(56, 189, 248, 0.25);
+}
+
+.retro-view__action-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.retro-view__action-card {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 16px;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.retro-view__action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.6);
+}
+
+.retro-view__action-icon {
+  font-size: 2rem;
+}
+
+.retro-view__action-copy h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #f8fafc;
+}
+
+.retro-view__action-copy p {
+  margin: 0.35rem 0 0;
+  color: #cbd5f5;
+  font-size: 0.95rem;
+}
+
+.retro-view__status-card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.retro-view__status-card h3 {
+  margin: 0 0 0.35rem;
+  color: #f8fafc;
+}
+
+.retro-view__status-card p {
+  margin: 0;
+  color: #cbd5f5;
+  font-size: 0.95rem;
+}
+
+.retro-view__status-card button {
+  background: transparent;
+  border: 1px solid #38bdf8;
+  color: #38bdf8;
+  border-radius: 12px;
+  padding: 0.6rem 1.25rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.retro-view__status-card button:hover {
+  background: #38bdf8;
+  color: #0f172a;
+}
+
+@media (max-width: 768px) {
+  .retro-view {
+    padding: 2rem;
+  }
+
+  .retro-view__status-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

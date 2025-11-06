@@ -1,8 +1,8 @@
 # WomCast — Runbook
 
 > **Operational procedures and troubleshooting guide**  
-> Updated: 2025-11-02 UTC  
-> Milestone: M2 (Storage & Library)
+> Updated: 2025-11-05 UTC  
+> Milestone: M5 (AI Bridge + PWA + Docs)
 
 ---
 
@@ -25,6 +25,57 @@
      curl http://localhost:3003/healthz  # Voice
      curl http://localhost:3004/healthz  # Search
      ```
+
+---
+
+## Casting & PWA Remote
+
+### Generate a Casting Session (LAN)
+
+1. On the TV UI, open **Cast** from the navigation rail.
+2. Select **Generate Pairing Code**.
+3. The view displays:
+   - 6-digit pairing PIN (manual entry fallback).
+   - QR code for the WebRTC session.
+   - Live expiry countdown (default 5 minutes).
+4. Scan the QR with the mobile device camera or the WomCast mobile bridge app.
+5. If the QR fails to load, provide the PIN to the user and retry when online.
+
+**Endpoints used**
+
+```http
+POST   /v1/cast/session               # create pairing session
+GET    /v1/cast/session/{id}/qr       # fetch session QR image
+GET    /v1/cast/pwa/qr                # fetch LAN remote QR (static)
+```
+
+### Launch the LAN Remote PWA
+
+1. From the Cast view, scan the **WomCast Remote** QR (purple badge).
+2. The device opens `http://womcast.local:5173/pwa/` (fallback message shown if QR fetch fails).
+3. Add to home screen (PWA install) for offline shell:
+   - iOS Safari: Share → Add to Home Screen.
+   - Android Chrome: Install app prompt.
+4. Controls available:
+   - Now Playing status with progress + refresh.
+   - Play/Pause, Stop, volume up/down, D-pad, context/home/menu/info/back.
+   - Library preview (recent video/audio), text search, semantic search via voice.
+
+**Service Worker / Offline Behavior**
+- Minimal service worker installs on first visit; caches shell assets.
+- Remote actions queue until connectivity resumes (UI banner indicates offline status).
+
+### Voice Button & Semantic Search
+
+1. Press and hold the **Voice** button in the PWA to capture a query.
+2. Release to submit; server runs Whisper STT → semantic search.
+3. Top matches appear in the Voice panel; tap **Play** to trigger playback.
+4. Requires `womcast-voice` and `womcast-search` services to be healthy.
+
+Troubleshooting:
+- If mobile device cannot resolve `womcast.local`, use the raw IP (e.g., `http://192.168.1.50:5173/pwa/`).
+- Ensure the Cast service advertises `._womcast-remote._tcp.local` via mDNS (`dns-sd -B _womcast-remote._tcp`).
+- Confirm playback API reachable: `curl http://localhost:3002/v1/ping`.
 
 ---
 
@@ -79,6 +130,13 @@
      ```bash
      curl "http://localhost:3001/v1/media/search?q=movie name"
      ```
+    - **Semantic Search (voice or text)**:
+       ```bash
+       curl "http://localhost:3004/v1/search/semantic?q=space documentary"
+       ```
+       - The PWA Remote voice button submits semantic queries automatically.
+       - Response payload includes `results[]` with `media_id`, `score`, and latency metadata.
+       - Frontend de-duplicates combined text + semantic results before display.
 
 ### Managing Subtitles (M2.6)
 
@@ -286,6 +344,41 @@
 
 ---
 
+## Demo Mode & Sample Content
+
+Use the bundled assets and services below to showcase WomCast quickly without production media.
+
+1. **Seed Local Demo Library**
+   ```bash
+   mkdir -p /media/demo
+   rsync -av --delete test-media/ /media/demo/
+   python -m metadata.indexer /media/demo
+   ```
+   - `test-media/` includes short Creative Commons clips and tracks safe for demos.
+   - Verify the mount inside Settings → Library → Mount Points.
+
+2. **Warm Up Semantic Search**
+   ```bash
+   curl -X POST http://localhost:3004/v1/search/semantic/rebuild
+   ```
+   - Ensures voice/text semantic queries include demo assets.
+
+3. **Prep the Remote Experience**
+   - Open Cast view, generate a pairing code, and launch the PWA remote on a phone/tablet.
+   - Demonstrate D-pad navigation, volume nudges, and the voice button (“play the demo trailer”).
+
+4. **Reset After Demo**
+   ```bash
+   rm -rf /media/demo
+   curl -X POST http://localhost:3001/v1/index/purge
+   curl -X POST http://localhost:3004/v1/search/semantic/rebuild
+   ```
+   - Removes demo files and cleans associated metadata/embeddings.
+
+> **Tip**: Cache the PWA ahead of time by visiting `http://womcast.local:5173/pwa/` so the service worker stores assets for offline demonstrations.
+
+---
+
 ## Common Tasks
 
 ### Rebuild Library Index
@@ -311,6 +404,18 @@ journalctl -u womcast-gateway -n 100
 ---
 
 ## Troubleshooting
+
+### PWA Remote Not Loading
+**Symptoms**: Mobile device shows 404 or blank screen when opening the remote.  
+**Checks**:
+- Verify Cast API reachable: `curl http://localhost:3005/v1/cast/pwa/qr`.
+- Confirm Vite/Electron static assets deployed under `/pwa/`.
+- Ensure mobile resolves `womcast.local` (`ping womcast.local`).
+
+**Fix**:
+1. Open the Cast view and re-scan the **WomCast Remote** QR (regenerates blob URL).
+2. If using IP directly, update service worker scope: browse to `http://<pi-ip>:5173/pwa/`.
+3. Clear mobile browser data for the site (removes stale service worker) and reload.
 
 ### No HDMI-CEC Response
 **Symptoms**: Remote control not working with Kodi  

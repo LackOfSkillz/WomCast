@@ -4,12 +4,16 @@ WebRTC signaling and session management for phone/tablet casting.
 """
 
 import logging
+import os
+import socket
 from contextlib import asynccontextmanager
 from io import BytesIO
 from typing import Any
+from urllib.parse import urlparse
 
 import qrcode
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -78,13 +82,16 @@ class WebRTCSignal(BaseModel):
 # Global session manager
 session_manager: SessionManager | None = None
 mdns_advertiser: MDNSAdvertiser | None = None
+pwa_mdns_advertiser: MDNSAdvertiser | None = None
 audio_relay: AudioRelay | None = None
+
+DEFAULT_PWA_PORT = int(os.getenv("PWA_PORT", "5173"))
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize session manager, mDNS, and audio relay on startup."""
-    global session_manager, mdns_advertiser, audio_relay
+    global session_manager, mdns_advertiser, audio_relay, pwa_mdns_advertiser
     session_manager = SessionManager(session_ttl=300, cleanup_interval=60)
     await session_manager.start()
     logger.info("SessionManager started")
@@ -98,6 +105,19 @@ async def lifespan(app: FastAPI):
     )
     mdns_advertiser.start()
 
+    # Advertise PWA remote for LAN discovery
+    pwa_mdns_advertiser = MDNSAdvertiser(
+        service_name="WomCast Remote",
+        service_type="_womcast-remote._tcp.local.",
+        port=DEFAULT_PWA_PORT,
+        properties={
+            "version": __version__,
+            "service": "womcast-remote",
+            "path": "/pwa/",
+        },
+    )
+    pwa_mdns_advertiser.start()
+
     # Initialize audio relay
     audio_relay = AudioRelay()
     logger.info("AudioRelay initialized")
@@ -107,11 +127,32 @@ async def lifespan(app: FastAPI):
     # Cleanup
     if mdns_advertiser:
         mdns_advertiser.stop()
+    if pwa_mdns_advertiser:
+        pwa_mdns_advertiser.stop()
     await session_manager.stop()
     logger.info("SessionManager stopped")
 
 
 app = FastAPI(title="WomCast Cast API", version=__version__, lifespan=lifespan)
+
+_default_origins = (
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173"
+)
+allowed_origins = (
+    os.getenv("CAST_CORS_ORIGINS")
+    or os.getenv("WOMCAST_CORS_ORIGINS")
+    or _default_origins
+)
+cors_origins = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
+
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 @app.get("/healthz")
@@ -351,6 +392,70 @@ async def get_session_qr(session_id: str):
     img = qr.make_image(fill_color="black", back_color="white")
 
     # Convert to bytes
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+
+    return StreamingResponse(buf, media_type="image/png")
+
+
+def _resolve_pwa_origin(origin: str | None) -> str:
+    """Normalise a client-supplied origin to scheme://host:port."""
+
+    default = f"http://womcast.local:{DEFAULT_PWA_PORT}"
+    if not origin:
+        return default
+
+    parsed = urlparse(origin)
+    if parsed.scheme not in {"http", "https"}:
+        return default
+
+    host = parsed.hostname or "womcast.local"
+    port = parsed.port or (DEFAULT_PWA_PORT if parsed.scheme == "http" else None)
+    base = f"{parsed.scheme}://{host}"
+    if port:
+        base += f":{port}"
+    return base
+
+
+def _lan_fallback_origin() -> str:
+    """Best-effort LAN origin for the remote PWA."""
+
+    try:
+        hostname = socket.gethostname()
+        lan_ip = socket.gethostbyname(hostname)
+    except Exception:  # pragma: no cover - network resolution failures
+        lan_ip = "127.0.0.1"
+    return f"http://{lan_ip}:{DEFAULT_PWA_PORT}"
+
+
+@app.get("/v1/cast/pwa/qr")
+async def get_pwa_qr(request: Request):
+    """Generate QR code linking to the LAN PWA remote."""
+
+    origin = request.query_params.get("origin")
+    fallback_param = request.query_params.get("fallback")
+
+    primary_base = _resolve_pwa_origin(origin)
+    primary_url = f"{primary_base.rstrip('/')}/pwa/"
+
+    fallback_base = _resolve_pwa_origin(fallback_param) if fallback_param else _lan_fallback_origin()
+
+    if primary_base.rstrip('/') == fallback_base.rstrip('/'):
+        qr_target = primary_url
+    else:
+        qr_target = f"{primary_url}?alt={fallback_base.rstrip('/')}/pwa/"
+
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(qr_target)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
     buf = BytesIO()
     img.save(buf, format="PNG")
     buf.seek(0)

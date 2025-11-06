@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { LibraryView, type VoiceSearchCommand } from './LibraryView';
 import * as api from '../../services/api';
 
@@ -153,8 +153,6 @@ describe('LibraryView', () => {
       ],
     });
 
-    vi.useFakeTimers();
-
     render(<LibraryView />);
 
     await waitFor(() => {
@@ -163,10 +161,6 @@ describe('LibraryView', () => {
 
     const textBox = screen.getByRole('textbox') as HTMLInputElement;
     fireEvent.change(textBox, { target: { value: 'mo' } });
-
-    await act(async () => {
-      vi.runAllTimers();
-    });
 
     await waitFor(() => {
       expect(api.searchMediaFiles).toHaveBeenCalledWith('mo');
@@ -181,7 +175,5 @@ describe('LibraryView', () => {
     await waitFor(() => {
       expect(screen.getByText(/Semantic boost added 1 match/)).toBeDefined();
     });
-
-    vi.useRealTimers();
   });
 });

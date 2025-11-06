@@ -7,9 +7,6 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import CastView from './CastView';
 
-// Mock fetch
-global.fetch = vi.fn();
-
 // Provide createObjectURL for environments without implementation
 const mockCreateObjectURL = vi.fn(() => 'blob:mock-url');
 const mockRevokeObjectURL = vi.fn();
@@ -27,14 +24,28 @@ describe('CastView', () => {
     vi.clearAllMocks();
     mockCreateObjectURL.mockClear();
     mockRevokeObjectURL.mockClear();
+
+     const defaultFetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : ('url' in input ? input.url : input.toString());
+      if (url.includes('/v1/cast/pwa/qr')) {
+        return {
+          ok: true,
+          blob: async () => new Blob(),
+        } as unknown as Response;
+      }
+
+      throw new Error(`Unhandled fetch call: ${url}`);
+    });
+
+    global.fetch = defaultFetch as unknown as typeof fetch;
   });
 
-  it('renders initial state with generate button', () => {
+  it('renders initial state with generate button', async () => {
     render(<CastView />);
-    
-    expect(screen.getByText(/Cast to WomCast/i)).toBeInTheDocument();
-    expect(screen.getByText(/Scan the QR code/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Generate Pairing Code/i })).toBeInTheDocument();
+
+    expect(await screen.findByText(/Cast to WomCast/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Scan the QR code/i)).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Generate Pairing Code/i })).toBeInTheDocument();
   });
 
   // Skipping legacy QR integration path until jsdom offers URL.createObjectURL.
@@ -46,22 +57,33 @@ describe('CastView', () => {
       expires_in_seconds: 300,
     };
 
-    // Mock session creation
-    (global.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
-      () => Promise.resolve({
-        ok: true,
-        json: async () => mockSession,
-      } as Response)
-    );
-
-    // Mock QR code fetch
     const blob = new Blob(['fake-qr-image'], { type: 'image/png' });
-    (global.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
-      () => Promise.resolve({
-        ok: true,
-        blob: async () => blob,
-      } as Response)
-    );
+
+    (global.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : ('url' in input ? input.url : input.toString());
+      if (url.includes('/v1/cast/pwa/qr')) {
+        return {
+          ok: true,
+          blob: async () => new Blob(),
+        } as unknown as Response;
+      }
+
+      if (url.endsWith('/v1/cast/session') && init?.method === 'POST') {
+        return {
+          ok: true,
+          json: async () => mockSession,
+        } as unknown as Response;
+      }
+
+      if (url.includes(`/v1/cast/session/${mockSession.session_id}/qr`)) {
+        return {
+          ok: true,
+          blob: async () => blob,
+        } as unknown as Response;
+      }
+
+      throw new Error(`Unhandled fetch call: ${url}`);
+    });
 
     render(<CastView />);
     const generateBtn = screen.getByRole('button', { name: /Generate Pairing Code/i });
@@ -78,11 +100,23 @@ describe('CastView', () => {
   });
 
   it('displays error when session creation fails', async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
-      () => Promise.resolve({
-        ok: false,
-      } as Response)
-    );
+    (global.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : ('url' in input ? input.url : input.toString());
+      if (url.includes('/v1/cast/pwa/qr')) {
+        return {
+          ok: true,
+          blob: async () => new Blob(),
+        } as unknown as Response;
+      }
+
+      if (url.endsWith('/v1/cast/session') && init?.method === 'POST') {
+        return {
+          ok: false,
+        } as unknown as Response;
+      }
+
+      throw new Error(`Unhandled fetch call: ${url}`);
+    });
 
     render(<CastView />);
     const generateBtn = screen.getByRole('button', { name: /Generate Pairing Code/i });
@@ -102,19 +136,31 @@ describe('CastView', () => {
       expires_in_seconds: 10,
     };
 
-    (global.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
-      () => Promise.resolve({
-        ok: true,
-        json: async () => mockSession,
-      } as Response)
-    );
+    (global.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : ('url' in input ? input.url : input.toString());
+      if (url.includes('/v1/cast/pwa/qr')) {
+        return {
+          ok: true,
+          blob: async () => new Blob(),
+        } as unknown as Response;
+      }
 
-    (global.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
-      () => Promise.resolve({
-        ok: true,
-        blob: async () => new Blob(),
-      } as Response)
-    );
+      if (url.endsWith('/v1/cast/session') && init?.method === 'POST') {
+        return {
+          ok: true,
+          json: async () => mockSession,
+        } as unknown as Response;
+      }
+
+      if (url.includes(`/v1/cast/session/${mockSession.session_id}/qr`)) {
+        return {
+          ok: true,
+          blob: async () => new Blob(),
+        } as unknown as Response;
+      }
+
+      throw new Error(`Unhandled fetch call: ${url}`);
+    });
 
     render(<CastView />);
     const generateBtn = screen.getByRole('button', { name: /Generate Pairing Code/i });

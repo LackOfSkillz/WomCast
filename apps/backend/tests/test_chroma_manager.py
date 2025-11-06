@@ -7,8 +7,29 @@ from ai.chroma.manager import ChromaManager
 
 
 class _DeterministicEmbedding:
-    def __call__(self, texts):
-        return [[float(len(text or ""))] for text in texts]
+    def __call__(self, input):
+        return [[self._encode(text)] for text in input]
+
+    def name(self) -> str:
+        return "deterministic"
+
+    def is_legacy(self) -> bool:
+        # Match Chroma's legacy embedding contract for custom callables
+        return True
+
+    def embed_documents(self, input):
+        return self.__call__(input)
+
+    def embed_query(self, input):
+        if isinstance(input, str):
+            return [[self._encode(input)]]
+        if isinstance(input, list):
+            return [[self._encode(input[0] if input else "")]]
+        return [[self._encode(str(input))]]
+
+    @staticmethod
+    def _encode(text: str) -> float:
+        return float(len(text or ""))
 
 
 def _prepare_database(path: Path) -> None:

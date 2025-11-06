@@ -13,6 +13,7 @@ from typing import Any
 
 import httpx
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -21,11 +22,108 @@ from common.settings import get_settings_manager
 
 __version__ = "0.1.0"
 
+LEGAL_TERMS_VERSION = os.getenv("LEGAL_TERMS_VERSION", "2025-11-cloud-v1")
+LEGAL_TERMS_LAST_UPDATED = "2025-11-05"
+LEGAL_TERMS_CONTENT = {
+    "title": "WomCast Legal Notice & Provider Terms",
+    "intro": (
+        "WomCast links to third-party streaming providers using their official applications and "
+        "public APIs. You must have the rights to access each service and you agree to comply "
+        "with provider terms and the law when launching connectors from WomCast."
+    ),
+    "sections": [
+        {
+            "title": "Usage Guidelines",
+            "items": [
+                "Only access services for which you currently hold a valid subscription or the content is free/legal in your region.",
+                "Do not attempt to bypass DRM, geo-restrictions, or authentication that providers enforce.",
+                "Respect provider rate limits and API usage policies when browsing catalog data.",
+                "You are responsible for ensuring that any custom playlists or connectors comply with copyright and licensing obligations.",
+            ],
+        },
+        {
+            "title": "Data & Privacy",
+            "items": [
+                "Connector requests are proxied through WomCast. Account credentials for third-party providers are never stored by WomCast.",
+                "Provider apps that you launch may collect their own telemetry subject to their privacy policies.",
+                "WomCast only retains connector session logs locally to troubleshoot failures; you can purge them from Settings → Privacy.",
+            ],
+        },
+        {
+            "title": "Third-Party Services",
+            "items": [
+                "Providers may change APIs or availability at any time. WomCast does not guarantee uptime for external services.",
+                "Some providers restrict commercial or public display usage. Ensure your deployment scenario conforms to those terms.",
+            ],
+        },
+    ],
+    "providers": [
+        {
+            "name": "Netflix",
+            "terms_url": "https://help.netflix.com/legal/termsofuse",
+            "privacy_url": "https://help.netflix.com/legal/privacy",
+            "notes": "Streaming content available only in participating regions with an active membership.",
+        },
+        {
+            "name": "Disney+",
+            "terms_url": "https://www.disneyplus.com/legal/subscriber-agreement",
+            "privacy_url": "https://privacy.thewaltdisneycompany.com/en/current-privacy-policy/",
+            "notes": "Includes Disney+, Hulu, and ESPN+ bundles where applicable.",
+        },
+        {
+            "name": "HBO Max / Max",
+            "terms_url": "https://www.max.com/terms-of-use",
+            "privacy_url": "https://www.warnermediaprivacy.com/policycenter/b2c/en-us/",
+            "notes": "Available content, devices, and features vary by territory.",
+        },
+        {
+            "name": "YouTube",
+            "terms_url": "https://www.youtube.com/t/terms",
+            "privacy_url": "https://policies.google.com/privacy",
+            "notes": "YouTube terms also apply to YouTube TV and YouTube Music experiences.",
+        },
+        {
+            "name": "PBS",
+            "terms_url": "https://www.pbs.org/about/about-pbs/terms-of-use/",
+            "privacy_url": "https://www.pbs.org/about/about-pbs/privacy-policy/",
+            "notes": "Content is made available for personal, non-commercial use.",
+        },
+        {
+            "name": "NASA",
+            "terms_url": "https://www.nasa.gov/multimedia/guidelines/index.html",
+            "privacy_url": "https://www.nasa.gov/privacy/",
+            "notes": "NASA imagery is in the public domain; some logos and insignia remain restricted.",
+        },
+        {
+            "name": "Jamendo",
+            "terms_url": "https://www.jamendo.com/legal/terms-of-use",
+            "privacy_url": "https://www.jamendo.com/legal/privacy",
+            "notes": "Tracks are distributed under Creative Commons or Jamendo licensing.",
+        },
+    ],
+}
+
 app = FastAPI(
     title="WomCast Settings Service",
     description="User preferences and application configuration management",
     version=__version__,
 )
+
+allowed_origins = os.getenv(
+    "SETTINGS_CORS_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173",
+)
+
+cors_origins = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
+
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 create_health_router(app, "settings-service", __version__)
 
@@ -51,6 +149,37 @@ class SettingsUpdate(BaseModel):
     """Request model for updating multiple settings"""
 
     settings: dict[str, Any]
+
+
+class LegalProvider(BaseModel):
+    name: str
+    terms_url: str
+    privacy_url: str | None = None
+    notes: str | None = None
+
+
+class LegalSection(BaseModel):
+    title: str
+    items: list[str]
+
+
+class LegalAcknowledgement(BaseModel):
+    version: str | None = None
+    accepted_at: str | None = None
+
+
+class LegalTermsResponse(BaseModel):
+    version: str
+    last_updated: str
+    title: str
+    intro: str
+    sections: list[LegalSection]
+    providers: list[LegalProvider]
+    accepted: LegalAcknowledgement
+
+
+class LegalAckRequest(BaseModel):
+    version: str
 
 
 async def _fetch_voice_history() -> dict[str, Any]:
@@ -361,4 +490,53 @@ async def delete_privacy_data() -> dict[str, Any]:
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "results": summary,
         "message": "Privacy data purged and settings reset",
+    }
+
+
+@app.get("/v1/legal/terms", response_model=LegalTermsResponse)
+async def get_legal_terms() -> LegalTermsResponse:
+    """Return current legal notice content and acknowledgement state."""
+
+    manager = get_settings_manager(SETTINGS_PATH)
+    accepted_version = manager.get("legal_terms_version") or None
+    accepted_at = manager.get("legal_terms_accepted_at")
+
+    sections = [LegalSection(**section) for section in LEGAL_TERMS_CONTENT["sections"]]
+    providers = [LegalProvider(**provider) for provider in LEGAL_TERMS_CONTENT["providers"]]
+
+    return LegalTermsResponse(
+        version=LEGAL_TERMS_VERSION,
+        last_updated=LEGAL_TERMS_LAST_UPDATED,
+        title=LEGAL_TERMS_CONTENT["title"],
+        intro=LEGAL_TERMS_CONTENT["intro"],
+        sections=sections,
+        providers=providers,
+        accepted=LegalAcknowledgement(version=accepted_version, accepted_at=accepted_at),
+    )
+
+
+@app.post("/v1/legal/ack")
+async def acknowledge_legal_terms(payload: LegalAckRequest) -> dict[str, Any]:
+    """Persist acknowledgement for the current legal notice version."""
+
+    if payload.version != LEGAL_TERMS_VERSION:
+        raise HTTPException(
+            status_code=400,
+            detail="Legal terms version mismatch. Refresh terms and try again.",
+        )
+
+    accepted_at = datetime.now(timezone.utc).isoformat()
+
+    manager = get_settings_manager(SETTINGS_PATH)
+    await manager.update(
+        {
+            "legal_terms_version": payload.version,
+            "legal_terms_accepted_at": accepted_at,
+        }
+    )
+
+    return {
+        "status": "ok",
+        "version": payload.version,
+        "accepted_at": accepted_at,
     }

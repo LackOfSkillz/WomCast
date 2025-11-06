@@ -283,7 +283,7 @@ WomCast/
 └── README.md              # This file
 ```
 
-**Current Status**: M1-M3 delivered; M4 follow-ups (CEC helper, legal notices) pending; M5 (AI Bridge + PWA + Docs) underway with 1/8 tasks complete.
+**Current Status**: M1-M3 delivered; M4 follow-up (legal notices) pending; M5 (AI Bridge + PWA + Docs) underway with 1/8 tasks complete.
 
 
 ### Key Design Decisions (ADRs)

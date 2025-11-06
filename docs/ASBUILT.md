@@ -2,7 +2,7 @@
 
 > **Living document tracking actual implementation vs specification**  
 > Updated: 2025-11-05 UTC  
-> Milestone: M5 (AI Bridge + PWA + Docs) In Progress — 1/8 tasks complete (M4 follow-ups: HDMI-CEC helper, legal notices)
+> Milestone: M5 (AI Bridge + PWA + Docs) In Progress — 4/8 tasks complete (M4 follow-up: legal notices)
 
 ---
 
@@ -15,7 +15,7 @@ WomCast is a local-first entertainment OS for Raspberry Pi 5, built as a microse
 - **AI**: Whisper (voice), Ollama (LLM), ChromaDB (embeddings)
 - **Build**: Docker multi-stage (Debian Bookworm base for Pi OS Lite compatibility)
 
-**Current Status**: M1 complete (12/12 tasks), M2 complete (12/12 tasks), M3 complete (16/16 tasks), M4 in progress (5/8 tasks). Cloud passthrough QR flows, server-side voice relay, hardened settings experience, and privacy export/purge tooling are implemented. HDMI-CEC backend helper and legal terms acknowledgement remain pending.
+**Current Status**: M1 complete (12/12 tasks), M2 complete (12/12 tasks), M3 complete (16/16 tasks), M4 in progress (6/8 tasks). Cloud passthrough QR flows, server-side voice relay, hardened settings experience, privacy export/purge tooling, and HDMI-CEC input switching are implemented. Legal terms acknowledgement remains pending.
 
 ---
 
@@ -37,11 +37,13 @@ WomCast is a local-first entertainment OS for Raspberry Pi 5, built as a microse
   - Introduced ChromaDB persistent store under `.data/chroma` with `media_index` and `voice_queries` collections backed by Ollama embeddings.
   - New REST endpoints: `GET /v1/search/semantic?q=`, `POST /v1/search/semantic/rebuild` provide ranked results with response latency metadata.
   - Voice intent handler now records transcripts + resolved actions into the semantic store for cross-session recall; failures degrade gracefully with logging only.
-- **Privacy Export & Purge** (`apps/backend/settings/main.py`, `apps/frontend/src/views/Settings/tabs/PrivacyTab.tsx`)
   - Export bundles settings, voice history, cast sessions, and SQLite tables into a signed JSON download with filename stamps.
   - Purge resets settings, clears voice transcripts, trims cast sessions, and wipes user tables with summarized results.
-- **HDMI-CEC Status** (`apps/frontend/src/views/Settings/tabs/CECTab.tsx`)
-  - Frontend toggle + device scan/switch actions implemented; backend helper to query the CEC bus remains a TODO under M4.2.
+  - Frontend toggle + device scan/switch actions implemented; backend helper now shared between playback service and API gateway under M4.2.
+- **LAN Remote PWA** (`apps/frontend/pwa/*`, `apps/frontend/src/views/Cast/CastView.tsx`, `apps/backend/cast/main.py`)
+  - Dedicated Vite entry under `pwa/index.html` with PWA manifest, icon, and service worker for offline shell caching.
+  - Remote UI surfaces playback state, transport controls, D-pad, volume, library preview, search, and voice-triggered semantic suggestions.
+  - Cast service exposes `GET /v1/cast/pwa/qr` and advertises `_womcast-remote._tcp.local` via mDNS for quick mobile pairing.
 
 ---
 

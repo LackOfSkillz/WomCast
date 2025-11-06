@@ -19,6 +19,8 @@
   background: rgba(20, 20, 30, 0.95);
   border-bottom: 2px solid rgba(255, 255, 255, 0.1);
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 1rem;
   padding: 1rem 2rem;
   backdrop-filter: blur(10px);

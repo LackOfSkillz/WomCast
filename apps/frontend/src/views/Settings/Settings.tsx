@@ -54,6 +54,12 @@ const normalizeSettings = (raw: SettingsResponse): Settings => {
   normalized.metadata_fetching_enabled = normalized.metadata_fetching_enabled ?? true;
   normalized.voice_history_days = normalized.voice_history_days ?? 30;
   normalized.cast_history_days = normalized.cast_history_days ?? 90;
+  normalized.legal_terms_version =
+    typeof normalized.legal_terms_version === 'string' ? normalized.legal_terms_version : '';
+  normalized.legal_terms_accepted_at =
+    typeof normalized.legal_terms_accepted_at === 'string'
+      ? normalized.legal_terms_accepted_at
+      : normalized.legal_terms_accepted_at ?? null;
 
   normalized.pairing_enabled = normalized.pairing_enabled ?? true;
   normalized.pairing_pin_length = normalized.pairing_pin_length ?? 6;
@@ -116,8 +122,8 @@ const SettingsView: React.FC = () => {
       setError(null);
       setStatusMessage(null);
 
-  const data = await getSettings();
-  setSettings(normalizeSettings(data));
+      const data = await getSettings();
+      setSettings(normalizeSettings(data));
       hasLoadedOnce.current = true;
     } catch (err) {
       console.error('Failed to load settings:', err);
@@ -174,8 +180,8 @@ const SettingsView: React.FC = () => {
 
     try {
       setSaving(true);
-  const data = await updateMultipleSettings(updates);
-  setSettings(normalizeSettings(data));
+      const data = await updateMultipleSettings(updates);
+      setSettings(normalizeSettings(data));
       setError(null);
       hasLoadedOnce.current = true;
     } catch (err) {
@@ -193,8 +199,8 @@ const SettingsView: React.FC = () => {
     
     try {
       setSaving(true);
-  const data = await resetAllSettings();
-  setSettings(normalizeSettings(data));
+      const data = await resetAllSettings();
+      setSettings(normalizeSettings(data));
       setError(null);
       setStatusMessage('Settings restored to defaults.');
     } catch (err) {

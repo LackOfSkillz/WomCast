@@ -16,6 +16,8 @@ export interface Settings {
   metadata_fetching_enabled: boolean;
   voice_history_days?: number;
   cast_history_days?: number;
+  legal_terms_version?: string | null;
+  legal_terms_accepted_at?: string | null;
 
   // Pairing
   pairing_enabled?: boolean;

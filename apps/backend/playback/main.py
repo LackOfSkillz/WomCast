@@ -6,12 +6,13 @@ import logging
 import os
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, ConfigDict, Field
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 
 from common.health import create_health_router
 
-from .cec_helper import CecDevice, get_cec_helper
 from .kodi_client import KodiClient, KodiConfig, PlayerState
+from .cec_routes import router as cec_router
 
 __version__ = "0.1.0"
 
@@ -23,6 +24,25 @@ app = FastAPI(
     description="Media playback control via Kodi/mpv",
     version=__version__,
 )
+
+_default_origins = (
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173"
+)
+allowed_origins = (
+    os.getenv("PLAYBACK_CORS_ORIGINS")
+    or os.getenv("WOMCAST_CORS_ORIGINS")
+    or _default_origins
+)
+cors_origins = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
+
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 create_health_router(app, "playback-service", __version__)
 
@@ -51,6 +71,32 @@ class VolumeRequest(BaseModel):
     """Request to set volume."""
 
     volume: int = Field(..., ge=0, le=100, description="Volume level (0-100)")
+
+
+class VolumeAdjustRequest(BaseModel):
+    """Request to adjust volume by delta."""
+
+    delta: int = Field(
+        ...,
+        ge=-100,
+        le=100,
+        description="Relative volume change (-100 to 100)",
+    )
+
+
+SUPPORTED_INPUT_ACTIONS: set[str] = {
+    "up",
+    "down",
+    "left",
+    "right",
+    "select",
+    "back",
+    "context",
+    "info",
+    "home",
+    "menu",
+    "play_pause",
+}
 
 
 @app.post("/v1/play", response_model=dict[str, bool])
@@ -166,6 +212,52 @@ async def get_volume():
         return {"volume": volume}
 
 
+@app.post("/v1/volume/adjust", response_model=dict[str, int])
+async def adjust_volume(request: VolumeAdjustRequest):
+    """Adjust the volume by a relative delta."""
+    async with KodiClient(kodi_config) as client:
+        current_volume = await client.get_volume()
+        target_volume = max(0, min(100, current_volume + request.delta))
+
+        success = await client.set_volume(target_volume)
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to adjust volume")
+
+        return {"volume": target_volume}
+
+
+@app.post("/v1/input/{action}", response_model=dict[str, bool])
+async def send_input_action(action: str):
+    """Send a remote input action to Kodi."""
+
+    normalized = action.strip().lower()
+    if normalized not in SUPPORTED_INPUT_ACTIONS:
+        raise HTTPException(status_code=400, detail=f"Unsupported input action '{action}'")
+
+    async with KodiClient(kodi_config) as client:
+        try:
+            delivered = await client.input_action(normalized)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+        if not delivered:
+            raise HTTPException(status_code=500, detail="Failed to send input action")
+
+        return {"success": True}
+
+
+@app.post("/v1/application/quit", response_model=dict[str, bool])
+async def quit_application():
+    """Close Kodi so the kiosk can return to the web UI."""
+
+    async with KodiClient(kodi_config) as client:
+        success = await client.application_quit()
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to quit Kodi")
+
+        return {"success": True}
+
+
 @app.get("/v1/ping", response_model=dict[str, bool])
 async def ping_kodi():
     """Test connection to Kodi.
@@ -228,165 +320,5 @@ async def toggle_subtitles():
         return {"success": True}
 
 
-# ============================================================================
-# HDMI-CEC Endpoints
-# ============================================================================
-
-
-class CecDeviceResponse(BaseModel):
-    """CEC device information response."""
-
-    model_config = ConfigDict(populate_by_name=True)
-
-    address: int = Field(..., description="CEC logical address (0-15)")
-    name: str = Field(..., description="Device name")
-    vendor: str = Field(..., description="Vendor name")
-    device_type: str = Field(..., alias="deviceType", description="Device type")
-    active_source: bool = Field(..., alias="activeSource", description="Is active source")
-    physical_address: str = Field(..., alias="physicalAddress", description="HDMI physical address")
-
-
-class CecSwitchRequest(BaseModel):
-    """Request to switch CEC input."""
-
-    model_config = ConfigDict(populate_by_name=True)
-
-    address: int | None = Field(None, description="CEC device address (0-15)")
-    name: str | None = Field(None, description="Device name (substring match)")
-
-
-@app.get("/v1/cec/available")
-async def check_cec_available():
-    """Check if CEC is available on this system.
-
-    Returns:
-        CEC availability status
-    """
-    cec = get_cec_helper()
-    available = await cec.is_available()
-
-    return {"available": available, "client_path": cec.cec_client_path}
-
-
-@app.get("/v1/cec/devices", response_model=list[CecDeviceResponse])
-async def list_cec_devices():
-    """Scan and list all CEC devices on the HDMI bus.
-
-    Returns:
-        List of detected CEC devices
-    """
-    cec = get_cec_helper()
-    devices = await cec.scan_devices()
-
-    return [
-        CecDeviceResponse(
-            address=dev.address,
-            name=dev.name,
-            vendor=dev.vendor,
-            deviceType=dev.device_type.value,
-            activeSource=dev.active_source,
-            physicalAddress=dev.physical_address,
-        )
-        for dev in devices
-    ]
-
-
-@app.get("/v1/cec/tv", response_model=CecDeviceResponse | None)
-async def get_tv_device():
-    """Get the TV device (CEC address 0).
-
-    Returns:
-        TV device information, or null if not found
-    """
-    cec = get_cec_helper()
-    tv = await cec.get_tv()
-
-    if not tv:
-        return None
-
-    return CecDeviceResponse(
-        address=tv.address,
-        name=tv.name,
-        vendor=tv.vendor,
-        deviceType=tv.device_type.value,
-        activeSource=tv.active_source,
-        physicalAddress=tv.physical_address,
-    )
-
-
-@app.get("/v1/cec/active", response_model=CecDeviceResponse | None)
-async def get_active_source():
-    """Get the currently active CEC source device.
-
-    Returns:
-        Active device information, or null if none active
-    """
-    cec = get_cec_helper()
-    active = await cec.get_active_source()
-
-    if not active:
-        return None
-
-    return CecDeviceResponse(
-        address=active.address,
-        name=active.name,
-        vendor=active.vendor,
-        deviceType=active.device_type.value,
-        activeSource=active.active_source,
-        physicalAddress=active.physical_address,
-    )
-
-
-@app.post("/v1/cec/switch")
-async def switch_cec_input(request: CecSwitchRequest):
-    """Switch TV input to a specific CEC device.
-
-    Args:
-        request: Switch request with either address or name
-
-    Returns:
-        Success status
-    """
-    cec = get_cec_helper()
-
-    if request.address is not None:
-        success = await cec.switch_to_device(request.address)
-    elif request.name:
-        success = await cec.switch_to_device_by_name(request.name)
-    else:
-        raise HTTPException(
-            status_code=400, detail="Must provide either 'address' or 'name'"
-        )
-
-    if not success:
-        raise HTTPException(status_code=500, detail="CEC switch command failed")
-
-    return {"success": True, "message": f"Switched to device"}
-
-
-@app.post("/v1/cec/activate")
-async def activate_womcast():
-    """Make WomCast the active source (switch TV input to us).
-
-    Returns:
-        Success status
-    """
-    cec = get_cec_helper()
-    success = await cec.make_active_source()
-
-    if not success:
-        raise HTTPException(status_code=500, detail="CEC activate command failed")
-
-    return {"success": True, "message": "Made WomCast active source"}
-
-
-@app.get("/v1/cec/status")
-async def get_cec_status():
-    """Get current CEC status and device list.
-
-    Returns:
-        CEC status with all devices
-    """
-    cec = get_cec_helper()
-    return cec.to_dict()
+app.include_router(cec_router)
 
