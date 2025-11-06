@@ -267,31 +267,31 @@ const SettingsView: React.FC = () => {
       <div className="settings-tabs">
         <button
           className={`tab ${activeTab === 'models' ? 'active' : ''}`}
-          onClick={() => setActiveTab('models')}
+          onClick={() => { setActiveTab('models'); }}
         >
           🤖 Models
         </button>
         <button
           className={`tab ${activeTab === 'privacy' ? 'active' : ''}`}
-          onClick={() => setActiveTab('privacy')}
+          onClick={() => { setActiveTab('privacy'); }}
         >
           🔒 Privacy
         </button>
         <button
           className={`tab ${activeTab === 'pairing' ? 'active' : ''}`}
-          onClick={() => setActiveTab('pairing')}
+          onClick={() => { setActiveTab('pairing'); }}
         >
           📱 Pairing
         </button>
         <button
           className={`tab ${activeTab === 'cec' ? 'active' : ''}`}
-          onClick={() => setActiveTab('cec')}
+          onClick={() => { setActiveTab('cec'); }}
         >
           📺 CEC
         </button>
         <button
           className={`tab ${activeTab === 'network' ? 'active' : ''}`}
-          onClick={() => setActiveTab('network')}
+          onClick={() => { setActiveTab('network'); }}
         >
           🌐 Network
         </button>

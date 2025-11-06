@@ -4,7 +4,7 @@ import { VoiceView } from './VoiceView';
 
 const mockVoiceButton = vi.fn(
   ({ onTranscript }: { onTranscript: (text: string) => void }) => (
-    <button onClick={() => onTranscript('test search query')}>Mock Voice Button</button>
+    <button onClick={() => { onTranscript('test search query'); }}>Mock Voice Button</button>
   )
 );
 
@@ -16,7 +16,7 @@ describe('VoiceView', () => {
   beforeEach(() => {
     mockVoiceButton.mockClear();
     mockVoiceButton.mockImplementation(({ onTranscript }: { onTranscript: (text: string) => void }) => (
-      <button onClick={() => onTranscript('test search query')}>Mock Voice Button</button>
+      <button onClick={() => { onTranscript('test search query'); }}>Mock Voice Button</button>
     ));
   });
 
@@ -115,7 +115,7 @@ describe('VoiceView', () => {
   it('ignores empty transcripts', () => {
     const mockOnSearch = vi.fn();
     mockVoiceButton.mockImplementationOnce(({ onTranscript }: { onTranscript: (text: string) => void }) => (
-      <button onClick={() => onTranscript('  ')}>Mock Voice Button</button>
+      <button onClick={() => { onTranscript('  '); }}>Mock Voice Button</button>
     ));
 
     render(<VoiceView onSearch={mockOnSearch} />);

@@ -1,0 +1,17 @@
+#EXTM3U
+#EXTINF:-1 tvg-id="nasa-tv-public" tvg-name="NASA TV (Education)" tvg-logo="https://www.nasa.gov/wp-content/uploads/sites/2/2023/07/nasa-meatball.png" group-title="Space & Science" language="en",NASA TV (Education)
+https://ntv1-ak.akamaized.net/hls/live/2014075/NASA-Public-Channel/master.m3u8
+#EXTINF:-1 tvg-id="dw-news-en" tvg-name="DW News (English)" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/1/19/Deutsche_Welle_logo.svg" group-title="News" language="en",DW News (English)
+https://dwstream30-lh.akamaihd.net/i/dwstream30_delivery@131329/master.m3u8
+#EXTINF:-1 tvg-id="bloomberg-quicktake" tvg-name="Bloomberg Quicktake" tvg-logo="https://upload.wikimedia.org/wikipedia/en/0/0f/Bloomberg_logo.svg" group-title="News" language="en",Bloomberg Quicktake
+https://www.bloomberg.com/media-manifest/streams/qt.m3u8
+#EXTINF:-1 tvg-id="big-buck-bunny" tvg-name="Big Buck Bunny (Demo)" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/7/70/Big_Buck_Bunny_alt_poster.jpg" group-title="Animation" language="en",Big Buck Bunny (Demo)
+https://storage.googleapis.com/shaka-demo-assets/angel-one-hls/hls.m3u8
+#EXTINF:-1 tvg-id="sintel-open-movie" tvg-name="Sintel (Open Movie)" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/3/3c/Sintel_poster.jpg" group-title="Movies" language="en",Sintel (Open Movie)
+https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8
+#EXTINF:-1 tvg-id="tears-of-steel" tvg-name="Tears of Steel (Demo)" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/7/73/Tears_of_Steel_poster.jpg" group-title="Sci-Fi" language="en",Tears of Steel (Demo)
+https://test-streams.mux.dev/ptsVOD/tears_of_steel.m3u8
+#EXTINF:-1 tvg-id="akamai-test" tvg-name="Akamai Test Channel" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/3/3b/Akamai_logo.svg" group-title="Tech Demos" language="en",Akamai Test Channel
+https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8
+#EXTINF:-1 tvg-id="red-bull-tv" tvg-name="Red Bull TV (Demo)" tvg-logo="https://upload.wikimedia.org/wikipedia/en/6/6c/Red_Bull_TV_logo.svg" group-title="Sports & Culture" language="en",Red Bull TV (Demo)
+https://test-streams.mux.dev/ptsVOD/redbull_tv.m3u8

@@ -5,9 +5,14 @@ __pycache__/
 out/
 dist/
 dist-electron/
-build/
+build/*
+!build/demo/
+!build/demo/**
+!build/demo/sample.m3u
 !build/image/
+!build/image/**
 !build/scripts/
+!build/scripts/**
 *.img
 *.img.gz
 .vscode/*

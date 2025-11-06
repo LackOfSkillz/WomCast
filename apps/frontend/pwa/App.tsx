@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import {
   adjustVolume,
   formatDuration,
@@ -56,7 +56,7 @@ async function resolveMediaById(mediaId: number): Promise<MediaFile | null> {
   }
 }
 
-export function RemoteApp(): JSX.Element {
+export function RemoteApp(): ReactElement {
   const { online } = useNetworkStatus();
   const [playerState, setPlayerState] = useState<PlayerState | null>(null);
   const [playerError, setPlayerError] = useState<string | null>(null);
@@ -104,7 +104,7 @@ export function RemoteApp(): JSX.Element {
     const handle = window.setInterval(() => {
       void refreshPlayerState();
     }, REFRESH_INTERVAL_MS);
-    return () => window.clearInterval(handle);
+    return () => { window.clearInterval(handle); };
   }, [refreshPlayerState, refreshVolume]);
 
   useEffect(() => {
@@ -163,7 +163,7 @@ export function RemoteApp(): JSX.Element {
       handleCommandError('Media file missing path metadata.', null);
       return;
     }
-    await handlePlayMedia(item.file_path, item.file_name ?? 'media');
+  await handlePlayMedia(item.file_path, item.file_name);
   };
 
   const handleSearchSubmit = async (query: string) => {
@@ -270,7 +270,14 @@ export function RemoteApp(): JSX.Element {
       <section className="panel now-playing">
         <div className="panel-header">
           <h2>Now Playing</h2>
-          <button className="secondary" type="button" onClick={() => refreshPlayerState()} disabled={loadingPlayer}>
+          <button
+            className="secondary"
+            type="button"
+            onClick={() => {
+              void refreshPlayerState();
+            }}
+            disabled={loadingPlayer}
+          >
             Refresh
           </button>
         </div>
@@ -306,10 +313,23 @@ export function RemoteApp(): JSX.Element {
           {playerError && <div className="remote-hint">{playerError}</div>}
         </div>
         <div className="control-row">
-          <button className="primary" type="button" onClick={() => handleInputAction('play_pause')} disabled={isSendingCommand}>
+          <button
+            className="primary"
+            type="button"
+            onClick={() => {
+              void handleInputAction('play_pause');
+            }}
+            disabled={isSendingCommand}
+          >
             Play / Pause
           </button>
-          <button className="secondary" type="button" onClick={handleStop}>
+          <button
+            className="secondary"
+            type="button"
+            onClick={() => {
+              void handleStop();
+            }}
+          >
             Stop
           </button>
         </div>
@@ -317,7 +337,9 @@ export function RemoteApp(): JSX.Element {
           <button
             className="secondary"
             type="button"
-            onClick={() => handleVolumeAdjust(-5)}
+            onClick={() => {
+              void handleVolumeAdjust(-5);
+            }}
             disabled={isAdjustingVolume}
           >
             Volume -
@@ -328,7 +350,9 @@ export function RemoteApp(): JSX.Element {
           <button
             className="secondary"
             type="button"
-            onClick={() => handleVolumeAdjust(5)}
+            onClick={() => {
+              void handleVolumeAdjust(5);
+            }}
             disabled={isAdjustingVolume}
           >
             Volume +
@@ -344,7 +368,9 @@ export function RemoteApp(): JSX.Element {
               key={action}
               type="button"
               className="pad-button"
-              onClick={() => handleInputAction(action)}
+              onClick={() => {
+                void handleInputAction(action);
+              }}
               disabled={isSendingCommand}
             >
               {label}
@@ -360,14 +386,14 @@ export function RemoteApp(): JSX.Element {
             <button
               type="button"
               className={mediaType === 'video' ? 'active' : ''}
-              onClick={() => setMediaType('video')}
+              onClick={() => { setMediaType('video'); }}
             >
               Video
             </button>
             <button
               type="button"
               className={mediaType === 'audio' ? 'active' : ''}
-              onClick={() => setMediaType('audio')}
+              onClick={() => { setMediaType('audio'); }}
             >
               Audio
             </button>
@@ -379,7 +405,12 @@ export function RemoteApp(): JSX.Element {
             <article className="media-card" key={item.id}>
               <h3>{item.file_name}</h3>
               <p>{item.media_type}</p>
-              <button type="button" onClick={() => handlePlayFromRecord(item)}>
+              <button
+                type="button"
+                onClick={() => {
+                  void handlePlayFromRecord(item);
+                }}
+              >
                 Play
               </button>
             </article>
@@ -410,10 +441,15 @@ export function RemoteApp(): JSX.Element {
         </form>
         <div className="media-grid">
           {searchResults.map((item) => (
-            <article className="media-card" key={`search-${item.id}`}>
+            <article className="media-card" key={`search-${String(item.id)}`}>
               <h3>{item.file_name}</h3>
               <p>{item.media_type}</p>
-              <button type="button" onClick={() => handlePlayFromRecord(item)}>
+              <button
+                type="button"
+                onClick={() => {
+                  void handlePlayFromRecord(item);
+                }}
+              >
                 Play
               </button>
             </article>
@@ -430,16 +466,25 @@ export function RemoteApp(): JSX.Element {
         <VoiceButton
           disabled={!online}
           disabledReason={online ? undefined : 'Voice requires connectivity.'}
-          onTranscript={handleVoiceTranscript}
-          onError={(error) => handleCommandError('Voice capture error.', error)}
+          onTranscript={(text) => {
+            void handleVoiceTranscript(text);
+          }}
+          onError={(error) => {
+            handleCommandError('Voice capture error.', error);
+          }}
         />
         {voiceTranscript && <div className="voice-echo">“{voiceTranscript}”</div>}
         <div className="media-grid">
           {voiceResults.map((item) => (
-            <article className="media-card" key={`voice-${item.id}`}>
+            <article className="media-card" key={`voice-${String(item.id)}`}>
               <h3>{item.file_name}</h3>
               <p>{item.media_type}</p>
-              <button type="button" onClick={() => handlePlayFromRecord(item)}>
+              <button
+                type="button"
+                onClick={() => {
+                  void handlePlayFromRecord(item);
+                }}
+              >
                 Play
               </button>
             </article>

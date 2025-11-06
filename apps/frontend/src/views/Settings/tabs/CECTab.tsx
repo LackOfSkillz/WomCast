@@ -3,9 +3,23 @@ import type { Settings } from '../../../types/settings';
 
 interface CECDevice {
   address: string;
-  name: string;
-  vendor: string;
+  name: string | null;
+  vendor: string | null;
   active: boolean;
+}
+
+function isCECDevice(value: unknown): value is CECDevice {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.address === 'string' &&
+    (typeof record.name === 'string' || record.name === null || record.name === undefined) &&
+    (typeof record.vendor === 'string' || record.vendor === null || record.vendor === undefined) &&
+    typeof record.active === 'boolean'
+  );
 }
 
 interface CECTabProps {
@@ -21,15 +35,24 @@ const CECTab: React.FC<CECTabProps> = ({ settings, updateSetting, disabled }) =>
   const [scanning, setScanning] = React.useState(false);
 
   React.useEffect(() => {
-    loadDevices();
+    void loadDevices();
   }, []);
 
   const loadDevices = async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/cast/v1/cec/devices');
-      const data = await response.json();
-      setDevices(data.devices || []);
+      const payload: unknown = await response.json();
+      let deviceList: CECDevice[] = [];
+
+      if (typeof payload === 'object' && payload !== null) {
+        const maybeDevices = (payload as { devices?: unknown }).devices;
+        if (Array.isArray(maybeDevices)) {
+          deviceList = maybeDevices.filter(isCECDevice);
+        }
+      }
+
+      setDevices(deviceList);
     } catch (error) {
       console.error('Failed to load CEC devices:', error);
     } finally {

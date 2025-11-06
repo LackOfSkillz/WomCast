@@ -50,7 +50,7 @@ const ModelsTab: React.FC<ModelsTabProps> = ({ settings, updateSetting, disabled
       void loadModelStatus();
     }, 3000);
 
-    return () => window.clearInterval(timer);
+    return () => { window.clearInterval(timer); };
   }, [modelStatus?.active_job, loadModelStatus]);
 
   const voiceVariants = modelStatus?.voice.models ?? [];
@@ -185,7 +185,7 @@ const ModelsTab: React.FC<ModelsTabProps> = ({ settings, updateSetting, disabled
             <label className="toggle-switch">
               <input
                 type="checkbox"
-                checked={settings.stt_enabled !== false}
+                checked={settings.stt_enabled}
                 onChange={(e) => updateSetting('stt_enabled', e.target.checked)}
                 disabled={disabled}
               />
@@ -371,7 +371,7 @@ const ModelsTab: React.FC<ModelsTabProps> = ({ settings, updateSetting, disabled
             <label className="toggle-switch">
               <input
                 type="checkbox"
-                checked={settings.tts_enabled === true}
+                checked={settings.tts_enabled}
                 onChange={(e) => updateSetting('tts_enabled', e.target.checked)}
                 disabled={disabled}
               />

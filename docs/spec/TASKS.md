@@ -141,8 +141,8 @@
 | M5.4 | LAN PWA remote (basic control + voice button) | AI-Agent | 1.25 | [ui][ops] | M3.6, M3.9 | — | ✅ |
 | M5.5 | Docs hardening + samples & demo mode | Gary | 0.5 | [docs] | M5.* | — | ✅ |
 | M5.6 | Model download/space management | AI-Agent | 0.75 | [ai][ops] | M5.1 | ✓ | ✅ |
-| M5.7 | PWA service worker + offline cache | AI-Agent | 0.5 | [ui][ops] | M5.4 | ✓ | todo |
-| M5.8 | Demo content pack + fake M3U generator | AI-Agent | 0.25 | [ops][perf] | M3.4, M2.3 | ✓ | todo |
+| M5.7 | PWA service worker + offline cache | AI-Agent | 0.5 | [ui][ops] | M5.4 | ✓ | ✅ |
+| M5.8 | Demo content pack + fake M3U generator | AI-Agent | 0.25 | [ops][perf] | M3.4, M2.3 | ✓ | ✅ |
 
 **M5 Acceptance Criteria**:
 - Voice intent resolution ≤3s p50

@@ -119,6 +119,15 @@ const voiceFetch = (input: string, init?: RequestInit) =>
 const searchFetch = (input: string, init?: RequestInit) =>
   fetchWithRetry(input, init, { serviceName: 'Search API' });
 
+function extractErrorDetail(payload: unknown): string | null {
+  if (typeof payload !== 'object' || payload === null) {
+    return null;
+  }
+
+  const maybeDetail = (payload as { detail?: unknown }).detail;
+  return typeof maybeDetail === 'string' ? maybeDetail : null;
+}
+
 export interface MediaFile {
   id: number;
   file_path: string;
@@ -498,8 +507,8 @@ export async function startModelDownload(kind: 'voice' | 'llm', model: string): 
   });
 
   if (!response.ok) {
-    const payload = await response.json().catch(() => ({} as Record<string, unknown>));
-    const detail = typeof payload.detail === 'string' ? payload.detail : response.statusText || 'Unknown error';
+  const payload: unknown = await response.json().catch(() => null);
+  const detail = extractErrorDetail(payload) ?? (response.statusText || 'Unknown error');
     throw new Error(`Failed to start download: ${detail}`);
   }
 
@@ -514,8 +523,8 @@ export async function cancelModelDownload(jobId: string): Promise<DownloadJobInf
   });
 
   if (!response.ok) {
-    const payload = await response.json().catch(() => ({} as Record<string, unknown>));
-    const detail = typeof payload.detail === 'string' ? payload.detail : response.statusText || 'Unknown error';
+  const payload: unknown = await response.json().catch(() => null);
+  const detail = extractErrorDetail(payload) ?? (response.statusText || 'Unknown error');
     throw new Error(`Failed to cancel download: ${detail}`);
   }
 

@@ -119,9 +119,11 @@ describe('VoiceButton', () => {
     })) as unknown as typeof fetch;
 
     // Mock requestAnimationFrame
-    global.requestAnimationFrame = vi.fn((cb) => {
-      setTimeout(cb, 0);
-      return 0;
+    global.requestAnimationFrame = vi.fn((cb: FrameRequestCallback) => {
+      const id = window.setTimeout(() => {
+        cb(0);
+      }, 0);
+      return id;
     });
 
     global.cancelAnimationFrame = vi.fn();
@@ -168,7 +170,7 @@ describe('VoiceButton', () => {
     const button = screen.getByLabelText('Push to talk');
 
     fireEvent.mouseDown(button);
-    await waitFor(() => expect(mockMediaRecorder.start).toHaveBeenCalled());
+    await waitFor(() => { expect(mockMediaRecorder.start).toHaveBeenCalled(); });
 
     fireEvent.mouseUp(button);
     await waitFor(() => {
@@ -182,7 +184,7 @@ describe('VoiceButton', () => {
     const button = screen.getByLabelText('Push to talk');
 
     fireEvent.mouseDown(button);
-    await waitFor(() => expect(mockMediaRecorder.start).toHaveBeenCalled());
+    await waitFor(() => { expect(mockMediaRecorder.start).toHaveBeenCalled(); });
 
     // Simulate data available
     const audioBlob = new Blob(['test audio'], { type: 'audio/webm' });
@@ -191,7 +193,7 @@ describe('VoiceButton', () => {
     }
 
     fireEvent.mouseUp(button);
-    await waitFor(() => expect(mockMediaRecorder.stop).toHaveBeenCalled());
+    await waitFor(() => { expect(mockMediaRecorder.stop).toHaveBeenCalled(); });
 
     // Trigger onstop callback
     if (mockMediaRecorder.onstop) {
@@ -221,7 +223,7 @@ describe('VoiceButton', () => {
     const button = screen.getByLabelText('Push to talk');
 
     fireEvent.mouseDown(button);
-    await waitFor(() => expect(mockMediaRecorder.start).toHaveBeenCalled());
+    await waitFor(() => { expect(mockMediaRecorder.start).toHaveBeenCalled(); });
 
     const audioBlob = new Blob(['test audio'], { type: 'audio/webm' });
     if (mockMediaRecorder.ondataavailable) {
@@ -269,7 +271,7 @@ describe('VoiceButton', () => {
     const button = screen.getByLabelText('Push to talk');
 
     fireEvent.mouseDown(button);
-    await waitFor(() => expect(mockMediaRecorder.start).toHaveBeenCalled());
+    await waitFor(() => { expect(mockMediaRecorder.start).toHaveBeenCalled(); });
 
     const audioBlob = new Blob(['test audio'], { type: 'audio/webm' });
     if (mockMediaRecorder.ondataavailable) {
@@ -291,7 +293,7 @@ describe('VoiceButton', () => {
     const button = screen.getByLabelText('Push to talk');
 
     fireEvent.mouseDown(button);
-    await waitFor(() => expect(mockMediaRecorder.start).toHaveBeenCalled());
+    await waitFor(() => { expect(mockMediaRecorder.start).toHaveBeenCalled(); });
 
     const startCallCount = mockMediaRecorder.start.mock.calls.length;
 
@@ -307,7 +309,7 @@ describe('VoiceButton', () => {
     const button = screen.getByLabelText('Push to talk');
 
     fireEvent.mouseDown(button);
-    await waitFor(() => expect(mockMediaRecorder.start).toHaveBeenCalled());
+    await waitFor(() => { expect(mockMediaRecorder.start).toHaveBeenCalled(); });
 
     unmount();
 

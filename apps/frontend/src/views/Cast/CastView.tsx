@@ -105,7 +105,7 @@ const CastView = (): React.JSX.Element => {
       });
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => { clearInterval(timer); };
   }, [expiresIn]);
 
   // Cleanup QR image URL on unmount

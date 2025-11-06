@@ -94,7 +94,7 @@ describe('LibraryView', () => {
     });
 
     await waitFor(() => {
-      const input = screen.getByRole('textbox') as HTMLInputElement;
+      const input = screen.getByRole('textbox');
       expect(input.value).toBe('Play jazz music');
     });
   });
@@ -128,7 +128,11 @@ describe('LibraryView', () => {
     ];
 
     vi.mocked(api.getMediaFiles).mockResolvedValue(mockMedia);
-  vi.mocked(api.searchMediaFiles).mockResolvedValue([mockMedia[0]!]);
+    const [firstResult] = mockMedia;
+    if (!firstResult) {
+      throw new Error('Expected at least one media item in mock data');
+    }
+    vi.mocked(api.searchMediaFiles).mockResolvedValue([firstResult]);
     vi.mocked(api.semanticSearchMedia).mockResolvedValue({
       count: 2,
       latency_ms: 42,
@@ -159,7 +163,7 @@ describe('LibraryView', () => {
       expect(screen.getByText('Media Library')).toBeDefined();
     });
 
-    const textBox = screen.getByRole('textbox') as HTMLInputElement;
+    const textBox = screen.getByRole('textbox');
     fireEvent.change(textBox, { target: { value: 'mo' } });
 
     await waitFor(() => {

@@ -1440,7 +1440,7 @@
                       "start_at_utc":  null,
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "done",
                       "notes":  ""
                   },
                   {
@@ -1611,7 +1611,7 @@
                                            "M5.4"
                                        ],
                       "files":  [
-                                    "apps/frontend/pwa/service-worker.ts"
+                                    "apps/frontend/pwa/service-worker.js"
                                 ],
                       "acceptance_criteria":  [
                                                   "Controls cached",
@@ -1621,7 +1621,7 @@
                       "start_at_utc":  null,
                       "end_at_utc":  null,
                       "duration_h":  null,
-                      "status":  "todo",
+                      "status":  "done",
                       "notes":  ""
                   },
                   {

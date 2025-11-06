@@ -169,7 +169,7 @@ const PrivacyTab: React.FC<PrivacyTabProps> = ({
             <label className="toggle-switch">
               <input
                 type="checkbox"
-                checked={settings.analytics_enabled === true}
+                checked={settings.analytics_enabled}
                 onChange={(e) => updateSetting('analytics_enabled', e.target.checked)}
                 disabled={disabled}
               />
@@ -187,7 +187,7 @@ const PrivacyTab: React.FC<PrivacyTabProps> = ({
             <label className="toggle-switch">
               <input
                 type="checkbox"
-                checked={settings.crash_reporting_enabled === true}
+                checked={settings.crash_reporting_enabled}
                 onChange={(e) => updateSetting('crash_reporting_enabled', e.target.checked)}
                 disabled={disabled}
               />
@@ -213,7 +213,7 @@ const PrivacyTab: React.FC<PrivacyTabProps> = ({
             <label className="toggle-switch">
               <input
                 type="checkbox"
-                checked={settings.metadata_fetching_enabled !== false}
+                checked={settings.metadata_fetching_enabled}
                 onChange={(e) => updateSetting('metadata_fetching_enabled', e.target.checked)}
                 disabled={disabled}
               />

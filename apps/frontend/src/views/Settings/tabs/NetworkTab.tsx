@@ -25,8 +25,8 @@ const NetworkTab: React.FC<NetworkTabProps> = ({ settings, updateSetting, disabl
         method: 'POST',
       });
       
-      const data = await response.json();
-      setDiagnosticsResult(JSON.stringify(data, null, 2));
+  const payload: unknown = await response.json();
+  setDiagnosticsResult(JSON.stringify(payload, null, 2));
     } catch (error) {
       console.error('Failed to run diagnostics:', error);
       setDiagnosticsResult(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);

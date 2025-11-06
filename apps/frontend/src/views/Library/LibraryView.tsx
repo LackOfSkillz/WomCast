@@ -379,33 +379,33 @@ function buildMediaFromSemanticHit(hit: SemanticSearchHit): MediaFile | null {
     ? typeCandidate
     : 'video') as MediaFile['media_type'];
 
-  const createdAt = typeof metadata['created_at'] === 'string' ? (metadata['created_at'] as string) : nowIso;
-  const modifiedAt = typeof metadata['modified_at'] === 'string' ? (metadata['modified_at'] as string) : createdAt;
-  const indexedAt = typeof metadata['indexed_at'] === 'string' ? (metadata['indexed_at'] as string) : modifiedAt;
+  const createdAt = typeof metadata['created_at'] === 'string' ? (metadata['created_at']) : nowIso;
+  const modifiedAt = typeof metadata['modified_at'] === 'string' ? (metadata['modified_at']) : createdAt;
+  const indexedAt = typeof metadata['indexed_at'] === 'string' ? (metadata['indexed_at']) : modifiedAt;
 
   return {
     id: hit.media_id,
     file_path: (metadata['file_path'] as string) ?? '',
     file_name: (metadata['file_name'] as string) ?? hit.title ?? `Item ${hit.media_id}`,
-    file_size: typeof metadata['file_size'] === 'number' ? (metadata['file_size'] as number) : 0,
+    file_size: typeof metadata['file_size'] === 'number' ? (metadata['file_size']) : 0,
     media_type: mediaType,
     duration_seconds:
       typeof metadata['duration_seconds'] === 'number'
-        ? (metadata['duration_seconds'] as number)
+        ? (metadata['duration_seconds'])
         : undefined,
-    width: typeof metadata['width'] === 'number' ? (metadata['width'] as number) : undefined,
-    height: typeof metadata['height'] === 'number' ? (metadata['height'] as number) : undefined,
+    width: typeof metadata['width'] === 'number' ? (metadata['width']) : undefined,
+    height: typeof metadata['height'] === 'number' ? (metadata['height']) : undefined,
     created_at: createdAt,
     modified_at: modifiedAt,
     indexed_at: indexedAt,
-    play_count: typeof metadata['play_count'] === 'number' ? (metadata['play_count'] as number) : 0,
+    play_count: typeof metadata['play_count'] === 'number' ? (metadata['play_count']) : 0,
     resume_position_seconds:
       typeof metadata['resume_position_seconds'] === 'number'
-        ? (metadata['resume_position_seconds'] as number)
+        ? (metadata['resume_position_seconds'])
         : 0,
     subtitle_tracks:
       typeof metadata['subtitle_tracks'] === 'string'
-        ? (metadata['subtitle_tracks'] as string)
+        ? (metadata['subtitle_tracks'])
         : undefined,
   };
 }

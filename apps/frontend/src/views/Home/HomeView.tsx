@@ -86,14 +86,14 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate, online }) => {
             <button
               className="home-view__primary-btn"
               type="button"
-              onClick={() => onNavigate('library')}
+              onClick={() => { onNavigate('library'); }}
             >
               Explore Library
             </button>
             <button
               className="home-view__secondary-btn"
               type="button"
-              onClick={() => onNavigate('search')}
+              onClick={() => { onNavigate('search'); }}
             >
               Run a Search
             </button>
@@ -117,7 +117,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate, online }) => {
               key={link.target}
               type="button"
               className="home-view__card"
-              onClick={() => onNavigate(link.target)}
+              onClick={() => { onNavigate(link.target); }}
             >
               <span className="home-view__card-icon" aria-hidden="true">
                 {link.icon}

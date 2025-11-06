@@ -17,6 +17,26 @@ interface CloudBadgeProps {
   onWatchClick?: (provider: string, contentId: string) => void;
 }
 
+interface CloudLinkResponse {
+  qrCodeUrl?: string | null;
+  webLink?: string | null;
+}
+
+function isCloudLinkResponse(value: unknown): value is CloudLinkResponse {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+  const qr = record.qrCodeUrl;
+  const web = record.webLink;
+
+  const qrValid = qr === undefined || qr === null || typeof qr === 'string';
+  const webValid = web === undefined || web === null || typeof web === 'string';
+
+  return qrValid && webValid;
+}
+
 export function CloudBadge({
   service,
   contentId,
@@ -43,10 +63,13 @@ export function CloudBadge({
         throw new Error('Failed to create cloud link');
       }
 
-      const linkData = await response.json();
+      const parsed: unknown = await response.json();
+      if (!isCloudLinkResponse(parsed)) {
+        throw new Error('Unexpected response from cloud service');
+      }
 
       // Set QR code URL
-      setQrCodeUrl(linkData.qrCodeUrl);
+      setQrCodeUrl(parsed.qrCodeUrl ?? null);
 
       // Show QR modal
       setShowQr(true);
@@ -74,8 +97,12 @@ export function CloudBadge({
         throw new Error('Failed to create cloud link');
       }
 
-      const linkData = await response.json();
-      window.open(linkData.webLink, '_blank');
+      const parsed: unknown = await response.json();
+      if (!isCloudLinkResponse(parsed) || typeof parsed.webLink !== 'string') {
+        throw new Error('Unexpected response from cloud service');
+      }
+
+      window.open(parsed.webLink, '_blank');
     } catch (error) {
       console.error('Failed to open web link:', error);
     }
@@ -124,7 +151,7 @@ export function CloudBadge({
         <div className="cloud-qr-modal" onClick={handleCloseQr}>
           <div
             className="cloud-qr-content"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); }}
           >
             <h3>Scan to Watch on {service.name}</h3>
             <img

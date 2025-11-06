@@ -353,6 +353,8 @@ Use the bundled assets and services below to showcase WomCast quickly without pr
    mkdir -p /media/demo
    rsync -av --delete test-media/ /media/demo/
    python -m metadata.indexer /media/demo
+   # or generate fresh placeholders and playlist
+   pwsh ./scripts/dev/generate-demo-content.ps1 -Clean
    ```
    - `test-media/` includes short Creative Commons clips and tracks safe for demos.
    - Verify the mount inside Settings → Library → Mount Points.
